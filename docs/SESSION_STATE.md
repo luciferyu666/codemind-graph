@@ -34,11 +34,11 @@ Current design baseline:
 
 ## Next steps
 
-1. Push the initial bootstrap commit to `luciferyu666/codemind-graph`.
-2. Implement `packages/core` graph schema.
-3. Implement `packages/adapter-typescript` TypeScript Compiler API symbol extraction.
-4. Implement CLI command skeletons.
-5. Implement read-only MCP server skeleton.
+1. Implement `packages/core` graph schema.
+2. Implement `packages/adapter-typescript` TypeScript Compiler API symbol extraction.
+3. Implement CLI command skeletons.
+4. Implement read-only MCP server skeleton.
+5. Add focused tests for graph schema and TypeScript symbol extraction.
 
 ## Resume workflow
 

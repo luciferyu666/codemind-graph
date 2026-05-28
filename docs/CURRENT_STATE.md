@@ -11,7 +11,7 @@ Last updated: 2026-05-28
 - `pnpm typecheck`, `pnpm test`, and `pnpm build` pass.
 - Git remote `origin` is configured as `https://github.com/luciferyu666/codemind-graph.git`.
 - GitHub repository exists at `https://github.com/luciferyu666/codemind-graph`.
-- Remote repository is empty before the initial push.
+- Initial bootstrap has been pushed to `origin/main`.
 - ChatGPT export `ChatGPT-專案排序與建議 (4).md` has been imported into `Documentations/`.
 - v0.1 quality gate is now defined in `docs/RUBRIC.md`.
 
@@ -25,4 +25,4 @@ Last updated: 2026-05-28
 
 ## Immediate target
 
-Push the initial repository bootstrap to GitHub, then implement the v0.1 graph schema and deterministic TypeScript symbol extraction.
+Implement the v0.1 graph schema and deterministic TypeScript symbol extraction.

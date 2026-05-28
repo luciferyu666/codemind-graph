@@ -18,6 +18,7 @@ Last updated: 2026-05-28
 - `init.defaultBranch`: `main`
 - Local branch: `main`
 - Remote: `origin -> https://github.com/luciferyu666/codemind-graph.git`
+- Upstream: `origin/main`
 
 ## Codex health
 
@@ -34,7 +35,7 @@ Last updated: 2026-05-28
 - Repository visibility: public.
 - Repository URL: `https://github.com/luciferyu666/codemind-graph`.
 - Local `origin` points to `https://github.com/luciferyu666/codemind-graph.git`.
-- Remote repository had no heads before the initial push.
+- Initial bootstrap commit pushed to `origin/main`.
 
 ## Verification
 
