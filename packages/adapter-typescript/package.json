@@ -12,7 +12,7 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@codemind/core": "workspace:*"
+    "@codemind/core": "workspace:*",
+    "typescript": "^5.9.3"
   }
 }
-

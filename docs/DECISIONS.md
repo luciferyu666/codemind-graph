@@ -47,3 +47,19 @@ Date: 2026-05-28
 Decision: Codex agents may read `docs/SESSION_STATE.md` to resume engineering work, but the MCP server must not expose engineering session notes by default.
 
 Reasoning: Engineering handoff notes and product repository graph context have different privacy boundaries.
+
+## ADR-0007: Use deterministic graph IDs and explicit node/edge kinds
+
+Date: 2026-05-28
+
+Decision: Define the v0.1 graph schema in `packages/core` with explicit node kinds, edge kinds, source locations, metadata, deterministic node IDs, deterministic edge IDs, and a `GraphBuilder` that deduplicates and sorts graph output.
+
+Reasoning: CodeMind Graph needs stable graph output for CLI queries, tests, MCP responses, and future persisted storage. Deterministic IDs also make generated graph data easier to diff.
+
+## ADR-0008: Extract TypeScript symbols with source-level graph edges first
+
+Date: 2026-05-28
+
+Decision: The first TypeScript adapter extracts project source files, imported modules, functions, classes, interfaces, type aliases, enums, variables, methods, and export edges. It returns a `CodeGraph` directly rather than writing storage.
+
+Reasoning: v0.1 needs deterministic extraction before introducing SQLite storage, CLI persistence, or MCP transport. Keeping extraction pure makes it easy to test and reuse across CLI and MCP packages.

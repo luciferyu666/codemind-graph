@@ -8,11 +8,12 @@
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false",
-    "test": "node --test",
+    "test": "pnpm build && node --test",
     "check": "pnpm typecheck && pnpm test && pnpm build",
     "clean": "pnpm --recursive exec powershell -NoProfile -Command \"if (Test-Path dist) { Remove-Item -Recurse -Force dist }\""
   },
   "devDependencies": {
+    "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
   }
 }

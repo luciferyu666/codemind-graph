@@ -41,6 +41,27 @@ Last updated: 2026-05-28
 
 - Dependency install: passed with `pnpm install`.
 - Typecheck: passed with `pnpm typecheck`.
-- Tests: passed with `pnpm test`.
+- Tests: passed with `pnpm test` using 5 focused `node:test` tests.
 - Build: passed with `pnpm build`.
 - Consolidated check: passed with `pnpm check`.
+
+## Manual CLI verification
+
+Command:
+
+```powershell
+node packages/cli/dist/index.js index examples/ts-basic
+node packages/cli/dist/index.js find greet --root examples/ts-basic
+```
+
+Result:
+
+- Indexed 1 TypeScript source file.
+- Wrote `examples/ts-basic/.codemind/graph.json`.
+- Found `function greet` in `src/index.ts`.
+
+## Documentation imports
+
+- Imported `Documentations/ChatGPT-專案排序與建議 (5).md`.
+- Added `docs/AGENT_HARNESS.md`.
+- Added `docs/NEXT_DEVELOPMENT_TOPICS.md`.

@@ -88,6 +88,7 @@ pnpm build
 - Keep generated data under `.codemind/`.
 - Reference `docs/DECISIONS.md` before changing graph schema or storage design.
 - Reference `docs/RUBRIC.md` before declaring v0.1 work complete.
+- Reference `docs/AGENT_HARNESS.md` when discussing Goal, MCP, Rubric, Governance, or long-running agent workflows.
 - Update `docs/SESSION_STATE.md` after meaningful changes.
 - Update `docs/ENGINEERING_STATE.md` after build, test, or environment changes.
 - Update `docs/DECISIONS.md` when making architecture decisions.

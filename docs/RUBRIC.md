@@ -6,18 +6,18 @@ This file defines the quality gate for CodeMind Graph v0.1.
 
 CodeMind Graph v0.1 is complete only when all of the following are true:
 
-- [ ] `pnpm install` passes on Windows PowerShell.
-- [ ] `pnpm typecheck` passes.
-- [ ] `pnpm test` passes.
-- [ ] `pnpm build` passes.
-- [ ] `packages/core` contains graph node and edge types.
-- [ ] `packages/adapter-typescript` extracts TypeScript source files, functions, classes, interfaces, imports, and exports with the TypeScript Compiler API.
-- [ ] `codemind index examples/ts-basic` writes graph data under `.codemind/`.
-- [ ] `codemind find <symbol>` returns a deterministic result.
+- [x] `pnpm install` passes on Windows PowerShell.
+- [x] `pnpm typecheck` passes.
+- [x] `pnpm test` passes.
+- [x] `pnpm build` passes.
+- [x] `packages/core` contains graph node and edge types.
+- [x] `packages/adapter-typescript` extracts TypeScript source files, functions, classes, interfaces, imports, and exports with the TypeScript Compiler API.
+- [x] `codemind index examples/ts-basic` writes graph data under `.codemind/`.
+- [x] `codemind find <symbol>` returns a deterministic result.
 - [ ] `codemind map --format markdown` generates `CODEMIND.md`.
 - [ ] `codemind mcp start` exposes read-only tools.
 - [ ] No write-capable MCP tools exist.
-- [ ] `docs/SESSION_STATE.md` and `docs/DECISIONS.md` are updated.
+- [x] `docs/SESSION_STATE.md` and `docs/DECISIONS.md` are updated.
 
 ## Evaluation Weights
 
@@ -34,4 +34,3 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - Do not describe SQLite FTS as semantic search; it is full-text symbol lookup.
 - Do not expose `docs/SESSION_STATE.md`, `docs/CURRENT_STATE.md`, or other engineering notes through MCP tools by default.
 - Do not add web dashboard, natural-language QA, Python deep support, DevSec scanning, or write-capable MCP tools in v0.1.
-

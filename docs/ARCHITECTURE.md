@@ -25,6 +25,55 @@ CodeMind Graph uses a local-first, MCP-native architecture.
 - `packages/cli`: `codemind` command line entry point.
 - `packages/mcp-server`: read-only MCP tools.
 
+## CLI Graph Commands
+
+`codemind index <path>` writes a deterministic graph index file to:
+
+```text
+<path>/.codemind/graph.json
+```
+
+The index file contains:
+
+- `schemaVersion`
+- normalized `rootDir`
+- indexed `sourceFiles`
+- TypeScript `diagnostics`
+- extracted `CodeGraph`
+
+Generated graph data remains under `.codemind/` and is ignored by Git.
+
+`codemind find <symbol>` reads `.codemind/graph.json` and returns deterministic symbol matches. By default it reads the current working directory graph, and `--root <path>` can point it at another indexed repo.
+
+## Graph Model
+
+The initial graph schema is deterministic and ID-based.
+
+Node kinds:
+
+- `repository`
+- `file`
+- `module`
+- `function`
+- `class`
+- `interface`
+- `type`
+- `enum`
+- `variable`
+- `method`
+- `property`
+
+Edge kinds:
+
+- `CONTAINS`
+- `DEFINES`
+- `IMPORTS`
+- `EXPORTS`
+- `REFERENCES`
+- `CALLS`
+
+The TypeScript adapter currently emits repository, file, module, and symbol nodes plus `CONTAINS`, `DEFINES`, `IMPORTS`, and `EXPORTS` edges.
+
 ## Non-goals for v0.1
 
 - Web dashboard
