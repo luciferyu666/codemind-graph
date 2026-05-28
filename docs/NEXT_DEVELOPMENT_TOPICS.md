@@ -13,17 +13,16 @@ Implemented:
 - `packages/cli` commands:
   - `codemind index <path>`
   - `codemind find <symbol>`
+  - `codemind map --format markdown`
 - `.codemind/graph.json` JSON graph index.
+- `CODEMIND.md` markdown repo map output.
 - Focused tests for core, TypeScript adapter, and CLI index/find.
 
 Not yet implemented:
 
-- `codemind map --format markdown`
-- `CODEMIND.md` repo map output
 - `codemind trace`
 - `codemind explain`
 - read-only MCP server
-- graph query engine package APIs
 - visualization UI
 - deployment pipeline
 
@@ -44,6 +43,8 @@ The near-term strategy is CLI-first and local-first. UI, Vercel deployment, and 
 ### 1. MVP Demo Slice: Repo Map Output
 
 Priority: P0
+
+Status: complete.
 
 Goal:
 
@@ -73,6 +74,8 @@ Why this is next:
 ### 2. Graph Query Engine
 
 Priority: P0
+
+Status: partially complete.
 
 Goal:
 
@@ -316,6 +319,8 @@ Do not formalize multi-agent workflow until v0.1 CLI and MCP are stable.
 
 ### Slice A: `map` and `CODEMIND.md`
 
+Status: complete.
+
 Outcome:
 
 `codemind map --root examples/ts-basic --format markdown` generates a deterministic repo map.
@@ -343,6 +348,8 @@ node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
 ```
 
 ### Slice B: Query Engine
+
+Status: partially complete.
 
 Outcome:
 
@@ -449,10 +456,9 @@ Verification:
 The next task should be:
 
 ```text
-Implement Slice A: codemind map --format markdown and CODEMIND.md generation.
+Implement Slice C: read-only MCP skeleton with find_symbol and get_repo_map.
 ```
 
 Reason:
 
-It completes the first public-facing MVP loop without expanding scope into MCP, UI, Vercel, or multi-agent complexity too early.
-
+The CLI demo loop is now in place. The next v0.1 gap is exposing the same graph context through safe read-only MCP tools.

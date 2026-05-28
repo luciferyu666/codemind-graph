@@ -29,8 +29,10 @@ Implemented in this session:
 - `packages/adapter-typescript` TypeScript Compiler API extraction for source files, imports, exports, functions, classes, interfaces, type aliases, enums, variables, and methods.
 - `packages/cli` `codemind index <path>` command that writes `<path>/.codemind/graph.json`.
 - `packages/cli` `codemind find <symbol>` command that reads `.codemind/graph.json` and returns deterministic symbol matches.
+- `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes `CODEMIND.md`.
+- `packages/core` reusable graph query helpers for files, symbols, imports, exports, and graph edges.
 - Focused `node:test` coverage for graph builder behavior and TypeScript adapter extraction.
-- Focused CLI test coverage for graph file generation and symbol lookup.
+- Focused CLI test coverage for graph file generation, symbol lookup, and markdown repo map generation.
 
 The 2026-05-28 ChatGPT export has been imported into `Documentations/ChatGPT-專案排序與建議 (4).md`. Its engineering corrections have been distilled into `docs/RUBRIC.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, and `AGENTS.md`.
 
@@ -48,11 +50,11 @@ Current design baseline:
 
 ## Next steps
 
-1. Implement `codemind map --format markdown` and `CODEMIND.md` generation.
-2. Add reusable graph query helpers in `packages/core`.
-3. Refactor CLI `find` to use graph query helpers.
-4. Implement read-only MCP server skeleton after `map` is stable.
-5. Add GitHub Actions CI with `pnpm check`.
+1. Implement read-only MCP server skeleton after `map` is stable.
+2. Add MCP tools `find_symbol` and `get_repo_map`.
+3. Add GitHub Actions CI with `pnpm check`.
+4. Improve example project coverage beyond a single exported function.
+5. Implement `codemind trace <symbol>` over dependency graph edges.
 
 ## Resume workflow
 

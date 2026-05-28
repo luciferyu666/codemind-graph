@@ -41,7 +41,7 @@ Last updated: 2026-05-28
 
 - Dependency install: passed with `pnpm install`.
 - Typecheck: passed with `pnpm typecheck`.
-- Tests: passed with `pnpm test` using 5 focused `node:test` tests.
+- Tests: passed with `pnpm test` using 6 focused `node:test` tests.
 - Build: passed with `pnpm build`.
 - Consolidated check: passed with `pnpm check`.
 
@@ -52,6 +52,7 @@ Command:
 ```powershell
 node packages/cli/dist/index.js index examples/ts-basic
 node packages/cli/dist/index.js find greet --root examples/ts-basic
+node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
 ```
 
 Result:
@@ -59,6 +60,7 @@ Result:
 - Indexed 1 TypeScript source file.
 - Wrote `examples/ts-basic/.codemind/graph.json`.
 - Found `function greet` in `src/index.ts`.
+- Wrote `examples/ts-basic/CODEMIND.md`.
 
 ## Documentation imports
 

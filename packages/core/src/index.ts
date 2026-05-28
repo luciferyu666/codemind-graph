@@ -21,8 +21,20 @@ export const GRAPH_EDGE_KINDS = [
   "CALLS",
 ] as const;
 
+export const SYMBOL_NODE_KINDS = [
+  "function",
+  "class",
+  "interface",
+  "type",
+  "enum",
+  "variable",
+  "method",
+  "property",
+] as const;
+
 export type GraphNodeKind = (typeof GRAPH_NODE_KINDS)[number];
 export type GraphEdgeKind = (typeof GRAPH_EDGE_KINDS)[number];
+export type SymbolNodeKind = (typeof SYMBOL_NODE_KINDS)[number];
 export type GraphNodeId = string;
 export type GraphEdgeId = string;
 
@@ -98,6 +110,14 @@ export function isGraphEdgeKind(value: string): value is GraphEdgeKind {
   return GRAPH_EDGE_KINDS.includes(value as GraphEdgeKind);
 }
 
+export function isSymbolNodeKind(value: string): value is SymbolNodeKind {
+  return SYMBOL_NODE_KINDS.includes(value as SymbolNodeKind);
+}
+
+export function isSymbolNode(node: GraphNode): node is GraphNode & { readonly kind: SymbolNodeKind } {
+  return isSymbolNodeKind(node.kind);
+}
+
 export class GraphBuilder {
   private readonly nodes = new Map<GraphNodeId, GraphNode>();
   private readonly edges = new Map<GraphEdgeId, GraphEdge>();
@@ -132,6 +152,96 @@ export class GraphBuilder {
 
     return graph;
   }
+}
+
+export function getNodeById(graph: CodeGraph, nodeId: GraphNodeId): GraphNode | undefined {
+  return graph.nodes.find((node) => node.id === nodeId);
+}
+
+export function listFiles(graph: CodeGraph): readonly GraphNode[] {
+  return graph.nodes.filter((node) => node.kind === "file").sort(compareGraphNodes);
+}
+
+export function listModules(graph: CodeGraph): readonly GraphNode[] {
+  return graph.nodes.filter((node) => node.kind === "module").sort(compareGraphNodes);
+}
+
+export function listSymbols(graph: CodeGraph): readonly GraphNode[] {
+  return graph.nodes.filter(isSymbolNode).sort(compareGraphNodes);
+}
+
+export function findSymbols(graph: CodeGraph, query: string): readonly GraphNode[] {
+  const normalizedQuery = query.toLocaleLowerCase();
+  return listSymbols(graph)
+    .filter((node) => node.name.toLocaleLowerCase().includes(normalizedQuery))
+    .sort(compareGraphNodes);
+}
+
+export function listImports(graph: CodeGraph): readonly GraphEdge[] {
+  return graph.edges.filter((edge) => edge.kind === "IMPORTS").sort(compareGraphEdges);
+}
+
+export function listExports(graph: CodeGraph): readonly GraphEdge[] {
+  return graph.edges.filter((edge) => edge.kind === "EXPORTS").sort(compareGraphEdges);
+}
+
+export function getOutgoingEdges(graph: CodeGraph, nodeId: GraphNodeId): readonly GraphEdge[] {
+  return graph.edges.filter((edge) => edge.fromId === nodeId).sort(compareGraphEdges);
+}
+
+export function getIncomingEdges(graph: CodeGraph, nodeId: GraphNodeId): readonly GraphEdge[] {
+  return graph.edges.filter((edge) => edge.toId === nodeId).sort(compareGraphEdges);
+}
+
+export function compareGraphNodes(left: GraphNode, right: GraphNode): number {
+  const leftFilePath = left.filePath ?? left.location?.filePath ?? "";
+  const rightFilePath = right.filePath ?? right.location?.filePath ?? "";
+  const fileCompare = leftFilePath.localeCompare(rightFilePath);
+
+  if (fileCompare !== 0) {
+    return fileCompare;
+  }
+
+  const leftLine = left.location?.range.start.line ?? 0;
+  const rightLine = right.location?.range.start.line ?? 0;
+  if (leftLine !== rightLine) {
+    return leftLine - rightLine;
+  }
+
+  const kindCompare = left.kind.localeCompare(right.kind);
+  if (kindCompare !== 0) {
+    return kindCompare;
+  }
+
+  const nameCompare = left.name.localeCompare(right.name);
+  if (nameCompare !== 0) {
+    return nameCompare;
+  }
+
+  return left.id.localeCompare(right.id);
+}
+
+export function compareGraphEdges(left: GraphEdge, right: GraphEdge): number {
+  const leftFilePath = left.location?.filePath ?? "";
+  const rightFilePath = right.location?.filePath ?? "";
+  const fileCompare = leftFilePath.localeCompare(rightFilePath);
+
+  if (fileCompare !== 0) {
+    return fileCompare;
+  }
+
+  const leftLine = left.location?.range.start.line ?? 0;
+  const rightLine = right.location?.range.start.line ?? 0;
+  if (leftLine !== rightLine) {
+    return leftLine - rightLine;
+  }
+
+  const kindCompare = left.kind.localeCompare(right.kind);
+  if (kindCompare !== 0) {
+    return kindCompare;
+  }
+
+  return left.id.localeCompare(right.id);
 }
 
 function compareById<T extends { readonly id: string }>(left: T, right: T): number {

@@ -200,3 +200,85 @@ test("codemind find returns 2 when no symbols match", async () => {
     await rm(rootDir, { recursive: true, force: true });
   }
 });
+
+test("codemind map writes deterministic CODEMIND.md", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-map-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "helper.ts"),
+      ["export function formatName(name: string): string {", "  return name.trim();", "}", ""].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      [
+        'import { formatName } from "./helper.js";',
+        "",
+        "export function greet(name: string): string {",
+        "  return `Hello, ${formatName(name)}`;",
+        "}",
+        "",
+      ].join("\n"),
+    );
+
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["map", "--root", "sample", "--format", "markdown"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    const codemindPath = path.join(rootDir, "sample", "CODEMIND.md");
+    const markdown = await readFile(codemindPath, "utf8");
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /Generated CODEMIND map for 2 TypeScript source file/);
+    assert.match(stdout, /sample\/CODEMIND\.md/);
+    assert.match(markdown, /^# CODEMIND/m);
+    assert.match(markdown, /^## Overview/m);
+    assert.match(markdown, /^## Files/m);
+    assert.match(markdown, /^## Symbols/m);
+    assert.match(markdown, /^## Imports/m);
+    assert.match(markdown, /^## Exports/m);
+    assert.match(markdown, /^## Diagnostics/m);
+    assert.match(markdown, /\| src\/index\.ts \| 1 \| 1 \| 1 \|/);
+    assert.match(markdown, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
+    assert.match(markdown, /\| src\/index\.ts \| module:src\/helper\.ts \| \.\/helper\.js \|/);
+    assert.match(markdown, /No diagnostics\./);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});

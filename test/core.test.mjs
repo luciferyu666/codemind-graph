@@ -4,6 +4,13 @@ import {
   GraphBuilder,
   createEdgeId,
   createNodeId,
+  findSymbols,
+  getIncomingEdges,
+  getNodeById,
+  getOutgoingEdges,
+  listExports,
+  listFiles,
+  listSymbols,
   normalizeGraphPath,
 } from "../packages/core/dist/index.js";
 
@@ -65,4 +72,11 @@ test("GraphBuilder deduplicates nodes and returns deterministic ordering", () =>
   assert.equal(graph.nodes.length, 3);
   assert.equal(graph.edges.length, 2);
   assert.equal(graph.rootPath, "F:/repo");
+  assert.equal(getNodeById(graph, symbolId)?.name, "run");
+  assert.deepEqual(listFiles(graph).map((node) => node.name), ["index.ts"]);
+  assert.deepEqual(listSymbols(graph).map((node) => node.name), ["run"]);
+  assert.deepEqual(findSymbols(graph, "ru").map((node) => node.name), ["run"]);
+  assert.equal(getOutgoingEdges(graph, fileId).length, 1);
+  assert.equal(getIncomingEdges(graph, symbolId).length, 1);
+  assert.equal(listExports(graph).length, 0);
 });

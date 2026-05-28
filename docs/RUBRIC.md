@@ -14,7 +14,7 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `packages/adapter-typescript` extracts TypeScript source files, functions, classes, interfaces, imports, and exports with the TypeScript Compiler API.
 - [x] `codemind index examples/ts-basic` writes graph data under `.codemind/`.
 - [x] `codemind find <symbol>` returns a deterministic result.
-- [ ] `codemind map --format markdown` generates `CODEMIND.md`.
+- [x] `codemind map --format markdown` generates `CODEMIND.md`.
 - [ ] `codemind mcp start` exposes read-only tools.
 - [ ] No write-capable MCP tools exist.
 - [x] `docs/SESSION_STATE.md` and `docs/DECISIONS.md` are updated.

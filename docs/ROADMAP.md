@@ -17,9 +17,9 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
   - [x] `find`
   - [ ] `trace`
   - [ ] `explain`
-  - [ ] `map`
+  - [x] `map`
 - [ ] Implement read-only MCP server tools.
-- [ ] Generate `CODEMIND.md` repository map.
+- [x] Generate `CODEMIND.md` repository map.
 
 ## Phase 002: Context ranking and ecosystem integration
 
@@ -40,8 +40,8 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 Day 1-30:
 
 - Complete CodeMind Graph v0.1 deterministic graph query flow.
-- Finish `codemind index`, `codemind find`, and `codemind map`.
-- Generate `CODEMIND.md`.
+- Finish `codemind index`, `codemind find`, and `codemind map`. Done.
+- Generate `CODEMIND.md`. Done.
 
 Day 31-60:
 
