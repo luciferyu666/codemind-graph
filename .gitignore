@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.codemind/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+

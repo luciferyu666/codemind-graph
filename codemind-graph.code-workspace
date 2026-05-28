@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "name": "CodeMind Graph",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.eol": "\n",
+    "files.trimTrailingWhitespace": true,
+    "typescript.tsdk": "node_modules/typescript/lib"
+  }
+}
+

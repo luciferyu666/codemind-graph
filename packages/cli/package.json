@@ -1,0 +1,22 @@
+{
+  "name": "@codemind/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "codemind": "./dist/index.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@codemind/core": "workspace:*",
+    "@codemind/adapter-typescript": "workspace:*"
+  }
+}
+
