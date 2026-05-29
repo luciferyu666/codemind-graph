@@ -8,6 +8,12 @@ A local-first code knowledge graph and read-only MCP server that helps AI coding
 
 CodeMind Graph is an AI-native knowledge layer for coding agents. It turns a repository into a deterministic symbol graph, dependency graph, and queryable architecture map.
 
+Official website:
+
+```text
+https://codemind-graph.vercel.app
+```
+
 The v0.1 target is intentionally narrow:
 
 - TypeScript-first repository scanner

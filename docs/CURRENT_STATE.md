@@ -40,6 +40,8 @@ Last updated: 2026-05-30
 - GitHub Actions Browser QA workflow is configured in `.github/workflows/browser-qa.yml`.
 - Website Slice W4 is implemented with sitemap, robots, canonical alternates, Open Graph metadata, Twitter metadata, generated social image route, and Vercel readiness docs.
 - Website Slice W4b is implemented with bilingual Engineering Practices routes, landing page `Why CodeMind Graph`, engineering standards, and brand positioning sections.
+- Website Slice W5 production deployment is complete at `https://codemind-graph.vercel.app`.
+- GitHub repository is connected to the Vercel project under `vincent-lius-projects-de5eeb92`.
 - Focused tests cover graph builder determinism and TypeScript extraction.
 - TypeScript adapter fixtures now cover richer imports, re-exports, classes, and methods for future trace work.
 - Focused CLI tests cover symbol trace success and no-match behavior.
@@ -56,8 +58,7 @@ Last updated: 2026-05-30
 - SQLite storage is not implemented yet; the current index target is JSON under `.codemind/graph.json`.
 - MCP currently reads only `.codemind/graph.json`; live indexing from MCP is intentionally out of scope.
 - CI badge is not added yet; add it after the first GitHub Actions run is visible on `main`.
-- Vercel project setup and production deployment are not implemented yet.
-- Vercel project linking is blocked until Vercel CLI authentication or a `VERCEL_TOKEN` is available for `vincent-lius-projects-de5eeb92`.
+- Custom domain setup is not implemented yet.
 - Codex in-app Browser currently has no registered `iab` backend in this app runtime.
 - Codex Chrome Extension is installed and available in the selected Chrome profile.
 

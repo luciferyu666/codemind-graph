@@ -15,12 +15,16 @@ Current readiness:
 - Locale pages publish canonical, alternate, Open Graph, and Twitter metadata.
 - Browser QA covers routing, metadata, sitemap, robots, Engineering Practices pages, and visual baselines.
 
-Latest deployment attempt:
+Latest deployment:
 
 - GitHub `main` has been pushed through release checkpoint `b2d85fd`.
 - GitHub Actions CI run `26664570193` passed `pnpm check`.
-- Vercel CLI project linking is blocked because the local runtime has no Vercel credentials.
-- The next required action is `vercel login` or providing a `VERCEL_TOKEN` for the target team.
+- Vercel CLI was upgraded to `54.6.1` and authenticated as `luciferyu666`.
+- Vercel project `codemind-graph` is linked under `vincent-lius-projects-de5eeb92`.
+- GitHub repository `https://github.com/luciferyu666/codemind-graph` is connected to the Vercel project.
+- Production deployment `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv` completed successfully.
+- Production URL: `https://codemind-graph.vercel.app`
+- Remote Browser QA passed against the production URL with `pnpm test:e2e:remote`.
 
 ## Vercel Project Settings
 
@@ -29,7 +33,7 @@ Use these settings when creating the Vercel project from GitHub:
 - Target team/dashboard: `vincent-lius-projects-de5eeb92`
 - Repository: `luciferyu666/codemind-graph`
 - Framework preset: Next.js
-- Root directory: `apps/web`
+- Root directory for local CLI deployment: `apps/web`
 - Install command: `pnpm install --frozen-lockfile`
 - Build command: `pnpm --filter @codemind/web build`
 - Output directory: Next.js default
@@ -43,7 +47,13 @@ Optional public environment variable:
 NEXT_PUBLIC_CODEMIND_SITE_URL=https://codemind-graph.vercel.app
 ```
 
-Set this to the final production URL or custom domain before production launch so sitemap, canonical URLs, and social metadata point to the correct public origin.
+The current default already points to the production alias:
+
+```text
+https://codemind-graph.vercel.app
+```
+
+Set this only if the final production URL or custom domain changes.
 
 ## Local Pre-Deploy Gates
 
@@ -92,6 +102,18 @@ CLI flow when Vercel credentials are available:
 ```powershell
 vercel link --yes --project codemind-graph --scope vincent-lius-projects-de5eeb92 --cwd apps/web
 vercel --prod --cwd apps/web --scope vincent-lius-projects-de5eeb92
+```
+
+Implemented production deploy command:
+
+```powershell
+vercel --prod --yes --cwd apps/web
+```
+
+Implemented Git connection command:
+
+```powershell
+vercel git connect https://github.com/luciferyu666/codemind-graph --cwd apps/web
 ```
 
 ## Not In Scope For Slice W4

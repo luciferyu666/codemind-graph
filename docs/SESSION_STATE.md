@@ -43,7 +43,10 @@ Implemented in this session:
 - Slice W4 SEO and Vercel readiness for `apps/web`, including sitemap, robots, canonical alternates, Open Graph, Twitter metadata, generated social image route, and deployment checklist.
 - Official website Engineering Practices content integration, including landing page `Why CodeMind Graph`, engineering standards, brand positioning sections, and dedicated `/en/engineering` and `/zh-TW/engineering` routes.
 - GitHub `main` pushed through release checkpoint `b2d85fd`, and GitHub Actions CI passed `pnpm check`.
-- Vercel production deployment to `vincent-lius-projects-de5eeb92` is pending Vercel CLI authentication or a `VERCEL_TOKEN`; the local runtime currently has no Vercel credentials.
+- Vercel production deployment to `vincent-lius-projects-de5eeb92` is complete.
+- Official website production URL: `https://codemind-graph.vercel.app`.
+- GitHub repository is connected to the Vercel project for deployment pipeline integration.
+- Remote Browser QA passed against production with `pnpm test:e2e:remote`.
 - Chrome Extension Backend enabled for browser navigation, DOM inspection, screenshots, and click interaction.
 - Browser automation environment diagnostics captured in `docs/BROWSER_QA_WORKFLOW.md`.
 - Focused `node:test` coverage for graph builder behavior and TypeScript adapter extraction.
@@ -94,7 +97,8 @@ Website track:
 - Slice W4 SEO and Vercel readiness is implemented and verified.
 - Slice W4b Engineering Practices content integration is implemented and verified.
 - Keep website public content separate from private `.codemind/` graph data and engineering memory files.
-- Next website slice: complete W5 Vercel project linking and production deployment after Vercel authentication is available.
+- Slice W5 Vercel production deployment is complete.
+- Next website slice: add a custom domain or Git-linked automatic deployment settings only when explicitly requested.
 
 ## Resume workflow
 

@@ -41,11 +41,16 @@ Last updated: 2026-05-30
 ## Vercel status
 
 - Target dashboard/team slug requested by project owner: `vincent-lius-projects-de5eeb92`.
-- Vercel CLI is installed as `41.4.1`.
-- Vercel CLI is not authenticated in this Windows runtime.
-- No local `.vercel/project.json` link exists yet.
-- `vercel link --yes --project codemind-graph --scope vincent-lius-projects-de5eeb92 --cwd apps/web` is blocked until `vercel login` or `--token` credentials are available.
-- Vercel connector could not list projects for `vincent-lius-projects-de5eeb92`, so production deployment is pending user-side Vercel authentication.
+- Vercel CLI is installed as `54.6.1`.
+- Vercel CLI is authenticated as `luciferyu666`.
+- Active Vercel team: `vincent-lius-projects-de5eeb92` (`Vincent Liu's projects`).
+- `apps/web` is linked to Vercel project `codemind-graph`.
+- GitHub repository `https://github.com/luciferyu666/codemind-graph` is connected to the Vercel project.
+- Vercel project ID: `prj_1KX0DWGVnWAarFwnBMDWwEikvNoT`.
+- Vercel org ID: `team_J3gReNe6pjh5lSeqL4I7vKTw`.
+- Production deployment ID: `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv`.
+- Production URL: `https://codemind-graph.vercel.app`.
+- Remote Browser QA passed against the production URL.
 
 ## Verification
 
@@ -170,7 +175,8 @@ Result:
 - `pnpm test:e2e` passed with 16 tests and 2 project-scoped skips.
 - `pnpm check` passed with 19 `node:test` tests.
 - GitHub `main` was pushed and GitHub Actions CI passed.
-- Production Vercel deployment is not complete because Vercel authentication is missing in the local CLI runtime.
+- Production Vercel deployment is complete at `https://codemind-graph.vercel.app`.
+- Vercel standalone build required `apps/web/tsconfig.json` to be self-contained and `typescript` / `@types/node` to be present in `apps/web` dev dependencies.
 
 ## Latest documentation-only update
 

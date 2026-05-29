@@ -347,6 +347,8 @@ Deliverables:
 
 ### Slice W5: Vercel Deployment
 
+Status: complete.
+
 Deliverables:
 
 - Vercel project setup
@@ -355,12 +357,19 @@ Deliverables:
 - production deployment
 - README deployment link after production is stable
 
+Implemented:
+
+- Vercel project `codemind-graph` linked under `vincent-lius-projects-de5eeb92`.
+- GitHub repository connected to the Vercel project.
+- Production deployment completed.
+- Production URL: `https://codemind-graph.vercel.app`.
+- Remote Browser QA passed against production.
+- README includes the production website URL.
+
 ## Recommended Next Website Task
 
-When the project owner explicitly switches from core graph work to website implementation, start with:
+When the project owner explicitly switches back to website implementation, the next optional tasks are:
 
 ```text
-Implement Slice W5: Vercel preview deployment.
+Custom domain setup, analytics, or Git-linked automatic deployment refinement.
 ```
-
-Slice W4 is implemented and verified. The next website-specific step is creating a Vercel preview deployment, running remote Browser QA, and only then deciding whether to promote to production.
