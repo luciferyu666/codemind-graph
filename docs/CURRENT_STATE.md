@@ -31,6 +31,7 @@ Last updated: 2026-05-30
 - `packages/core` exposes reusable graph query helpers used by CLI commands.
 - `packages/mcp-server` exposes a read-only MCP skeleton with `find_symbol`, `get_repo_map`, and `trace_symbol`.
 - GitHub Actions CI is configured in `.github/workflows/ci.yml` for push and pull request.
+- Release checkpoint `b2d85fd` has been pushed to GitHub `main`; GitHub Actions CI passed `pnpm check`.
 - Official website and Vercel deployment planning is captured in `docs/OFFICIAL_WEBSITE_PLAN.md`.
 - `apps/web` official website skeleton is implemented with Next.js, React, TypeScript, Tailwind CSS, `/en`, and `/zh-TW`.
 - Root `pnpm check` now includes the web typecheck and production build.
@@ -56,6 +57,7 @@ Last updated: 2026-05-30
 - MCP currently reads only `.codemind/graph.json`; live indexing from MCP is intentionally out of scope.
 - CI badge is not added yet; add it after the first GitHub Actions run is visible on `main`.
 - Vercel project setup and production deployment are not implemented yet.
+- Vercel project linking is blocked until Vercel CLI authentication or a `VERCEL_TOKEN` is available for `vincent-lius-projects-de5eeb92`.
 - Codex in-app Browser currently has no registered `iab` backend in this app runtime.
 - Codex Chrome Extension is installed and available in the selected Chrome profile.
 

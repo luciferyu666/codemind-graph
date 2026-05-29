@@ -35,7 +35,17 @@ Last updated: 2026-05-30
 - Repository visibility: public.
 - Repository URL: `https://github.com/luciferyu666/codemind-graph`.
 - Local `origin` points to `https://github.com/luciferyu666/codemind-graph.git`.
-- Initial bootstrap commit pushed to `origin/main`.
+- Release checkpoint `b2d85fd` (`feat: prepare official website for Vercel launch`) pushed to `origin/main`.
+- GitHub Actions CI run `26664570193` passed `pnpm check` on `main`.
+
+## Vercel status
+
+- Target dashboard/team slug requested by project owner: `vincent-lius-projects-de5eeb92`.
+- Vercel CLI is installed as `41.4.1`.
+- Vercel CLI is not authenticated in this Windows runtime.
+- No local `.vercel/project.json` link exists yet.
+- `vercel link --yes --project codemind-graph --scope vincent-lius-projects-de5eeb92 --cwd apps/web` is blocked until `vercel login` or `--token` credentials are available.
+- Vercel connector could not list projects for `vincent-lius-projects-de5eeb92`, so production deployment is pending user-side Vercel authentication.
 
 ## Verification
 
@@ -159,6 +169,8 @@ Result:
 - Updated sitemap, robots, route metadata, Playwright route assertions, and visual baselines.
 - `pnpm test:e2e` passed with 16 tests and 2 project-scoped skips.
 - `pnpm check` passed with 19 `node:test` tests.
+- GitHub `main` was pushed and GitHub Actions CI passed.
+- Production Vercel deployment is not complete because Vercel authentication is missing in the local CLI runtime.
 
 ## Latest documentation-only update
 

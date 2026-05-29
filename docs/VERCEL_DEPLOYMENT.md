@@ -15,6 +15,13 @@ Current readiness:
 - Locale pages publish canonical, alternate, Open Graph, and Twitter metadata.
 - Browser QA covers routing, metadata, sitemap, robots, Engineering Practices pages, and visual baselines.
 
+Latest deployment attempt:
+
+- GitHub `main` has been pushed through release checkpoint `b2d85fd`.
+- GitHub Actions CI run `26664570193` passed `pnpm check`.
+- Vercel CLI project linking is blocked because the local runtime has no Vercel credentials.
+- The next required action is `vercel login` or providing a `VERCEL_TOKEN` for the target team.
+
 ## Vercel Project Settings
 
 Use these settings when creating the Vercel project from GitHub:
