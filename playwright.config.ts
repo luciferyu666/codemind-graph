@@ -6,6 +6,9 @@ const baseURL = externalBaseUrl ?? `http://127.0.0.1:${webPort}`;
 
 export default defineConfig({
   testDir: "./test/e2e",
+  expect: {
+    timeout: 15_000,
+  },
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,

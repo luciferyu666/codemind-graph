@@ -49,7 +49,8 @@ Last updated: 2026-05-30
 - Vercel project Root Directory is configured as `apps/web`.
 - Vercel project ID: `prj_1KX0DWGVnWAarFwnBMDWwEikvNoT`.
 - Vercel org ID: `team_J3gReNe6pjh5lSeqL4I7vKTw`.
-- Production deployment ID: `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv`.
+- Manual production deployment ID: `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv`.
+- Git-triggered production deployment ID: `dpl_4WescTDuCzWjERWBetMXH5krotBf`.
 - Production URL: `https://codemind-graph.vercel.app`.
 - Remote Browser QA passed against the production URL.
 

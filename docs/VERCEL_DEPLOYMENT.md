@@ -23,7 +23,8 @@ Latest deployment:
 - Vercel project `codemind-graph` is linked under `vincent-lius-projects-de5eeb92`.
 - GitHub repository `https://github.com/luciferyu666/codemind-graph` is connected to the Vercel project.
 - Vercel project Root Directory is configured as `apps/web`.
-- Production deployment `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv` completed successfully.
+- Manual production deployment `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv` completed successfully.
+- Git-triggered production deployment `dpl_4WescTDuCzWjERWBetMXH5krotBf` completed successfully after Root Directory was set to `apps/web`.
 - Production URL: `https://codemind-graph.vercel.app`
 - Remote Browser QA passed against the production URL with `pnpm test:e2e:remote`.
 
