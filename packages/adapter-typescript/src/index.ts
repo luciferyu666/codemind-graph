@@ -223,10 +223,12 @@ function extractImportOrExport(
 
   if (ts.isExportDeclaration(node) && node.moduleSpecifier !== undefined && ts.isStringLiteral(node.moduleSpecifier)) {
     const moduleNode = createModuleNode(rootDir, sourceFile.fileName, node.moduleSpecifier.text, compilerOptions);
+    const exportNames = exportNamesForDeclaration(node);
     builder.addNode(moduleNode);
     builder.addEdge(createGraphEdge("EXPORTS", fileNodeId, moduleNode.id, sourceFile, node, relativeFilePath, {
       specifier: node.moduleSpecifier.text,
-      exportKind: "re-export",
+      exportKind: exportKindForDeclaration(node),
+      ...(exportNames.length === 0 ? {} : { exportNames }),
     }));
   }
 }
@@ -456,6 +458,10 @@ function importKindForDeclaration(node: ts.ImportDeclaration): string {
     return "side-effect";
   }
 
+  if (node.importClause.isTypeOnly) {
+    return "type";
+  }
+
   if (node.importClause.namedBindings !== undefined && ts.isNamespaceImport(node.importClause.namedBindings)) {
     return "namespace";
   }
@@ -469,6 +475,34 @@ function importKindForDeclaration(node: ts.ImportDeclaration): string {
   }
 
   return "named";
+}
+
+function exportKindForDeclaration(node: ts.ExportDeclaration): string {
+  if (node.isTypeOnly) {
+    return "type-re-export";
+  }
+
+  if (node.exportClause === undefined) {
+    return "export-all";
+  }
+
+  if (ts.isNamespaceExport(node.exportClause)) {
+    return "namespace-re-export";
+  }
+
+  return "re-export";
+}
+
+function exportNamesForDeclaration(node: ts.ExportDeclaration): readonly string[] {
+  if (node.exportClause === undefined) {
+    return ["*"];
+  }
+
+  if (ts.isNamespaceExport(node.exportClause)) {
+    return [`* as ${node.exportClause.name.text}`];
+  }
+
+  return node.exportClause.elements.map((element) => element.name.text).sort();
 }
 
 function isExported(node: ts.Node): boolean {

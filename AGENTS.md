@@ -32,6 +32,7 @@ Build only:
 Do not build yet:
 
 - Web dashboard
+- Vercel deployment, unless the project owner explicitly switches to deployment work
 - Full natural language QA
 - Automatic code editing
 - Write-capable MCP tools
@@ -48,6 +49,7 @@ Use a pnpm TypeScript monorepo:
 - `packages/cli`: command line interface
 - `packages/mcp-server`: read-only MCP tools
 - `examples/ts-basic`: small test repository
+- `apps/web`: official website package
 
 ## Development Commands
 

@@ -12,14 +12,22 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [x] Verify `pnpm install`, `pnpm typecheck`, `pnpm test`, and `pnpm build`.
 - [x] Implement graph schema in `packages/core`.
 - [x] Implement TypeScript Compiler API import and symbol extraction in `packages/adapter-typescript`.
+- [x] Add TypeScript adapter fixture coverage for imports, re-exports, classes, and methods.
 - [ ] Implement CLI commands:
   - [x] `index`
   - [x] `find`
-  - [ ] `trace`
+  - [x] `trace`
   - [ ] `explain`
   - [x] `map`
-- [ ] Implement read-only MCP server tools.
+  - [x] `mcp start`
+- [x] Implement read-only MCP server tools:
+  - [x] `find_symbol`
+  - [x] `get_repo_map`
+  - [x] `trace_symbol`
+- [x] Wire MCP server through `codemind mcp start`.
+- [x] Add MCP stdio protocol smoke coverage for `find_symbol` and `get_repo_map`.
 - [x] Generate `CODEMIND.md` repository map.
+- [x] Add GitHub Actions CI for `pnpm check`.
 
 ## Phase 002: Context ranking and ecosystem integration
 
@@ -35,19 +43,39 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [ ] Add technical debt scoring.
 - [ ] Add onboarding guide generation.
 
+## Phase 004: Official Website and Vercel Deployment
+
+See `docs/OFFICIAL_WEBSITE_PLAN.md`.
+
+- [x] Capture official website plan.
+- [x] Scaffold `apps/web` with Next.js, React, TypeScript, and Tailwind CSS.
+- [x] Add English and Traditional Chinese locale routes.
+- [x] Build landing hero and product dashboard showcase skeleton.
+- [x] Add Playwright Browser QA workflow for E2E, screenshots, and visual baselines.
+- [x] Add sitemap, robots, and complete SEO metadata.
+- [x] Update CI to include web build after `apps/web` exists.
+- [x] Add GitHub Actions Browser QA workflow for website-related pull requests.
+- [x] Add Vercel deployment readiness checklist.
+- [ ] Configure Vercel project and production deployment.
+
 ## 90-Day Strategic Focus
 
 Day 1-30:
 
 - Complete CodeMind Graph v0.1 deterministic graph query flow.
 - Finish `codemind index`, `codemind find`, and `codemind map`. Done.
+- Add `codemind trace`. Done.
 - Generate `CODEMIND.md`. Done.
 
 Day 31-60:
 
-- Add read-only MCP server.
-- Expose `find_symbol` and `get_repo_map`.
-- Add schema validation for MCP tool inputs.
+- Add read-only MCP server. Done.
+- Expose `find_symbol` and `get_repo_map`. Done.
+- Expose `trace_symbol`. Done.
+- Add schema validation for MCP tool inputs. Done.
+- Wire MCP server through `codemind mcp start`. Done.
+- Add MCP protocol smoke coverage. Done.
+- Add GitHub Actions CI. Done.
 
 Day 61-90:
 
@@ -56,4 +84,5 @@ Day 61-90:
 
 Day 90+:
 
+- Build the official CodeMind Graph website and public Vercel demo after core graph and MCP workflows are stable.
 - Keep QuantAgent Lab as a separate vertical-domain brand project after CodeMind Graph has a working public demo.

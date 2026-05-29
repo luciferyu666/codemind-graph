@@ -59,9 +59,11 @@ Day 1-30:
 
 Day 31-60:
 
-- Add read-only MCP server.
-- Provide `find_symbol` and `get_repo_map`.
-- Add schema validation for tool inputs.
+- Add read-only MCP server. Done.
+- Provide `find_symbol` and `get_repo_map`. Done.
+- Add schema validation for tool inputs. Done.
+- Wire `codemind mcp start`. Done.
+- Add GitHub Actions CI. Done.
 
 Day 61-90:
 
@@ -71,4 +73,3 @@ Day 61-90:
 Day 90+:
 
 - Revisit QuantAgent Lab as a separate vertical-domain brand project.
-

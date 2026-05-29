@@ -2,6 +2,12 @@ node_modules/
 dist/
 coverage/
 .codemind/
+.next/
+.vercel/
+playwright-report/
+test-results/
+*.log
+*.tsbuildinfo
 
 .env
 .env.*
@@ -13,4 +19,3 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
-

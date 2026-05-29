@@ -12,11 +12,17 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `pnpm build` passes.
 - [x] `packages/core` contains graph node and edge types.
 - [x] `packages/adapter-typescript` extracts TypeScript source files, functions, classes, interfaces, imports, and exports with the TypeScript Compiler API.
+- [x] TypeScript adapter fixtures cover import kinds, local/external module resolution, re-exports, classes, and class methods.
 - [x] `codemind index examples/ts-basic` writes graph data under `.codemind/`.
 - [x] `codemind find <symbol>` returns a deterministic result.
+- [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, and related module context.
 - [x] `codemind map --format markdown` generates `CODEMIND.md`.
-- [ ] `codemind mcp start` exposes read-only tools.
-- [ ] No write-capable MCP tools exist.
+- [x] `packages/mcp-server` exposes read-only `find_symbol` and `get_repo_map` tools.
+- [x] `packages/mcp-server` exposes read-only `trace_symbol` over the same core trace helper used by CLI.
+- [x] `codemind mcp start` exposes read-only tools.
+- [x] MCP stdio protocol smoke coverage verifies initialize, `tools/list`, and `tools/call` for `find_symbol` and `get_repo_map`.
+- [x] No write-capable MCP tools exist.
+- [x] GitHub Actions runs `pnpm check` on push and pull request.
 - [x] `docs/SESSION_STATE.md` and `docs/DECISIONS.md` are updated.
 
 ## Evaluation Weights

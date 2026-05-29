@@ -12,7 +12,8 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@codemind/core": "workspace:*"
+    "@codemind/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
   }
 }
-

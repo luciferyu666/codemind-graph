@@ -96,3 +96,243 @@ test("extractTypeScriptGraph extracts files, symbols, imports, and exports", asy
     await rm(rootDir, { recursive: true, force: true });
   }
 });
+
+test("extractTypeScriptGraph covers rich import, re-export, class, and method fixtures", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-ts-fixtures-"));
+
+  try {
+    await mkdir(path.join(rootDir, "src"), { recursive: true });
+    await writeTsConfig(rootDir);
+    await writeFile(
+      path.join(rootDir, "src", "external.d.ts"),
+      [
+        'declare module "external-lib" {',
+        "  export const externalValue: number;",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "src", "setup.ts"),
+      ["export const setupFlag = true;", ""].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "src", "models.ts"),
+      [
+        "export interface Report {",
+        "  title: string;",
+        "}",
+        "",
+        "export type ReportId = string;",
+        "",
+        "export enum ReportStatus {",
+        '  Draft = "draft",',
+        "}",
+        "",
+      ].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "src", "math.ts"),
+      [
+        "export default function calculate(value: number): number {",
+        "  return value * 2;",
+        "}",
+        "",
+        "export function sum(left: number, right: number): number {",
+        "  return left + right;",
+        "}",
+        "",
+        "export interface NumericValue {",
+        "  value: number;",
+        "}",
+        "",
+        "export class Calculator {",
+        "  constructor(private readonly factor = 2) {}",
+        "",
+        "  multiply(value: number): number {",
+        "    return value * this.factor;",
+        "  }",
+        "",
+        "  static create(): Calculator {",
+        "    return new Calculator();",
+        "  }",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "src", "barrel.ts"),
+      [
+        'export { Calculator, sum } from "./math.js";',
+        'export type { NumericValue } from "./math.js";',
+        'export * from "./models.js";',
+        "",
+      ].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "src", "consumer.ts"),
+      [
+        'import "./setup.js";',
+        'import calculate, { Calculator, sum as add } from "./math.js";',
+        'import type { NumericValue } from "./math.js";',
+        'import * as models from "./models.js";',
+        'import { externalValue } from "external-lib";',
+        "",
+        "export class ReportService {",
+        "  build(value: NumericValue): models.Report {",
+        "    const calculated = calculate(add(value.value, externalValue));",
+        "    return { title: this.normalize(String(calculated)) };",
+        "  }",
+        "",
+        "  private normalize(title: string): string {",
+        "    return title.trim();",
+        "  }",
+        "",
+        "  static create(): ReportService {",
+        "    return new ReportService();",
+        "  }",
+        "}",
+        "",
+        "export const reportStatus = models.ReportStatus.Draft;",
+        "export const calculator = Calculator.create();",
+        "",
+      ].join("\n"),
+    );
+
+    const result = await extractTypeScriptGraph({ rootDir });
+    const graph = result.graph;
+
+    assert.deepEqual(result.sourceFiles, [
+      "src/barrel.ts",
+      "src/consumer.ts",
+      "src/math.ts",
+      "src/models.ts",
+      "src/setup.ts",
+    ]);
+    assert.equal(result.diagnostics.length, 0);
+
+    assertSymbol(graph, "function", "calculate", { exported: true, filePath: "src/math.ts" });
+    assertSymbol(graph, "function", "sum", { exported: true, filePath: "src/math.ts" });
+    assertSymbol(graph, "interface", "NumericValue", { exported: true, filePath: "src/math.ts" });
+    assertSymbol(graph, "class", "Calculator", { exported: true, filePath: "src/math.ts" });
+    assertSymbol(graph, "method", "Calculator.multiply", { exported: false, filePath: "src/math.ts" });
+    assertSymbol(graph, "method", "Calculator.create", { exported: false, filePath: "src/math.ts" });
+    assertSymbol(graph, "class", "ReportService", { exported: true, filePath: "src/consumer.ts" });
+    assertSymbol(graph, "method", "ReportService.build", { exported: false, filePath: "src/consumer.ts" });
+    assertSymbol(graph, "method", "ReportService.normalize", { exported: false, filePath: "src/consumer.ts" });
+    assertSymbol(graph, "method", "ReportService.create", { exported: false, filePath: "src/consumer.ts" });
+    assertSymbol(graph, "enum", "ReportStatus", { exported: true, filePath: "src/models.ts" });
+
+    assertImportEdge(graph, "src/consumer.ts", "./setup.js", {
+      importKind: "side-effect",
+      targetName: "src/setup.ts",
+      targetSource: "project",
+    });
+    assertImportEdge(graph, "src/consumer.ts", "./math.js", {
+      importKind: "default-and-named",
+      targetName: "src/math.ts",
+      targetSource: "project",
+    });
+    assertImportEdge(graph, "src/consumer.ts", "./math.js", {
+      importKind: "type",
+      targetName: "src/math.ts",
+      targetSource: "project",
+    });
+    assertImportEdge(graph, "src/consumer.ts", "./models.js", {
+      importKind: "namespace",
+      targetName: "src/models.ts",
+      targetSource: "project",
+    });
+    assertImportEdge(graph, "src/consumer.ts", "external-lib", {
+      importKind: "named",
+      targetName: "external-lib",
+      targetSource: "external",
+    });
+
+    assertExportEdge(graph, "src/barrel.ts", "./math.js", {
+      exportKind: "re-export",
+      exportNames: ["Calculator", "sum"],
+      targetName: "src/math.ts",
+    });
+    assertExportEdge(graph, "src/barrel.ts", "./math.js", {
+      exportKind: "type-re-export",
+      exportNames: ["NumericValue"],
+      targetName: "src/math.ts",
+    });
+    assertExportEdge(graph, "src/barrel.ts", "./models.js", {
+      exportKind: "export-all",
+      exportNames: ["*"],
+      targetName: "src/models.ts",
+    });
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+async function writeTsConfig(rootDir) {
+  await writeFile(
+    path.join(rootDir, "tsconfig.json"),
+    JSON.stringify(
+      {
+        compilerOptions: {
+          target: "ES2022",
+          module: "NodeNext",
+          moduleResolution: "NodeNext",
+          strict: true,
+        },
+        include: ["src/**/*.ts"],
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+function assertSymbol(graph, kind, name, expected) {
+  const node = graph.nodes.find((candidate) => candidate.kind === kind && candidate.name === name);
+
+  assert.ok(node, `Expected ${kind}:${name}`);
+  assert.equal(node.filePath, expected.filePath);
+  assert.equal(node.metadata?.exported, expected.exported);
+}
+
+function assertImportEdge(graph, filePath, specifier, expected) {
+  const edge = findFileEdge(graph, "IMPORTS", filePath, specifier, expected.importKind);
+  const targetNode = getNode(graph, edge.toId);
+
+  assert.equal(edge.metadata?.importKind, expected.importKind);
+  assert.equal(targetNode.name, expected.targetName);
+  assert.equal(targetNode.source, expected.targetSource);
+}
+
+function assertExportEdge(graph, filePath, specifier, expected) {
+  const edge = findFileEdge(graph, "EXPORTS", filePath, specifier, expected.exportKind);
+  const targetNode = getNode(graph, edge.toId);
+
+  assert.equal(edge.metadata?.exportKind, expected.exportKind);
+  assert.deepEqual(edge.metadata?.exportNames, expected.exportNames);
+  assert.equal(targetNode.name, expected.targetName);
+}
+
+function findFileEdge(graph, kind, filePath, specifier, edgeKind) {
+  const fileNode = graph.nodes.find((node) => node.kind === "file" && node.filePath === filePath);
+
+  assert.ok(fileNode, `Expected file node ${filePath}`);
+
+  const edge = graph.edges.find((candidate) => (
+    candidate.kind === kind
+    && candidate.fromId === fileNode.id
+    && candidate.metadata?.specifier === specifier
+    && (candidate.metadata?.importKind === edgeKind || candidate.metadata?.exportKind === edgeKind)
+  ));
+
+  assert.ok(edge, `Expected ${kind} edge from ${filePath} to ${specifier} with kind ${edgeKind}`);
+  return edge;
+}
+
+function getNode(graph, nodeId) {
+  const node = graph.nodes.find((candidate) => candidate.id === nodeId);
+
+  assert.ok(node, `Expected node ${nodeId}`);
+  return node;
+}

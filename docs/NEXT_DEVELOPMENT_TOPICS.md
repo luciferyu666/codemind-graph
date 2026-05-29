@@ -8,11 +8,16 @@ Implemented:
 
 - Windows Codex App workspace and persistent engineering workflow.
 - GitHub repository and local pnpm TypeScript monorepo.
+- 2026 open-source strategy captured in `docs/OPEN_SOURCE_STRATEGY_2026.md`.
+- 2026 AI Agent infrastructure strategy captured in `docs/AI_AGENT_INFRASTRUCTURE_WHITEPAPER_2026.md`.
+- CodeMind Graph engineering practice standard captured in `docs/ENGINEERING_PRACTICE_STANDARD.md`.
 - `packages/core` graph schema and deterministic `GraphBuilder`.
 - `packages/adapter-typescript` TypeScript Compiler API extraction.
+- `docs/TOOLCHAIN.md` verified local toolchain and Current vs Planned documentation boundary.
 - `packages/cli` commands:
   - `codemind index <path>`
   - `codemind find <symbol>`
+  - `codemind trace <symbol>`
   - `codemind map --format markdown`
 - `.codemind/graph.json` JSON graph index.
 - `CODEMIND.md` markdown repo map output.
@@ -20,11 +25,10 @@ Implemented:
 
 Not yet implemented:
 
-- `codemind trace`
 - `codemind explain`
-- read-only MCP server
+- broader real-world TypeScript repository fixtures
 - visualization UI
-- deployment pipeline
+- Vercel deployment pipeline
 
 ## Product Direction
 
@@ -100,6 +104,8 @@ The CLI, MCP server, future UI, and AI reasoning workflow should share the same 
 
 Priority: P1
 
+Status: initial CLI slice complete.
+
 Goal:
 
 Support dependency-oriented graph reasoning.
@@ -112,11 +118,11 @@ codemind trace <symbol> --root <path>
 
 Deliverables:
 
-- trace symbol to file
-- show imported modules for the symbol file
-- show exported symbols from the file
+- trace symbol to file done
+- show imported modules for the symbol file done
+- show exported symbols from the file done
 - later: resolve cross-file references and call edges
-- focused tests over `examples/ts-basic`
+- focused tests over generated graph fixtures done
 
 Why this matters:
 
@@ -126,14 +132,17 @@ Trace is the first step toward impact analysis and graph-based reasoning.
 
 Priority: P1
 
+Status: initial slice complete for `find_symbol`, `get_repo_map`, and `codemind mcp start`.
+
 Goal:
 
 Expose CodeMind Graph to AI coding agents through read-only tools.
 
 Initial tools:
 
-- `find_symbol`
-- `get_repo_map`
+- `find_symbol` done
+- `get_repo_map` done
+- `trace_symbol` done
 - `list_modules`
 - `trace_dependency`
 
@@ -186,12 +195,12 @@ Improve graph quality before adding visualization.
 Deliverables:
 
 - richer TypeScript examples
-- namespace import handling tests
-- default export tests
-- re-export tests
-- class method tests
+- namespace import handling tests done
+- default export tests done
+- re-export tests done
+- class method tests done
 - interface/type alias coverage
-- external module nodes
+- external module nodes done
 - basic `REFERENCES` edges
 - later `CALLS` edges
 
@@ -236,6 +245,13 @@ Deliverables:
 - clear stale-index warnings
 - agent handoff instructions generated from graph output
 
+Recommended Slice H direction:
+
+- Use source fingerprints, not mtime alone.
+- Store indexed timestamp, root path, scanner version, source file count, latest mtime, content hash, and optional Git state.
+- Return freshness states as `fresh`, `stale`, or `unknown`.
+- Keep stale warnings deterministic for CLI and read-only MCP output.
+
 ### 9. UI and Visualization
 
 Priority: P3
@@ -262,6 +278,8 @@ Avoid early:
 
 Priority: P3
 
+Status: official website plan captured; implementation not started.
+
 Goal:
 
 Deploy public docs and demo visualization, not private repo analysis.
@@ -280,9 +298,71 @@ Do not deploy:
 - local MCP server
 - engineering session notes
 
+### 10A. Official Website
+
+Priority: P2
+
+Status: Slice W1 complete; bilingual landing skeleton exists in `apps/web`.
+
+Goal:
+
+Create the official website for CodeMind Graph as an AI-native graph platform landing page and future Vercel deployment target.
+
+Recommended package:
+
+- `apps/web`
+
+Initial deliverables:
+
+- Next.js + React + TypeScript + Tailwind CSS done
+- English and Traditional Chinese locale routes done
+- landing hero skeleton done
+- product dashboard showcase skeleton done
+- feature sections done
+- language switcher done
+- GitHub repository CTA done
+- SEO metadata and language alternates
+- Playwright Browser QA pipeline done
+
+Constraints:
+
+- no private repo graph data
+- no local MCP endpoint exposure
+- no engineering memory documents as product content
+- no Vercel deployment before a production build passes locally
+
+### 10B. Browser QA Pipeline
+
+Priority: P1
+
+Status: initial Playwright slice complete; Codex App browser bridge requires external setup.
+
+Goal:
+
+Make website and future product UI changes verifiable through real browser automation.
+
+Implemented:
+
+- `@playwright/test` runtime
+- desktop and mobile Chromium projects
+- E2E tests for routing, language switching, and anchors
+- visual baseline snapshots
+- local production-server flow
+- remote deployed URL flow through `CODEMIND_WEB_BASE_URL`
+- GitHub Actions Browser QA workflow
+- browser bridge diagnostics documented
+
+Remaining external setup:
+
+- Codex in-app Browser currently has no registered `iab` backend.
+- Codex Chrome Extension is not installed in the selected Chrome profile.
+- Chrome native host manifest is correct.
+
 ### 11. GitHub Workflow
 
 Priority: P1
+
+Status: initial CI slice complete.
 
 Goal:
 
@@ -290,9 +370,9 @@ Make every agent-generated change safe to review.
 
 Deliverables:
 
-- GitHub Actions CI
-- `pnpm install --frozen-lockfile`
-- `pnpm check`
+- GitHub Actions CI done
+- `pnpm install --frozen-lockfile` done
+- `pnpm check` done
 - dependency audit gate
 - pull request template
 - issue templates for graph bugs and adapter bugs
@@ -369,17 +449,22 @@ pnpm check
 
 ### Slice C: Read-only MCP Skeleton
 
+Status: complete.
+
 Outcome:
 
 `codemind mcp start` starts a read-only MCP server that can return graph context.
 
-Tasks:
+Completed tasks:
 
-- Add MCP SDK dependency with ADR entry.
-- Add tool schemas.
-- Implement `find_symbol`.
-- Implement `get_repo_map`.
-- Add tests for handlers without requiring an external MCP client.
+- Added MCP SDK dependency with ADR entry.
+- Added tool schemas.
+- Implemented `find_symbol`.
+- Implemented `get_repo_map`.
+- Wired `codemind mcp start --root <path>` through `packages/cli`.
+- Added tests for handlers without requiring an external MCP client.
+- Added CLI delegation tests for MCP startup.
+- Added protocol-level smoke coverage through SDK stdio client transport.
 
 Verification:
 
@@ -390,20 +475,107 @@ node packages/cli/dist/index.js mcp start --root examples/ts-basic
 
 ### Slice D: GitHub CI
 
+Status: complete.
+
 Outcome:
 
 Every push and PR runs project verification.
 
-Tasks:
+Completed tasks:
 
-- Add `.github/workflows/ci.yml`.
-- Run `pnpm install --frozen-lockfile`.
-- Run `pnpm check`.
-- Add README status badge after workflow is active.
+- Added `.github/workflows/ci.yml`.
+- Runs `pnpm install --frozen-lockfile`.
+- Runs `pnpm check`.
+- Uses `windows-latest`, Node.js `24.x`, and pnpm `10.10.0`.
+
+Remaining:
+
+- Add README status badge after the first workflow run is visible on GitHub.
 
 Verification:
 
 - GitHub Actions passes on `main`.
+
+### Slice W0: Official Website Planning
+
+Status: complete.
+
+Outcome:
+
+Official website and Vercel deployment architecture is captured without introducing web dependencies into the current core graph checkpoint.
+
+Completed tasks:
+
+- Added `docs/OFFICIAL_WEBSITE_PLAN.md`.
+- Added Phase 004 website roadmap.
+- Defined `apps/web` as the recommended future package boundary.
+- Defined bilingual, SEO, Vercel, safety, and privacy requirements.
+
+### Slice W1: Next.js Website Scaffold
+
+Status: complete.
+
+Outcome:
+
+`apps/web` exists as a Vercel-ready Next.js app with bilingual route structure.
+
+Completed tasks:
+
+- Added `apps/*` to `pnpm-workspace.yaml`.
+- Scaffolded `apps/web`.
+- Added TypeScript and Tailwind CSS.
+- Added `/en` and `/zh-TW` routes.
+- Added language switcher skeleton.
+- Added `pnpm --filter @codemind/web build`.
+- Updated root `pnpm check` so CI runs the web typecheck and production build.
+
+Verification:
+
+```powershell
+pnpm install
+pnpm --filter @codemind/web build
+pnpm check
+```
+
+### Slice W4: SEO and Vercel Readiness
+
+Status: complete.
+
+Outcome:
+
+The website has production-ready metadata, sitemap, robots, and a Vercel setup checklist.
+
+Tasks:
+
+- Added `sitemap.ts`.
+- Added `robots.ts`.
+- Completed Open Graph and Twitter metadata strategy.
+- Documented Vercel project settings in `docs/VERCEL_DEPLOYMENT.md`.
+- Added pre-deploy and remote Browser QA checklist.
+- Added Playwright coverage for SEO endpoints and locale metadata.
+
+### Slice W4a: Browser QA Pipeline
+
+Status: complete.
+
+Outcome:
+
+Website changes can be tested in Chromium across desktop and mobile projects with screenshots and visual baselines.
+
+Completed tasks:
+
+- Added `playwright.config.ts`.
+- Added `test/e2e/web.spec.ts`.
+- Added `pnpm test:e2e`, `pnpm test:e2e:update`, `pnpm test:e2e:headed`, and `pnpm test:e2e:remote`.
+- Added `.github/workflows/browser-qa.yml`.
+- Added `docs/BROWSER_QA_WORKFLOW.md`.
+
+Verification:
+
+```powershell
+pnpm playwright:install
+pnpm test:e2e
+```
 
 ## Long-term Roadmap
 
@@ -413,9 +585,10 @@ Verification:
 - JSON graph index
 - CLI `index`
 - CLI `find`
+- CLI `trace`
 - CLI `map`
 - `CODEMIND.md`
-- read-only MCP skeleton
+- read-only MCP skeleton with `codemind mcp start`
 - CI
 
 ### v0.2: Better Context for Agents
@@ -447,6 +620,7 @@ Verification:
 ### v0.5: Visualization and Deployment
 
 - static graph report
+- official website on Vercel
 - hosted public demo on Vercel
 - docs site
 - example visualizations
@@ -456,9 +630,13 @@ Verification:
 The next task should be:
 
 ```text
-Implement Slice C: read-only MCP skeleton with find_symbol and get_repo_map.
+Add Graph freshness / stale index warning metadata.
 ```
 
 Reason:
 
-The CLI demo loop is now in place. The next v0.1 gap is exposing the same graph context through safe read-only MCP tools.
+The CLI and MCP deterministic query loop now includes find, map, and trace. The next best reliability step is making graph freshness explicit so agents know when `.codemind/graph.json` may be stale. Export 6 recommends using source fingerprints rather than relying on mtime alone.
+
+Website note:
+
+The official website track now has a working Next.js skeleton, Browser QA pipeline, and Slice W4 SEO readiness. Continue with Slice W5 only when prioritizing Vercel preview deployment.

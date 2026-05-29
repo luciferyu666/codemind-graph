@@ -51,5 +51,51 @@ Run checks:
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm check
 ```
 
+Run the local graph CLI demo:
+
+```powershell
+node packages/cli/dist/index.js index examples/ts-basic
+node packages/cli/dist/index.js find greet --root examples/ts-basic
+node packages/cli/dist/index.js trace greet --root examples/ts-basic
+node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
+```
+
+Run the official website locally:
+
+```powershell
+pnpm --filter @codemind/web dev
+```
+
+Run browser QA for the official website:
+
+```powershell
+pnpm playwright:install
+pnpm test:e2e
+```
+
+Run the same browser QA against a deployed URL:
+
+```powershell
+$env:CODEMIND_WEB_BASE_URL = "https://your-vercel-site.vercel.app"
+pnpm test:e2e:remote
+Remove-Item Env:\CODEMIND_WEB_BASE_URL
+```
+
+Prepare the official website for Vercel:
+
+```powershell
+pnpm --filter @codemind/web build
+pnpm test:e2e
+pnpm check
+```
+
+Vercel deployment readiness notes are maintained in `docs/VERCEL_DEPLOYMENT.md`. Set `NEXT_PUBLIC_CODEMIND_SITE_URL` before production launch if the final public URL differs from `https://codemind-graph.vercel.app`.
+
+## CI
+
+GitHub Actions runs `pnpm install --frozen-lockfile` and `pnpm check` on push and pull request.
+
+Browser QA is defined in `.github/workflows/browser-qa.yml` and runs Playwright Chromium checks for website-related pull requests.

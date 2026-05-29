@@ -6,13 +6,21 @@
   "description": "Local-first code knowledge graph and read-only MCP server for AI coding agents.",
   "packageManager": "pnpm@10.10.0",
   "scripts": {
-    "build": "tsc -b",
-    "typecheck": "tsc -b --pretty false",
-    "test": "pnpm build && node --test",
+    "build": "pnpm build:packages && pnpm --filter @codemind/web build",
+    "build:packages": "tsc -b",
+    "typecheck": "tsc -b --pretty false && pnpm --filter @codemind/web typecheck",
+    "test": "pnpm build:packages && node --test \"test/*.test.mjs\"",
+    "test:e2e": "pnpm --filter @codemind/web build && playwright test",
+    "test:e2e:headed": "pnpm --filter @codemind/web build && playwright test --headed",
+    "test:e2e:remote": "playwright test",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:update": "pnpm --filter @codemind/web build && playwright test --update-snapshots",
     "check": "pnpm typecheck && pnpm test && pnpm build",
+    "playwright:install": "playwright install chromium",
     "clean": "pnpm --recursive exec powershell -NoProfile -Command \"if (Test-Path dist) { Remove-Item -Recurse -Force dist }\""
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
   }

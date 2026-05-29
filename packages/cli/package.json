@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@codemind/core": "workspace:*",
-    "@codemind/adapter-typescript": "workspace:*"
+    "@codemind/adapter-typescript": "workspace:*",
+    "@codemind/mcp-server": "workspace:*"
   }
 }
-

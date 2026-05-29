@@ -282,3 +282,192 @@ test("codemind map writes deterministic CODEMIND.md", async () => {
     await rm(rootDir, { recursive: true, force: true });
   }
 });
+
+test("codemind trace reads .codemind/graph.json and reports symbol context", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-trace-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "helper.ts"),
+      ["export function formatName(name: string): string {", "  return name.trim();", "}", ""].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      [
+        'import { formatName } from "./helper.js";',
+        "",
+        "export function greet(name: string): string {",
+        "  return `Hello, ${formatName(name)}`;",
+        "}",
+        "",
+      ].join("\n"),
+    );
+
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["trace", "greet", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# Trace/m);
+    assert.match(stdout, /Query: `greet`/);
+    assert.match(stdout, /Matches: 1/);
+    assert.match(stdout, /- Symbol: `function greet`/);
+    assert.match(stdout, /- File: `src\/index\.ts`/);
+    assert.match(stdout, /^### Imports/m);
+    assert.match(stdout, /\| src\/index\.ts \| module:src\/helper\.ts \| \.\/helper\.js \| named \|/);
+    assert.match(stdout, /^### Exports/m);
+    assert.match(stdout, /\| src\/index\.ts \| function:greet \|  \| named \|/);
+    assert.match(stdout, /^### Related Modules/m);
+    assert.match(stdout, /\| src\/helper\.ts \| project \| \.\/helper\.js \|/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind trace returns 2 when no symbols match", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-trace-empty-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(path.join(rootDir, "sample", "src", "index.ts"), "export const answer = 42;\n");
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["trace", "missing", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 2);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# Trace/m);
+    assert.match(stdout, /No symbols found for `missing`\./);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind mcp start delegates to the read-only MCP server", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-mcp-cli-"));
+
+  try {
+    let stdout = "";
+    let stderr = "";
+    let startedRootDir = "";
+    const exitCode = await runCli(["mcp", "start", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+      async startMcpServer(options) {
+        startedRootDir = options.rootDir;
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(stdout, "");
+    assert.equal(stderr, "");
+    assert.equal(startedRootDir, path.join(rootDir, "sample"));
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind mcp start rejects unknown options", async () => {
+  let stdout = "";
+  let stderr = "";
+  let started = false;
+  const exitCode = await runCli(["mcp", "start", "--write"], {
+    stdout: {
+      write(chunk) {
+        stdout += String(chunk);
+      },
+    },
+    stderr: {
+      write(chunk) {
+        stderr += String(chunk);
+      },
+    },
+    async startMcpServer() {
+      started = true;
+    },
+  });
+
+  assert.equal(exitCode, 1);
+  assert.equal(stdout, "");
+  assert.match(stderr, /Unknown option for mcp start: --write/);
+  assert.equal(started, false);
+});

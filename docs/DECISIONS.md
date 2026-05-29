@@ -63,3 +63,49 @@ Date: 2026-05-28
 Decision: The first TypeScript adapter extracts project source files, imported modules, functions, classes, interfaces, type aliases, enums, variables, methods, and export edges. It returns a `CodeGraph` directly rather than writing storage.
 
 Reasoning: v0.1 needs deterministic extraction before introducing SQLite storage, CLI persistence, or MCP transport. Keeping extraction pure makes it easy to test and reuse across CLI and MCP packages.
+
+## ADR-0009: Implement MCP tools over persisted graph indexes only
+
+Date: 2026-05-28
+
+Decision: The initial MCP server uses `@modelcontextprotocol/sdk` with Zod input schemas and exposes only read-only graph tools: `find_symbol` and `get_repo_map`. These tools read `.codemind/graph.json`, reuse `packages/core` query and map rendering helpers, and do not expose file writes, shell execution, package installation, Git operations, or engineering memory files.
+
+Reasoning: MCP should provide AI agents with deterministic product context while preserving the v0.1 safety boundary. Reading an already-generated graph index keeps MCP behavior predictable and avoids mixing indexing side effects into tool calls.
+
+Guardrail: Tool inputs may select a root or graph path only inside the configured MCP root, preventing accidental reads outside the selected workspace.
+
+## ADR-0010: Start MCP through CLI without stdout preamble
+
+Date: 2026-05-28
+
+Decision: `codemind mcp start --root <path>` delegates directly to `packages/mcp-server` and starts the MCP stdio transport without writing human-readable status output to stdout.
+
+Reasoning: MCP stdio uses stdout as the protocol stream. Keeping startup quiet prevents CLI convenience output from corrupting MCP client handshakes while still allowing tests to verify startup delegation through dependency injection.
+
+## ADR-0011: Run v0.1 CI on Windows with Node 24 and pnpm 10
+
+Date: 2026-05-28
+
+Decision: GitHub Actions CI runs on `windows-latest`, uses Node.js `24.x`, installs pnpm `10.10.0`, runs `pnpm install --frozen-lockfile`, and then runs `pnpm check`.
+
+Reasoning: CodeMind Graph is developed as a Windows-first local tool and the project blueprint targets Node.js 24. CI should validate the same primary runtime family while keeping the verification gate identical to local development.
+
+## ADR-0012: Keep the official website as a separate app track
+
+Date: 2026-05-28
+
+Decision: The official website and Vercel deployment track uses a separate `apps/web` package. It remains separate from `packages/core`, `packages/cli`, and `packages/mcp-server`.
+
+Reasoning: Website dependencies, Vercel deployment, and public marketing content have different release and privacy boundaries than the local graph engine and MCP server. Keeping the site in `apps/web` lets CI include a production build without coupling website implementation to graph package APIs.
+
+Guardrail: The website may use synthetic or public demo graph data, but it must not deploy private `.codemind/graph.json`, local MCP endpoints, or engineering memory files.
+
+## ADR-0013: Use deterministic public SEO metadata for the website
+
+Date: 2026-05-29
+
+Decision: The official website uses deterministic Next.js metadata routes and locale metadata in `apps/web`, with `https://codemind-graph.vercel.app` as the default public origin and `NEXT_PUBLIC_CODEMIND_SITE_URL` as the override for preview, production, or future custom domain deployment.
+
+Reasoning: Sitemap, robots, canonical URLs, alternate language links, and social metadata must be stable for tests, previews, and Vercel deployment while still allowing the final production origin to be configured without code changes.
+
+Guardrail: SEO and deployment metadata must not expose `.codemind/`, `Documentations/`, engineering memory files, private graph data, or local MCP endpoints as public website content.

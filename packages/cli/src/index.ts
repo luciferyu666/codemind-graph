@@ -6,32 +6,34 @@ import { pathToFileURL } from "node:url";
 import { extractTypeScriptGraph, type TypeScriptExtractionResult } from "@codemind/adapter-typescript";
 import {
   findSymbols,
-  getNodeById,
-  listExports,
-  listFiles,
-  listImports,
-  listSymbols,
-  type CodeGraph,
-  type GraphEdge,
+  formatNodeLocation,
+  isGraphIndexFile,
+  renderMarkdownRepoMap,
+  renderMarkdownSymbolTrace,
+  traceSymbols,
+  type GraphIndexFile,
   type GraphNode,
 } from "@codemind/core";
+import type { CodeMindMcpOptions } from "@codemind/mcp-server";
 
 export interface CliOptions {
   readonly cwd?: string;
   readonly stdout?: WritableLike;
   readonly stderr?: WritableLike;
-}
-
-export interface GraphIndexFile {
-  readonly schemaVersion: "0.1.0";
-  readonly rootDir: string;
-  readonly sourceFiles: readonly string[];
-  readonly diagnostics: readonly string[];
-  readonly graph: TypeScriptExtractionResult["graph"];
+  readonly startMcpServer?: StartMcpServer;
 }
 
 interface WritableLike {
   write(chunk: string): unknown;
+}
+
+type StartMcpServer = (options: CodeMindMcpOptions) => Promise<void>;
+
+interface ResolvedCliOptions {
+  readonly cwd: string;
+  readonly stdout: WritableLike;
+  readonly stderr: WritableLike;
+  readonly startMcpServer: StartMcpServer;
 }
 
 interface IndexArgs {
@@ -45,11 +47,21 @@ interface FindArgs {
   readonly graphPath?: string;
 }
 
+interface TraceArgs {
+  readonly symbol: string;
+  readonly rootPath?: string;
+  readonly graphPath?: string;
+}
+
 interface MapArgs {
   readonly rootPath?: string;
   readonly graphPath?: string;
   readonly outputPath?: string;
   readonly format: "markdown";
+}
+
+interface McpArgs {
+  readonly rootPath?: string;
 }
 
 interface GraphPathArgs {
@@ -62,19 +74,30 @@ const HELP_TEXT = `CodeMind Graph CLI
 Usage:
   codemind index <path> [--out <file>]
   codemind find <symbol> [--root <path>] [--graph <file>]
+  codemind trace <symbol> [--root <path>] [--graph <file>]
   codemind map [--root <path>] [--graph <file>] [--format markdown] [--out <file>]
+  codemind mcp start [--root <path>]
 
 Commands:
   index   Build a TypeScript graph and write .codemind/graph.json
   find    Find symbols in .codemind/graph.json
+  trace   Trace a symbol to its file imports, exports, and related modules
   map     Generate CODEMIND.md from .codemind/graph.json
+  mcp     Start the read-only MCP server
 `;
 
 export async function runCli(argv = process.argv.slice(2), options: CliOptions = {}): Promise<number> {
   const stdout = options.stdout ?? process.stdout;
   const stderr = options.stderr ?? process.stderr;
   const cwd = path.resolve(options.cwd ?? process.cwd());
+  const startMcpServer = options.startMcpServer ?? defaultStartMcpServer;
   const [command, ...args] = argv;
+  const resolvedOptions: ResolvedCliOptions = {
+    cwd,
+    stdout,
+    stderr,
+    startMcpServer,
+  };
 
   try {
     if (command === undefined || command === "--help" || command === "-h") {
@@ -84,19 +107,31 @@ export async function runCli(argv = process.argv.slice(2), options: CliOptions =
 
     if (command === "index") {
       const indexArgs = parseIndexArgs(args);
-      await runIndexCommand(indexArgs, { cwd, stdout, stderr });
+      await runIndexCommand(indexArgs, resolvedOptions);
       return 0;
     }
 
     if (command === "find") {
       const findArgs = parseFindArgs(args);
-      const found = await runFindCommand(findArgs, { cwd, stdout, stderr });
+      const found = await runFindCommand(findArgs, resolvedOptions);
+      return found ? 0 : 2;
+    }
+
+    if (command === "trace") {
+      const traceArgs = parseTraceArgs(args);
+      const found = await runTraceCommand(traceArgs, resolvedOptions);
       return found ? 0 : 2;
     }
 
     if (command === "map") {
       const mapArgs = parseMapArgs(args);
-      await runMapCommand(mapArgs, { cwd, stdout, stderr });
+      await runMapCommand(mapArgs, resolvedOptions);
+      return 0;
+    }
+
+    if (command === "mcp") {
+      const mcpArgs = parseMcpArgs(args);
+      await runMcpCommand(mcpArgs, resolvedOptions);
       return 0;
     }
 
@@ -196,6 +231,56 @@ function parseFindArgs(args: readonly string[]): FindArgs {
   };
 }
 
+function parseTraceArgs(args: readonly string[]): TraceArgs {
+  let symbol: string | undefined;
+  let rootPath: string | undefined;
+  let graphPath: string | undefined;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--root") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --root");
+      }
+      rootPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--graph") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --graph");
+      }
+      graphPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg?.startsWith("-")) {
+      throw new Error(`Unknown option for trace: ${arg}`);
+    }
+
+    if (symbol !== undefined) {
+      throw new Error(`Unexpected extra argument for trace: ${arg}`);
+    }
+
+    symbol = arg;
+  }
+
+  if (symbol === undefined) {
+    throw new Error("Usage: codemind trace <symbol> [--root <path>] [--graph <file>]");
+  }
+
+  return {
+    symbol,
+    ...(rootPath === undefined ? {} : { rootPath }),
+    ...(graphPath === undefined ? {} : { graphPath }),
+  };
+}
+
 function parseMapArgs(args: readonly string[]): MapArgs {
   let rootPath: string | undefined;
   let graphPath: string | undefined;
@@ -263,7 +348,43 @@ function parseMapArgs(args: readonly string[]): MapArgs {
   };
 }
 
-async function runIndexCommand(args: IndexArgs, options: Required<CliOptions>): Promise<void> {
+function parseMcpArgs(args: readonly string[]): McpArgs {
+  const [subcommand, ...remainingArgs] = args;
+
+  if (subcommand === undefined || subcommand === "--help" || subcommand === "-h") {
+    throw new Error("Usage: codemind mcp start [--root <path>]");
+  }
+
+  if (subcommand !== "start") {
+    throw new Error(`Unknown mcp subcommand: ${subcommand}\nUsage: codemind mcp start [--root <path>]`);
+  }
+
+  let rootPath: string | undefined;
+
+  for (let index = 0; index < remainingArgs.length; index += 1) {
+    const arg = remainingArgs[index];
+
+    if (arg === "--root") {
+      const nextArg = remainingArgs[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --root");
+      }
+      rootPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg?.startsWith("-")) {
+      throw new Error(`Unknown option for mcp start: ${arg}`);
+    }
+
+    throw new Error(`Unexpected argument for mcp start: ${arg}`);
+  }
+
+  return rootPath === undefined ? {} : { rootPath };
+}
+
+async function runIndexCommand(args: IndexArgs, options: ResolvedCliOptions): Promise<void> {
   const rootDir = path.resolve(options.cwd, args.targetPath);
   const extraction = await extractTypeScriptGraph({ rootDir });
   const graphFile = createGraphIndexFile(extraction);
@@ -285,7 +406,7 @@ async function runIndexCommand(args: IndexArgs, options: Required<CliOptions>): 
   }
 }
 
-async function runFindCommand(args: FindArgs, options: Required<CliOptions>): Promise<boolean> {
+async function runFindCommand(args: FindArgs, options: ResolvedCliOptions): Promise<boolean> {
   const graphPath = resolveGraphPath(args, options.cwd);
   const indexFile = await readGraphIndexFile(graphPath);
   const matches = findSymbols(indexFile.graph, args.symbol);
@@ -302,7 +423,7 @@ async function runFindCommand(args: FindArgs, options: Required<CliOptions>): Pr
     const location = formatNodeLocation(match);
     options.stdout.write(`- ${match.kind} ${match.name}`);
     if (location.length > 0) {
-      options.stdout.write(` ${location}`);
+      options.stdout.write(` (${location})`);
     }
     options.stdout.write(`\n  id: ${match.id}\n`);
   }
@@ -310,7 +431,17 @@ async function runFindCommand(args: FindArgs, options: Required<CliOptions>): Pr
   return true;
 }
 
-async function runMapCommand(args: MapArgs, options: Required<CliOptions>): Promise<void> {
+async function runTraceCommand(args: TraceArgs, options: ResolvedCliOptions): Promise<boolean> {
+  const graphPath = resolveGraphPath(args, options.cwd);
+  const indexFile = await readGraphIndexFile(graphPath);
+  const traces = traceSymbols(indexFile.graph, args.symbol);
+  const markdown = renderMarkdownSymbolTrace(indexFile.graph, args.symbol);
+
+  options.stdout.write(markdown);
+  return traces.length > 0;
+}
+
+async function runMapCommand(args: MapArgs, options: ResolvedCliOptions): Promise<void> {
   const graphPath = resolveGraphPath(args, options.cwd);
   const indexFile = await readGraphIndexFile(graphPath);
   const markdown = renderMarkdownRepoMap(indexFile);
@@ -321,6 +452,16 @@ async function runMapCommand(args: MapArgs, options: Required<CliOptions>): Prom
 
   options.stdout.write(`Generated CODEMIND map for ${indexFile.sourceFiles.length} TypeScript source file(s).\n`);
   options.stdout.write(`Wrote ${path.relative(options.cwd, outputPath).replaceAll("\\", "/")}\n`);
+}
+
+async function runMcpCommand(args: McpArgs, options: ResolvedCliOptions): Promise<void> {
+  const rootDir = args.rootPath === undefined ? options.cwd : path.resolve(options.cwd, args.rootPath);
+  await options.startMcpServer({ rootDir });
+}
+
+async function defaultStartMcpServer(options: CodeMindMcpOptions): Promise<void> {
+  const { startStdioServer } = await import("@codemind/mcp-server");
+  await startStdioServer(options);
 }
 
 function resolveGraphPath(args: GraphPathArgs, cwd: string): string {
@@ -353,167 +494,6 @@ async function readGraphIndexFile(graphPath: string): Promise<GraphIndexFile> {
   }
 
   return parsed;
-}
-
-function isGraphIndexFile(value: unknown): value is GraphIndexFile {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  const candidate = value as Partial<GraphIndexFile>;
-  return candidate.schemaVersion === "0.1.0"
-    && Array.isArray(candidate.sourceFiles)
-    && Array.isArray(candidate.diagnostics)
-    && typeof candidate.graph === "object"
-    && candidate.graph !== null
-    && Array.isArray(candidate.graph.nodes)
-    && Array.isArray(candidate.graph.edges);
-}
-
-function formatNodeLocation(node: GraphNode): string {
-  const filePath = node.filePath ?? node.location?.filePath;
-  if (filePath === undefined) {
-    return "";
-  }
-
-  const position = node.location?.range.start;
-  if (position === undefined) {
-    return `(${filePath})`;
-  }
-
-  return `(${filePath}:${position.line}:${position.column})`;
-}
-
-function renderMarkdownRepoMap(indexFile: GraphIndexFile): string {
-  const graph = indexFile.graph;
-  const lines: string[] = [
-    "# CODEMIND",
-    "",
-    "Generated by CodeMind Graph.",
-    "",
-    "## Overview",
-    "",
-    `- Schema version: \`${indexFile.schemaVersion}\``,
-    `- Root: \`${indexFile.rootDir}\``,
-    `- Source files: ${indexFile.sourceFiles.length}`,
-    `- Nodes: ${graph.nodes.length}`,
-    `- Edges: ${graph.edges.length}`,
-    `- Diagnostics: ${indexFile.diagnostics.length}`,
-    "",
-    "## Files",
-    "",
-    ...renderFilesTable(graph),
-    "",
-    "## Symbols",
-    "",
-    ...renderSymbolsTable(graph),
-    "",
-    "## Imports",
-    "",
-    ...renderEdgeTable(graph, listImports(graph), "Import"),
-    "",
-    "## Exports",
-    "",
-    ...renderEdgeTable(graph, listExports(graph), "Export"),
-    "",
-    "## Diagnostics",
-    "",
-    ...renderDiagnostics(indexFile.diagnostics),
-    "",
-  ];
-
-  return `${lines.join("\n")}\n`;
-}
-
-function renderFilesTable(graph: CodeGraph): readonly string[] {
-  const files = listFiles(graph);
-  if (files.length === 0) {
-    return ["No files indexed."];
-  }
-
-  const rows = files.map((fileNode) => {
-    const symbols = listSymbols(graph).filter((node) => node.filePath === fileNode.filePath).length;
-    const imports = listImports(graph).filter((edge) => edge.fromId === fileNode.id).length;
-    const exports = listExports(graph).filter((edge) => edge.fromId === fileNode.id).length;
-    return `| ${cell(fileNode.filePath ?? fileNode.name)} | ${symbols} | ${imports} | ${exports} |`;
-  });
-
-  return [
-    "| File | Symbols | Imports | Exports |",
-    "| --- | ---: | ---: | ---: |",
-    ...rows,
-  ];
-}
-
-function renderSymbolsTable(graph: CodeGraph): readonly string[] {
-  const symbols = listSymbols(graph);
-  if (symbols.length === 0) {
-    return ["No symbols indexed."];
-  }
-
-  return [
-    "| Kind | Name | Location | Exported |",
-    "| --- | --- | --- | --- |",
-    ...symbols.map((node) => {
-      const exported = node.metadata?.exported === true ? "yes" : "no";
-      return `| ${cell(node.kind)} | ${cell(node.name)} | ${cell(formatPlainNodeLocation(node))} | ${exported} |`;
-    }),
-  ];
-}
-
-function renderEdgeTable(graph: CodeGraph, edges: readonly GraphEdge[], label: string): readonly string[] {
-  if (edges.length === 0) {
-    return [`No ${label.toLocaleLowerCase()} edges indexed.`];
-  }
-
-  return [
-    `| ${label} From | Target | Detail |`,
-    "| --- | --- | --- |",
-    ...edges.map((edge) => {
-      const fromNode = getNodeById(graph, edge.fromId);
-      const toNode = getNodeById(graph, edge.toId);
-      const detail = edge.metadata?.specifier ?? edge.metadata?.exportKind ?? "";
-      return `| ${cell(formatEdgeNode(fromNode))} | ${cell(formatEdgeNode(toNode))} | ${cell(String(detail))} |`;
-    }),
-  ];
-}
-
-function renderDiagnostics(diagnostics: readonly string[]): readonly string[] {
-  if (diagnostics.length === 0) {
-    return ["No diagnostics."];
-  }
-
-  return diagnostics.map((diagnostic) => `- ${diagnostic}`);
-}
-
-function formatPlainNodeLocation(node: GraphNode): string {
-  const filePath = node.filePath ?? node.location?.filePath;
-  if (filePath === undefined) {
-    return "";
-  }
-
-  const position = node.location?.range.start;
-  if (position === undefined) {
-    return filePath;
-  }
-
-  return `${filePath}:${position.line}:${position.column}`;
-}
-
-function formatEdgeNode(node: GraphNode | undefined): string {
-  if (node === undefined) {
-    return "unknown";
-  }
-
-  if (node.kind === "file") {
-    return node.filePath ?? node.name;
-  }
-
-  return `${node.kind}:${node.name}`;
-}
-
-function cell(value: string): string {
-  return value.replaceAll("|", "\\|").replaceAll("\n", " ");
 }
 
 function createGraphIndexFile(extraction: TypeScriptExtractionResult): GraphIndexFile {
