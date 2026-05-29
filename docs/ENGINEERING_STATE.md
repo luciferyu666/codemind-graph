@@ -46,6 +46,7 @@ Last updated: 2026-05-30
 - Active Vercel team: `vincent-lius-projects-de5eeb92` (`Vincent Liu's projects`).
 - `apps/web` is linked to Vercel project `codemind-graph`.
 - GitHub repository `https://github.com/luciferyu666/codemind-graph` is connected to the Vercel project.
+- Vercel project Root Directory is configured as `apps/web`.
 - Vercel project ID: `prj_1KX0DWGVnWAarFwnBMDWwEikvNoT`.
 - Vercel org ID: `team_J3gReNe6pjh5lSeqL4I7vKTw`.
 - Production deployment ID: `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv`.

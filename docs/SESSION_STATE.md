@@ -46,6 +46,7 @@ Implemented in this session:
 - Vercel production deployment to `vincent-lius-projects-de5eeb92` is complete.
 - Official website production URL: `https://codemind-graph.vercel.app`.
 - GitHub repository is connected to the Vercel project for deployment pipeline integration.
+- Vercel project Root Directory is configured as `apps/web`.
 - Remote Browser QA passed against production with `pnpm test:e2e:remote`.
 - Chrome Extension Backend enabled for browser navigation, DOM inspection, screenshots, and click interaction.
 - Browser automation environment diagnostics captured in `docs/BROWSER_QA_WORKFLOW.md`.

@@ -22,6 +22,7 @@ Latest deployment:
 - Vercel CLI was upgraded to `54.6.1` and authenticated as `luciferyu666`.
 - Vercel project `codemind-graph` is linked under `vincent-lius-projects-de5eeb92`.
 - GitHub repository `https://github.com/luciferyu666/codemind-graph` is connected to the Vercel project.
+- Vercel project Root Directory is configured as `apps/web`.
 - Production deployment `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv` completed successfully.
 - Production URL: `https://codemind-graph.vercel.app`
 - Remote Browser QA passed against the production URL with `pnpm test:e2e:remote`.
@@ -33,7 +34,7 @@ Use these settings when creating the Vercel project from GitHub:
 - Target team/dashboard: `vincent-lius-projects-de5eeb92`
 - Repository: `luciferyu666/codemind-graph`
 - Framework preset: Next.js
-- Root directory for local CLI deployment: `apps/web`
+- Root directory: `apps/web`
 - Install command: `pnpm install --frozen-lockfile`
 - Build command: `pnpm --filter @codemind/web build`
 - Output directory: Next.js default
@@ -114,6 +115,13 @@ Implemented Git connection command:
 
 ```powershell
 vercel git connect https://github.com/luciferyu666/codemind-graph --cwd apps/web
+```
+
+Project root directory was verified after update:
+
+```text
+Root Directory: apps/web
+Node.js Version: 24.x
 ```
 
 ## Not In Scope For Slice W4
