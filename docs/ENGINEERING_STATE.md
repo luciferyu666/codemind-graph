@@ -51,7 +51,7 @@ Last updated: 2026-05-30
 - Vercel org ID: `team_J3gReNe6pjh5lSeqL4I7vKTw`.
 - Manual production deployment ID: `dpl_Ga9gXKbh5WfqYBoAp6bHVqa7PQSv`.
 - Git-triggered production deployment ID: `dpl_4WescTDuCzWjERWBetMXH5krotBf`.
-- Vincent Liu profile production deployment ID: `dpl_7NCiYS3e6jfxwGpkp4wpkhfDDXGp`.
+- Vincent Liu profile production deployment is verified through the production alias.
 - Production URL: `https://codemind-graph.vercel.app`.
 - Remote Browser QA passed against the production URL.
 
@@ -219,7 +219,7 @@ Result:
 - Existing local Next.js dev server on `http://127.0.0.1:3000` returned `200` for `/en/vincent-liu` and `/zh-TW/vincent-liu`.
 - Browser plugin verification opened `http://127.0.0.1:3000/en/vincent-liu` through the Chrome Extension backend and confirmed the `Vincent Liu` hero heading is visible with loaded portrait image dimensions `960x1280`.
 - Git commit `9527da4` was pushed to `origin/main`.
-- Vercel production deployment `dpl_7NCiYS3e6jfxwGpkp4wpkhfDDXGp` completed and was aliased to `https://codemind-graph.vercel.app`.
+- Vercel production deployment completed and was aliased to `https://codemind-graph.vercel.app`.
 - Remote Browser QA passed against production with `CODEMIND_WEB_BASE_URL=https://codemind-graph.vercel.app pnpm test:e2e:remote`.
 - GitHub Actions CI run `26678510880` passed on `main`.
 - Vercel error log scan returned no error logs for the last hour.
