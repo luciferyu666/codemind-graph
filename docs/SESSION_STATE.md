@@ -42,6 +42,7 @@ Implemented in this session:
 - Browser QA workflow with Playwright Chromium, E2E routing checks, responsive projects, and visual baselines.
 - Slice W4 SEO and Vercel readiness for `apps/web`, including sitemap, robots, canonical alternates, Open Graph, Twitter metadata, generated social image route, and deployment checklist.
 - Official website Engineering Practices content integration, including landing page `Why CodeMind Graph`, engineering standards, brand positioning sections, and dedicated `/en/engineering` and `/zh-TW/engineering` routes.
+- Vincent Liu digital business card route for `/en/vincent-liu` and `/zh-TW/vincent-liu`, including bilingual profile copy, featured project links, SEO metadata, sitemap/robots coverage, and responsive Browser QA tests.
 - GitHub `main` pushed through release checkpoint `b2d85fd`, and GitHub Actions CI passed `pnpm check`.
 - Vercel production deployment to `vincent-lius-projects-de5eeb92` is complete.
 - Official website production URL: `https://codemind-graph.vercel.app`.
@@ -62,6 +63,8 @@ The 2026-05-28 ChatGPT export has been imported into `Documentations/ChatGPT-專
 The 2026-05-28 Export 5 ChatGPT record has been imported into `Documentations/ChatGPT-專案排序與建議 (5).md`. Its harness and public-roadmap guidance has been distilled into `docs/AGENT_HARNESS.md` and `docs/ROADMAP.md`.
 
 The 2026-05-30 Export 6 ChatGPT record has been imported into `Documentations/ChatGPT-專案排序與建議 (6).md`. Its toolchain, Current vs Planned, MCP Host/Client/Server, Engineering Harness, and Slice H guidance has been distilled into `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-05-30 Export 6.md` and `docs/TOOLCHAIN.md`.
+
+The 2026-05-30 Export 7 ChatGPT record has been imported into `Documentations/ChatGPT-專案排序與建議 (7).md`. Its public-narrative corrections and 90-day focus guidance have been distilled into `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-05-30 Export 7.md`. The main action remains Slice H: Graph freshness / stale index warnings.
 
 The 2026 open-source strategy brief provided in-chat has been distilled into `docs/OPEN_SOURCE_STRATEGY_2026.md`. It captures the Knowledge / Trust / Governance / Proof layer framing while preserving publication cautions around public repo state, MCP wording, Python scope, and source verification.
 
@@ -88,7 +91,7 @@ Current design baseline:
 1. Add Graph freshness / stale index warning metadata using source fingerprints rather than mtime alone.
 2. Improve example project coverage beyond a single exported function if trace needs additional fixtures.
 3. Add MCP protocol smoke coverage for negative/error tool calls if needed.
-4. Create Vercel preview deployment only after the project owner explicitly starts Slice W5.
+4. Prepare README demo and v0.1.0 release tag only after graph freshness is implemented.
 5. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
@@ -97,6 +100,7 @@ Website track:
 - Browser QA is configured through `pnpm test:e2e`.
 - Slice W4 SEO and Vercel readiness is implemented and verified.
 - Slice W4b Engineering Practices content integration is implemented and verified.
+- Slice W6 Vincent Liu digital business card is implemented and verified with a normalized portrait asset from `C:\Users\vince\Downloads\20260528_161756790.JPG`.
 - Keep website public content separate from private `.codemind/` graph data and engineering memory files.
 - Slice W5 Vercel production deployment is complete.
 - Next website slice: add a custom domain or Git-linked automatic deployment settings only when explicitly requested.

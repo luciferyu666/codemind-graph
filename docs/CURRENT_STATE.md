@@ -15,6 +15,8 @@ Last updated: 2026-05-30
 - ChatGPT export `ChatGPT-專案排序與建議 (4).md` has been imported into `Documentations/`.
 - ChatGPT export `ChatGPT-專案排序與建議 (5).md` has been imported into `Documentations/`.
 - ChatGPT export `ChatGPT-專案排序與建議 (6).md` has been imported into `Documentations/`.
+- ChatGPT export `ChatGPT-專案排序與建議 (7).md` has been imported into `Documentations/`.
+- `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-05-30 Export 7.md` captures Export 7's public-narrative corrections and 90-day focus guidance.
 - `docs/AGENT_HARNESS.md` defines Goal, MCP, Rubric, and Governance boundaries.
 - `docs/TOOLCHAIN.md` defines the verified local toolchain and Current vs Planned documentation boundary.
 - `docs/OPEN_SOURCE_STRATEGY_2026.md` captures the 2026 open-source project strategy and positions CodeMind Graph as the Knowledge Layer project.
@@ -41,6 +43,7 @@ Last updated: 2026-05-30
 - Website Slice W4 is implemented with sitemap, robots, canonical alternates, Open Graph metadata, Twitter metadata, generated social image route, and Vercel readiness docs.
 - Website Slice W4b is implemented with bilingual Engineering Practices routes, landing page `Why CodeMind Graph`, engineering standards, and brand positioning sections.
 - Website Slice W5 production deployment is complete at `https://codemind-graph.vercel.app`.
+- Website Slice W6 Vincent Liu digital business card is implemented at `/en/vincent-liu` and `/zh-TW/vincent-liu`.
 - GitHub repository is connected to the Vercel project under `vincent-lius-projects-de5eeb92`.
 - Vercel project Root Directory is configured as `apps/web`.
 - Focused tests cover graph builder determinism and TypeScript extraction.
@@ -60,9 +63,10 @@ Last updated: 2026-05-30
 - MCP currently reads only `.codemind/graph.json`; live indexing from MCP is intentionally out of scope.
 - CI badge is not added yet; add it after the first GitHub Actions run is visible on `main`.
 - Custom domain setup is not implemented yet.
+- The Vincent Liu digital business card uses a normalized portrait asset generated from `C:\Users\vince\Downloads\20260528_161756790.JPG`.
 - Codex in-app Browser currently has no registered `iab` backend in this app runtime.
 - Codex Chrome Extension is installed and available in the selected Chrome profile.
 
 ## Immediate target
 
-Add Graph freshness / stale index warning metadata using source fingerprints, or start Slice W5 Vercel preview deployment only when explicitly requested.
+Add Graph freshness / stale index warning metadata using source fingerprints rather than mtime alone.

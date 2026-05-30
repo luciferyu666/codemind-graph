@@ -637,6 +637,8 @@ Reason:
 
 The CLI and MCP deterministic query loop now includes find, map, and trace. The next best reliability step is making graph freshness explicit so agents know when `.codemind/graph.json` may be stale. Export 6 recommends using source fingerprints rather than relying on mtime alone.
 
+Export 7 reinforces this priority and recommends keeping the 90-day roadmap focused on CodeMind Graph reliability before expanding into DevSec Sentinel, MCP ToolHub, or QuantAgent Lab.
+
 Website note:
 
-The official website track now has a working Next.js skeleton, Browser QA pipeline, and Slice W4 SEO readiness. Continue with Slice W5 only when prioritizing Vercel preview deployment.
+The official website track now has a working Next.js app, Browser QA pipeline, SEO readiness, Engineering Practices content, and production Vercel deployment at `https://codemind-graph.vercel.app`.

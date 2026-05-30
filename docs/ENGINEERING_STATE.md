@@ -61,8 +61,8 @@ Last updated: 2026-05-30
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
 - Tests: passed with `pnpm test` using 19 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-05-30 after Engineering Practices website integration.
-- Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W4b Engineering Practices integration.
+- Consolidated check: passed with `pnpm check` on 2026-05-30 after Vincent Liu digital business card integration.
+- Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with Windows, Node.js `24.x`, pnpm `10.10.0`, frozen install, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests.
 
@@ -72,11 +72,12 @@ Result:
 
 - `apps/web` typecheck passed with `pnpm --filter @codemind/web typecheck`.
 - `apps/web` production build passed with `pnpm --filter @codemind/web build`.
-- Next.js prerenders `/`, `/_not-found`, `/en`, `/zh-TW`, `/en/engineering`, `/zh-TW/engineering`, `/robots.txt`, and `/sitemap.xml`.
+- Next.js prerenders `/`, `/_not-found`, `/en`, `/zh-TW`, `/en/engineering`, `/zh-TW/engineering`, `/en/vincent-liu`, `/zh-TW/vincent-liu`, `/robots.txt`, and `/sitemap.xml`.
 - Locale pages publish canonical links, locale alternates, Open Graph metadata, Twitter metadata, and generated social image references.
-- `/sitemap.xml` contains `/en`, `/zh-TW`, `/en/engineering`, and `/zh-TW/engineering` with language alternates.
-- `/robots.txt` allows public landing pages and Engineering Practices pages, and disallows `.codemind/`, `docs/`, `Documentations/`, and API paths.
+- `/sitemap.xml` contains `/en`, `/zh-TW`, `/en/engineering`, `/zh-TW/engineering`, `/en/vincent-liu`, and `/zh-TW/vincent-liu` with language alternates.
+- `/robots.txt` allows public landing pages, Engineering Practices pages, and Vincent Liu profile pages, and disallows `.codemind/`, `docs/`, `Documentations/`, and API paths.
 - Engineering Practices routes publish locale-specific canonical links, alternates, Open Graph metadata, and Twitter metadata.
+- Vincent Liu digital business card routes publish locale-specific canonical links, alternates, Open Graph metadata, Twitter metadata, featured project links, and responsive layout coverage.
 - Landing page now includes `Why CodeMind Graph`, engineering standards, and brand positioning sections.
 
 ## Browser automation verification
@@ -156,6 +157,7 @@ Result:
 
 - Imported `Documentations/ChatGPT-專案排序與建議 (5).md`.
 - Imported `Documentations/ChatGPT-專案排序與建議 (6).md`.
+- Imported `Documentations/ChatGPT-專案排序與建議 (7).md`.
 - Added `docs/AGENT_HARNESS.md`.
 - Added `docs/NEXT_DEVELOPMENT_TOPICS.md`.
 - Added `docs/OFFICIAL_WEBSITE_PLAN.md` for the future official website and Vercel deployment track.
@@ -165,6 +167,7 @@ Result:
 - Added `docs/OPEN_SOURCE_STRATEGY_2026.md` for the 2026 open-source strategy brief and project ranking.
 - Added `docs/AI_AGENT_INFRASTRUCTURE_WHITEPAPER_2026.md` for the 2026 AI Agent infrastructure strategy whitepaper.
 - Added `docs/ENGINEERING_PRACTICE_STANDARD.md` for CodeMind Graph engineering practice standards.
+- Added `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-05-30 Export 7.md` for public-narrative corrections, 90-day focus, and Slice H prioritization.
 
 ## Latest website update
 
@@ -190,3 +193,27 @@ Result:
 - The in-chat CodeMind Graph engineering practice standard was distilled on 2026-05-30.
 - No TypeScript source files were changed for this import.
 - `pnpm check` was not rerun because the update is documentation-only.
+
+## Latest ChatGPT export update
+
+Result:
+
+- Export 7 was reviewed on 2026-05-30.
+- The raw export was archived under `Documentations/`.
+- The summary emphasizes public-copy precision around GitHub Octoverse, MCP wording, TypeScript monthly contributors, and separate supply-chain incidents.
+- The recommended engineering priority remains Slice H: Graph freshness / stale index warning metadata.
+- No TypeScript source files were changed for this import.
+- `pnpm check` was not rerun because the update is documentation-only.
+
+## Latest website profile update
+
+Result:
+
+- Added Vincent Liu digital business card pages at `/en/vincent-liu` and `/zh-TW/vincent-liu`.
+- Added bilingual profile positioning, contact CTA, core expertise, featured projects, project status, route metadata, sitemap entries, and robots allow rules.
+- Added normalized portrait asset at `apps/web/public/vincent-liu/portrait.jpg` from `C:\Users\vince\Downloads\20260528_161756790.JPG`.
+- `pnpm --filter @codemind/web build` passed.
+- `pnpm test:e2e` passed with 18 tests and 2 project-scoped skips.
+- `pnpm check` passed with 19 `node:test` tests.
+- Existing local Next.js dev server on `http://127.0.0.1:3000` returned `200` for `/en/vincent-liu` and `/zh-TW/vincent-liu`.
+- Browser plugin verification opened `http://127.0.0.1:3000/en/vincent-liu` through the Chrome Extension backend and confirmed the `Vincent Liu` hero heading is visible with loaded portrait image dimensions `960x1280`.

@@ -69,6 +69,8 @@ Initial routes:
 - `/zh-TW`
 - `/en/engineering`
 - `/zh-TW/engineering`
+- `/en/vincent-liu`
+- `/zh-TW/vincent-liu`
 
 Optional later routes:
 
@@ -168,6 +170,27 @@ Content:
 - Example CLI flow
 - Read-only MCP safety message
 - Local-first privacy note
+
+### Personal Digital Business Card
+
+Purpose:
+
+Publish a concise founder/operator profile for Vincent Liu that can be used as a LinkedIn, GitHub, personal brand, project showcase, and About Me destination.
+
+Content:
+
+- Vincent Liu as AI Workflow Architect
+- AI Native Product Builder, Knowledge Graph Engineer, and AI Agent System Architect positioning
+- Contact email
+- Core expertise list
+- Featured project links for GuardVision Edge, TAIFEX Quant Trading Platform, Caregiver VR Training System, and CodeMind Graph
+- Production and productization status
+
+Implementation:
+
+- Dedicated bilingual route at `/en/vincent-liu` and `/zh-TW/vincent-liu`
+- Locale-specific metadata, canonical links, sitemap entries, and robots allow rules
+- Normalized portrait asset from the verified local photo
 
 ## Bilingual Architecture
 
@@ -366,6 +389,25 @@ Implemented:
 - Production URL: `https://codemind-graph.vercel.app`.
 - Remote Browser QA passed against production.
 - README includes the production website URL.
+
+### Slice W6: Vincent Liu Digital Business Card
+
+Status: complete.
+
+Deliverables:
+
+- Bilingual personal profile routes
+- Dark-mode SaaS digital business card layout
+- Core expertise and featured project sections
+- Contact CTA and project status section
+- Locale metadata, canonical links, sitemap entries, and robots allow rules
+- Browser QA coverage for desktop and mobile route behavior
+
+Implemented:
+
+- `/en/vincent-liu`
+- `/zh-TW/vincent-liu`
+- Normalized portrait treatment using `apps/web/public/vincent-liu/portrait.jpg`.
 
 ## Recommended Next Website Task
 

@@ -56,7 +56,9 @@ See `docs/OFFICIAL_WEBSITE_PLAN.md`.
 - [x] Update CI to include web build after `apps/web` exists.
 - [x] Add GitHub Actions Browser QA workflow for website-related pull requests.
 - [x] Add Vercel deployment readiness checklist.
-- [ ] Configure Vercel project and production deployment.
+- [x] Configure Vercel project and production deployment.
+- [x] Connect GitHub repository to Vercel deployment pipeline.
+- [x] Verify production deployment at `https://codemind-graph.vercel.app`.
 
 ## 90-Day Strategic Focus
 
@@ -79,10 +81,12 @@ Day 31-60:
 
 Day 61-90:
 
-- Prototype governance and DevSec integration points.
-- Explore permission profiles and audit logs.
+- Add Graph freshness / stale index warning metadata.
+- Include freshness status in CLI and read-only MCP outputs.
+- Prepare README demo and v0.1.0 release tag after freshness is implemented.
+- Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.
 
 Day 90+:
 
-- Build the official CodeMind Graph website and public Vercel demo after core graph and MCP workflows are stable.
+- Expand DevSec Sentinel and MCP ToolHub concepts after CodeMind Graph v0.1 is reliable.
 - Keep QuantAgent Lab as a separate vertical-domain brand project after CodeMind Graph has a working public demo.

@@ -5,7 +5,16 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/en", "/zh-TW", "/en/engineering", "/zh-TW/engineering", "/sitemap.xml"],
+      allow: [
+        "/",
+        "/en",
+        "/zh-TW",
+        "/en/engineering",
+        "/zh-TW/engineering",
+        "/en/vincent-liu",
+        "/zh-TW/vincent-liu",
+        "/sitemap.xml",
+      ],
       disallow: [
         "/.codemind/",
         "/Documentations/",
