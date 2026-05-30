@@ -44,6 +44,7 @@ Last updated: 2026-05-30
 - Website Slice W4b is implemented with bilingual Engineering Practices routes, landing page `Why CodeMind Graph`, engineering standards, and brand positioning sections.
 - Website Slice W5 production deployment is complete at `https://codemind-graph.vercel.app`.
 - Website Slice W6 Vincent Liu digital business card is implemented at `/en/vincent-liu` and `/zh-TW/vincent-liu`.
+- Website Slice W6 Vincent Liu digital business card is deployed to production at `https://codemind-graph.vercel.app/en/vincent-liu`.
 - GitHub repository is connected to the Vercel project under `vincent-lius-projects-de5eeb92`.
 - Vercel project Root Directory is configured as `apps/web`.
 - Focused tests cover graph builder determinism and TypeScript extraction.

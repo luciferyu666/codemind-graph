@@ -46,6 +46,7 @@ Implemented in this session:
 - GitHub `main` pushed through release checkpoint `b2d85fd`, and GitHub Actions CI passed `pnpm check`.
 - Vercel production deployment to `vincent-lius-projects-de5eeb92` is complete.
 - Official website production URL: `https://codemind-graph.vercel.app`.
+- Vincent Liu digital business card has been deployed to production at `/en/vincent-liu` and `/zh-TW/vincent-liu`.
 - GitHub repository is connected to the Vercel project for deployment pipeline integration.
 - Vercel project Root Directory is configured as `apps/web`.
 - Remote Browser QA passed against production with `pnpm test:e2e:remote`.
