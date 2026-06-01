@@ -43,7 +43,8 @@ Implemented in this session:
 - Slice W4 SEO and Vercel readiness for `apps/web`, including sitemap, robots, canonical alternates, Open Graph, Twitter metadata, generated social image route, and deployment checklist.
 - Official website Engineering Practices content integration, including landing page `Why CodeMind Graph`, engineering standards, brand positioning sections, and dedicated `/en/engineering` and `/zh-TW/engineering` routes.
 - Vincent Liu digital business card route for `/en/vincent-liu` and `/zh-TW/vincent-liu`, including bilingual profile copy, featured project links, SEO metadata, sitemap/robots coverage, and responsive Browser QA tests.
-- GitHub `main` pushed through release checkpoint `b2d85fd`, and GitHub Actions CI passed `pnpm check`.
+- GitHub `main` pushed through release checkpoint `60092e5`, GitHub Actions CI passed `pnpm check`, and release tag `v0.1.0` was pushed.
+- CI workflows now target `windows-2025-vs2026` and opt into `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`.
 - Vercel production deployment to `vincent-lius-projects-de5eeb92` is complete.
 - Official website production URL: `https://codemind-graph.vercel.app`.
 - Vincent Liu digital business card has been deployed to production at `/en/vincent-liu` and `/zh-TW/vincent-liu`.
@@ -101,7 +102,7 @@ Current design baseline:
 
 ## Next steps
 
-1. Consider a `v0.1.0` release tag after reviewing the updated README and generated `CODEMIND.md`.
+1. Verify the CI runtime update on GitHub Actions after pushing the workflow change.
 2. Improve example project coverage beyond a single exported function if trace needs additional fixtures.
 3. Add MCP protocol smoke coverage for negative/error tool calls if needed.
 4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
@@ -130,6 +131,8 @@ Latest implementation update:
 - Slice H graph freshness is implemented and verified with `pnpm check`.
 - v0.1 README demo and release-readiness copy are updated.
 - Legacy Repo Onboarding Pack one-page service plan is added.
+- v0.1.0 release tag is pushed.
+- CI runtime settings are being updated for GitHub's Node.js 24 JavaScript action runtime and Windows 2025 VS 2026 runner image.
 
 ## Resume workflow
 

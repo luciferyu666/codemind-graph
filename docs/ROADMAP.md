@@ -94,7 +94,7 @@ Day 61-90:
 - Add Graph freshness / stale index warning metadata.
 - Use `docs/TASK_DECOMPOSITION_GUIDE.md` as the Slice H task contract.
 - Include freshness status in CLI and read-only MCP outputs.
-- Prepare README demo and v0.1.0 release tag after freshness is implemented.
+- Maintain the pushed `v0.1.0` release checkpoint and use follow-up slices for CI/runtime maintenance, example coverage, and MCP negative-path tests.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.
 
 Day 90+:

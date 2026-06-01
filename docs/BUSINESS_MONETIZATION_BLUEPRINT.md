@@ -456,7 +456,7 @@ Engineering:
 
 - Finish Slice H Graph freshness.
 - Add README demo after freshness is implemented.
-- Prepare v0.1.0 release tag.
+- Maintain the pushed `v0.1.0` release tag and use it as the baseline for first customer-facing demos.
 
 Go-to-market:
 
@@ -494,4 +494,3 @@ Pro Plan monetizes individual power users.
 Team Plan monetizes shared engineering memory.
 Enterprise Plan monetizes governance, audit, policy, and self-hosting.
 ```
-

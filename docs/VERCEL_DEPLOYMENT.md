@@ -17,8 +17,9 @@ Current readiness:
 
 Latest deployment:
 
-- GitHub `main` has been pushed through release checkpoint `b2d85fd`.
-- GitHub Actions CI run `26664570193` passed `pnpm check`.
+- GitHub `main` has been pushed through release checkpoint `60092e5`.
+- Release tag `v0.1.0` has been pushed.
+- GitHub Actions CI run `26744683567` passed `pnpm check`.
 - Vercel CLI was upgraded to `54.6.1` and authenticated as `luciferyu666`.
 - Vercel project `codemind-graph` is linked under `vincent-lius-projects-de5eeb92`.
 - GitHub repository `https://github.com/luciferyu666/codemind-graph` is connected to the Vercel project.

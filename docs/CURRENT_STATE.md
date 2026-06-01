@@ -42,7 +42,9 @@ Last updated: 2026-06-01
 - `packages/mcp-server` exposes a read-only MCP skeleton with `find_symbol`, `get_repo_map`, and `trace_symbol`.
 - `packages/mcp-server` reports graph freshness status in `find_symbol`, `get_repo_map`, and `trace_symbol` responses.
 - GitHub Actions CI is configured in `.github/workflows/ci.yml` for push and pull request.
-- Release checkpoint `b2d85fd` has been pushed to GitHub `main`; GitHub Actions CI passed `pnpm check`.
+- Release checkpoint `60092e5` has been pushed to GitHub `main`; GitHub Actions CI passed `pnpm check`.
+- Release tag `v0.1.0` has been pushed.
+- GitHub Actions CI and Browser QA workflows now target `windows-2025-vs2026` and opt into `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`.
 - Official website and Vercel deployment planning is captured in `docs/OFFICIAL_WEBSITE_PLAN.md`.
 - `apps/web` official website skeleton is implemented with Next.js, React, TypeScript, Tailwind CSS, `/en`, and `/zh-TW`.
 - Root `pnpm check` now includes the web typecheck and production build.
@@ -82,8 +84,8 @@ Last updated: 2026-06-01
 
 ## Immediate target
 
-Slice H, README demo readiness, and Legacy Repo Onboarding Pack updates are implemented and verified with `pnpm check`.
+Slice H, README demo readiness, Legacy Repo Onboarding Pack updates, and `v0.1.0` release tagging are implemented.
 
-After the verification gate passes, review whether to cut a `v0.1.0` release tag.
+Immediate verification target: confirm the CI runtime update passes on GitHub Actions after pushing the workflow change.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

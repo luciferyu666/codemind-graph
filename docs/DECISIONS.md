@@ -90,6 +90,8 @@ Decision: GitHub Actions CI runs on `windows-latest`, uses Node.js `24.x`, insta
 
 Reasoning: CodeMind Graph is developed as a Windows-first local tool and the project blueprint targets Node.js 24. CI should validate the same primary runtime family while keeping the verification gate identical to local development.
 
+Status: Superseded by ADR-0015 for the runner image and JavaScript action runtime setting.
+
 ## ADR-0012: Keep the official website as a separate app track
 
 Date: 2026-05-28
@@ -119,3 +121,13 @@ Decision: `codemind index` writes freshness metadata into `.codemind/graph.json`
 Reasoning: AI agents need to know whether a persisted graph still represents the current repository. File modification times are not enough for deterministic workflows, so v0.1 uses content fingerprints and source file counts. Legacy graph files without freshness metadata remain valid but produce an `unknown` freshness warning instead of crashing.
 
 Guardrail: Freshness checking remains read-only. MCP tools may report `fresh`, `stale`, or `unknown`, but they must not re-index, write files, run shell commands, or expose engineering memory files.
+
+## ADR-0015: Opt CI into Windows 2025 VS 2026 and Node.js 24 action runtime
+
+Date: 2026-06-01
+
+Decision: GitHub Actions CI and Browser QA workflows use `windows-2025-vs2026` and set `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` at workflow level.
+
+Reasoning: GitHub Actions emitted notices that JavaScript actions running on Node.js 20 are deprecated and that `windows-latest` / `windows-2025` are migrating to the Windows Server 2025 Visual Studio 2026 image in June 2026. Opting in explicitly makes the project test against the incoming default runtime before it becomes implicit.
+
+Guardrail: Keep the project runtime under test as Node.js `24.x` and pnpm `10.10.0`; this ADR changes the GitHub Actions JavaScript action runtime and runner image, not the product runtime contract.

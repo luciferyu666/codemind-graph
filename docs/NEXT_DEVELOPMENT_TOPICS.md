@@ -488,7 +488,7 @@ Completed tasks:
 - Added `.github/workflows/ci.yml`.
 - Runs `pnpm install --frozen-lockfile`.
 - Runs `pnpm check`.
-- Uses `windows-latest`, Node.js `24.x`, and pnpm `10.10.0`.
+- Uses `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, and `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`.
 
 Remaining:
 
