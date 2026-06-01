@@ -5,6 +5,7 @@ CodeMind Graph uses AI-native engineering practices, but the engineering harness
 ## Boundary
 
 - `Goal`: defines what an engineering agent should finish.
+- `Task Contract`: defines one task node's inputs, outputs, verification, failure handling, and review gates.
 - `MCP`: defines which repository context tools an AI client may call.
 - `Rubric`: defines whether the work is good enough to accept.
 - `Governance`: defines what is trusted, audited, and allowed in team or enterprise workflows.
@@ -13,6 +14,7 @@ Short version:
 
 ```text
 Goal decides what the agent must complete.
+Task Contract decides how each node is verified and recovered.
 MCP decides what the agent can safely call.
 Rubric decides whether the result is good enough.
 Governance decides whether the workflow can be trusted.
@@ -27,6 +29,7 @@ The following files are part of the persistent engineering harness:
 - `docs/SESSION_STATE.md`
 - `docs/DECISIONS.md`
 - `docs/ENGINEERING_STATE.md`
+- `docs/TASK_DECOMPOSITION_GUIDE.md`
 
 Codex agents should read these files before continuing engineering tasks.
 
@@ -36,8 +39,10 @@ The v0.1 product surface is:
 
 - `codemind index`
 - `codemind find`
+- `codemind trace`
 - `codemind map`
-- read-only MCP tools such as `find_symbol` and `get_repo_map`
+- `codemind mcp start`
+- read-only MCP tools such as `find_symbol`, `get_repo_map`, and `trace_symbol`
 - `CODEMIND.md` repo map output
 
 The MCP server must expose repository graph context only. It must not expose engineering session notes, private planning notes, or Codex handoff state by default.
@@ -67,9 +72,12 @@ Day 31-60:
 
 Day 61-90:
 
-- Prototype governance and DevSec integration points.
-- Explore permission profiles, audit logs, and supply-chain data sources.
+- Add Graph freshness / stale index warning metadata.
+- Include freshness status in CLI and read-only MCP outputs.
+- Use `docs/TASK_DECOMPOSITION_GUIDE.md` to define slice-level task contracts.
 
 Day 90+:
 
+- Prototype governance and DevSec integration points.
+- Explore permission profiles, audit logs, and supply-chain data sources.
 - Revisit QuantAgent Lab as a separate vertical-domain brand project.

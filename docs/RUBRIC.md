@@ -17,12 +17,17 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `codemind find <symbol>` returns a deterministic result.
 - [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, and related module context.
 - [x] `codemind map --format markdown` generates `CODEMIND.md`.
+- [x] `.codemind/graph.json` includes freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
+- [x] `codemind find`, `codemind trace`, and `codemind map` report stale or unknown graph freshness without crashing on legacy graph files.
 - [x] `packages/mcp-server` exposes read-only `find_symbol` and `get_repo_map` tools.
 - [x] `packages/mcp-server` exposes read-only `trace_symbol` over the same core trace helper used by CLI.
+- [x] MCP `find_symbol`, `get_repo_map`, and `trace_symbol` responses include graph freshness status.
 - [x] `codemind mcp start` exposes read-only tools.
-- [x] MCP stdio protocol smoke coverage verifies initialize, `tools/list`, and `tools/call` for `find_symbol` and `get_repo_map`.
+- [x] MCP stdio protocol smoke coverage verifies initialize, `tools/list`, and `tools/call` for `find_symbol`, `get_repo_map`, and `trace_symbol`.
 - [x] No write-capable MCP tools exist.
 - [x] GitHub Actions runs `pnpm check` on push and pull request.
+- [x] README documents the v0.1 quickstart demo, read-only MCP boundary, and v0.1 non-goals.
+- [x] Legacy Repo Onboarding Pack is documented as the first service-oriented wedge.
 - [x] `docs/SESSION_STATE.md` and `docs/DECISIONS.md` are updated.
 
 ## Evaluation Weights

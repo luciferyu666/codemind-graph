@@ -1,6 +1,6 @@
 # Engineering State
 
-Last updated: 2026-05-30
+Last updated: 2026-06-01
 
 ## Local tools
 
@@ -60,9 +60,9 @@ Last updated: 2026-05-30
 - Dependency install: passed with `pnpm install`.
 - Frozen dependency install: passed with `pnpm install --frozen-lockfile`.
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
-- Tests: passed with `pnpm test` using 19 focused `node:test` tests.
+- Tests: passed with `pnpm test` using 22 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-05-30 after Vincent Liu digital business card integration.
+- Consolidated check: passed with `pnpm check` on 2026-06-01 after Slice H graph freshness, README demo, and Legacy Repo Onboarding Pack updates.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with Windows, Node.js `24.x`, pnpm `10.10.0`, frozen install, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests.
@@ -118,9 +118,12 @@ Result:
 
 - Indexed 1 TypeScript source file.
 - Wrote `examples/ts-basic/.codemind/graph.json`.
+- Graph index now includes `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - Found `function greet` in `src/index.ts`.
 - Traced `function greet` to its file-level imports, exports, and related modules.
-- Wrote `examples/ts-basic/CODEMIND.md`.
+- `find` returned no freshness warning for a fresh index.
+- `trace` and `map` include a `Freshness` section when run against a graph index.
+- Wrote `examples/ts-basic/CODEMIND.md` during map verification.
 
 ## Trace verification
 
@@ -129,6 +132,7 @@ Result:
 - `packages/core` exposes `traceSymbols` and `renderMarkdownSymbolTrace`.
 - `codemind trace <symbol>` reads `.codemind/graph.json` and emits deterministic Markdown.
 - Trace output includes symbol, location, file, imports, exports, and related module tables.
+- Trace output includes graph freshness status.
 - No-match trace returns exit code `2` with deterministic Markdown output.
 
 ## MCP verification
@@ -142,6 +146,7 @@ Result:
 - `codemind mcp start --root <path>` delegates to the read-only MCP stdio server without writing stdout before transport startup.
 - MCP protocol smoke coverage starts `node packages/cli/dist/index.js mcp start --root examples/ts-basic` through SDK stdio transport and verifies initialize, `tools/list`, and `tools/call`.
 - Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns Markdown repo map content; protocol-level `trace_symbol` returns symbol trace context.
+- MCP tool responses include graph freshness status.
 - Protocol-level tool metadata verifies read-only, non-destructive, and non-open-world annotations.
 - MCP graph paths are constrained to the selected root.
 - `packages/mcp-server/src` contains no file write APIs, shell execution APIs, engineering memory file exposure, or production `any` types.
@@ -159,6 +164,9 @@ Result:
 - Imported `Documentations/ChatGPT-專案排序與建議 (5).md`.
 - Imported `Documentations/ChatGPT-專案排序與建議 (6).md`.
 - Imported `Documentations/ChatGPT-專案排序與建議 (7).md`.
+- Imported `Documentations/ChatGPT-專案排序與建議 (8).md`.
+- Imported `Documentations/ChatGPT-專案排序與建議 (9).md`.
+- Imported `Documentations/CodeMind Graph 商業化與變現策略藍圖.md`.
 - Added `docs/AGENT_HARNESS.md`.
 - Added `docs/NEXT_DEVELOPMENT_TOPICS.md`.
 - Added `docs/OFFICIAL_WEBSITE_PLAN.md` for the future official website and Vercel deployment track.
@@ -169,6 +177,10 @@ Result:
 - Added `docs/AI_AGENT_INFRASTRUCTURE_WHITEPAPER_2026.md` for the 2026 AI Agent infrastructure strategy whitepaper.
 - Added `docs/ENGINEERING_PRACTICE_STANDARD.md` for CodeMind Graph engineering practice standards.
 - Added `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-05-30 Export 7.md` for public-narrative corrections, 90-day focus, and Slice H prioritization.
+- Added `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-06-01 Export 8.md` for Task Decomposition, Task Contract, Agentic Workflow, MCP safety, `/goal`, and Slice H guidance.
+- Added `docs/TASK_DECOMPOSITION_GUIDE.md` for the Human SOP -> Skill -> Task Contract -> Agentic Workflow model and Slice H task contract.
+- Added `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-06-01 Export 9.md` for enterprise Agentic Workflow refinements and the unresolved monetization-blueprint gap.
+- Added `docs/BUSINESS_MONETIZATION_BLUEPRINT.md` for CodeMind Graph product positioning, commercial model, pricing caveats, target markets, productization stages, and first paid wedge.
 
 ## Latest website update
 
@@ -199,10 +211,22 @@ Result:
 
 Result:
 
-- Export 7 was reviewed on 2026-05-30.
+- Export 9 was reviewed on 2026-06-01.
 - The raw export was archived under `Documentations/`.
-- The summary emphasizes public-copy precision around GitHub Octoverse, MCP wording, TypeScript monthly contributors, and separate supply-chain incidents.
+- The summary emphasizes enterprise Agentic Workflow refinements: hybrid rules + agents + approvals + audit logs, deterministic safety boundaries, structured artifacts, eval logs, HITL workflow gates, and avoiding over-decomposition.
+- The export prompt requested monetization analysis, but the response did not complete a business blueprint.
 - The recommended engineering priority remains Slice H: Graph freshness / stale index warning metadata.
+- No TypeScript source files were changed for this import.
+- `pnpm check` was not rerun because the update is documentation-only.
+
+## Latest business strategy update
+
+Result:
+
+- The CodeMind Graph business and monetization blueprint was reviewed on 2026-06-01.
+- The raw file was archived under `Documentations/`.
+- `docs/BUSINESS_MONETIZATION_BLUEPRINT.md` now defines the open-core, Pro, Team, Enterprise, and Legacy Repo Onboarding Pack strategy.
+- Official competitor pricing pages were spot-checked on 2026-06-01, but public-facing pricing claims should be revalidated before publication.
 - No TypeScript source files were changed for this import.
 - `pnpm check` was not rerun because the update is documentation-only.
 
@@ -223,3 +247,25 @@ Result:
 - Remote Browser QA passed against production with `CODEMIND_WEB_BASE_URL=https://codemind-graph.vercel.app pnpm test:e2e:remote`.
 - GitHub Actions CI run `26678510880` passed on `main`.
 - Vercel error log scan returned no error logs for the last hour.
+
+## Latest Slice H and v0.1 readiness update
+
+Result:
+
+- Implemented graph freshness metadata in `packages/core` and `packages/cli`.
+- `codemind index` writes `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint`.
+- `codemind find`, `codemind trace`, and `codemind map` report stale or unknown graph freshness without crashing on legacy graph files.
+- MCP `find_symbol`, `get_repo_map`, and `trace_symbol` return graph freshness status while preserving the read-only boundary.
+- Added CLI tests for stale source fingerprints and legacy graph indexes without freshness metadata.
+- Added MCP and MCP protocol assertions for freshness status.
+- Updated README with v0.1 positioning, quickstart demo, freshness warnings, read-only MCP safety boundary, scope, and non-goals.
+- Added `docs/LEGACY_REPO_ONBOARDING_PACK.md` for the first service-oriented commercial wedge.
+- Updated `docs/DECISIONS.md`, `docs/RUBRIC.md`, `docs/CURRENT_STATE.md`, and `docs/SESSION_STATE.md`.
+- `pnpm test` passed with 22 `node:test` tests.
+- `pnpm check` passed on 2026-06-01.
+- Manual CLI verification passed:
+
+```powershell
+node packages/cli/dist/index.js index examples/ts-basic
+node packages/cli/dist/index.js find greet --root examples/ts-basic
+```

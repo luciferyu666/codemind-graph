@@ -109,3 +109,13 @@ Decision: The official website uses deterministic Next.js metadata routes and lo
 Reasoning: Sitemap, robots, canonical URLs, alternate language links, and social metadata must be stable for tests, previews, and Vercel deployment while still allowing the final production origin to be configured without code changes.
 
 Guardrail: SEO and deployment metadata must not expose `.codemind/`, `Documentations/`, engineering memory files, private graph data, or local MCP endpoints as public website content.
+
+## ADR-0014: Store source-fingerprint freshness metadata in graph indexes
+
+Date: 2026-06-01
+
+Decision: `codemind index` writes freshness metadata into `.codemind/graph.json`: `indexedAt`, `rootDir`, `sourceFileCount`, and a deterministic `sourceFingerprint` derived from source file paths and file contents. CLI and MCP read paths evaluate this metadata before returning graph context.
+
+Reasoning: AI agents need to know whether a persisted graph still represents the current repository. File modification times are not enough for deterministic workflows, so v0.1 uses content fingerprints and source file counts. Legacy graph files without freshness metadata remain valid but produce an `unknown` freshness warning instead of crashing.
+
+Guardrail: Freshness checking remains read-only. MCP tools may report `fresh`, `stale`, or `unknown`, but they must not re-index, write files, run shell commands, or expose engineering memory files.

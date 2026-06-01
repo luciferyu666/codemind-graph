@@ -11,6 +11,7 @@ Implemented:
 - 2026 open-source strategy captured in `docs/OPEN_SOURCE_STRATEGY_2026.md`.
 - 2026 AI Agent infrastructure strategy captured in `docs/AI_AGENT_INFRASTRUCTURE_WHITEPAPER_2026.md`.
 - CodeMind Graph engineering practice standard captured in `docs/ENGINEERING_PRACTICE_STANDARD.md`.
+- Task Decomposition and Task Contract workflow captured in `docs/TASK_DECOMPOSITION_GUIDE.md`.
 - `packages/core` graph schema and deterministic `GraphBuilder`.
 - `packages/adapter-typescript` TypeScript Compiler API extraction.
 - `docs/TOOLCHAIN.md` verified local toolchain and Current vs Planned documentation boundary.
@@ -247,6 +248,7 @@ Deliverables:
 
 Recommended Slice H direction:
 
+- Follow the task contract in `docs/TASK_DECOMPOSITION_GUIDE.md`.
 - Use source fingerprints, not mtime alone.
 - Store indexed timestamp, root path, scanner version, source file count, latest mtime, content hash, and optional Git state.
 - Return freshness states as `fresh`, `stale`, or `unknown`.
@@ -638,6 +640,23 @@ Reason:
 The CLI and MCP deterministic query loop now includes find, map, and trace. The next best reliability step is making graph freshness explicit so agents know when `.codemind/graph.json` may be stale. Export 6 recommends using source fingerprints rather than relying on mtime alone.
 
 Export 7 reinforces this priority and recommends keeping the 90-day roadmap focused on CodeMind Graph reliability before expanding into DevSec Sentinel, MCP ToolHub, or QuantAgent Lab.
+
+Export 8 reinforces the same priority and adds a task-contract frame for Slice H: define inputs, outputs, success criteria, failure handling, human review gates, and docs update rules before implementing freshness metadata.
+
+Export 9 adds enterprise workflow refinements to the same task-contract model: use hybrid rules + agents + approvals + audit logs, encode safety boundaries deterministically, use structured artifacts, capture eval logs, treat HITL as workflow gates, and avoid over-decomposition.
+
+Business note:
+
+The initial business strategy now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`.
+
+Commercial baseline:
+
+- do not compete as another AI IDE
+- sell repo-specific engineering memory for AI coding agents
+- keep Community Edition useful
+- use Legacy Repo Onboarding Pack as the first paid wedge
+- defer hosted graph API and HA distributed graph storage
+- finish Slice H before commercial packaging
 
 Website note:
 

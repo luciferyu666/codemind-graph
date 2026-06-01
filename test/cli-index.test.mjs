@@ -58,8 +58,134 @@ test("codemind index writes .codemind/graph.json", async () => {
     assert.equal(graphFile.schemaVersion, "0.1.0");
     assert.deepEqual(graphFile.sourceFiles, ["src/index.ts"]);
     assert.equal(graphFile.diagnostics.length, 0);
+    assert.equal(typeof graphFile.freshness.indexedAt, "string");
+    assert.equal(graphFile.freshness.rootDir, graphFile.rootDir);
+    assert.equal(graphFile.freshness.sourceFileCount, 1);
+    assert.match(graphFile.freshness.sourceFingerprint, /^sha256:[a-f0-9]{64}$/);
     assert.ok(nodeNames.has("function:greet"));
     assert.ok(graphFile.graph.edges.some((edge) => edge.kind === "EXPORTS"));
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind find warns when the graph source fingerprint is stale", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-find-stale-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      "export function greet(name: string): string {\n  return `Hello, ${name}`;\n}\n",
+    );
+
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      "export function greet(name: string): string {\n  return `Hi, ${name}`;\n}\n",
+    );
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["find", "greet", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /Warning: graph freshness is stale: source fingerprint changed/);
+    assert.match(stdout, /Found 1 symbol\(s\) for "greet"/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind find warns but does not crash for legacy graph files without freshness metadata", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-find-legacy-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      "export function greet(name: string): string {\n  return `Hello, ${name}`;\n}\n",
+    );
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    const graphFilePath = path.join(rootDir, "sample", ".codemind", "graph.json");
+    const graphFile = JSON.parse(await readFile(graphFilePath, "utf8"));
+    delete graphFile.freshness;
+    await writeFile(graphFilePath, `${JSON.stringify(graphFile, null, 2)}\n`, "utf8");
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["find", "greet", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /Warning: graph freshness is unknown: graph index does not include freshness metadata/);
+    assert.match(stdout, /Found 1 symbol\(s\) for "greet"/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
   }
@@ -269,6 +395,8 @@ test("codemind map writes deterministic CODEMIND.md", async () => {
     assert.match(stdout, /sample\/CODEMIND\.md/);
     assert.match(markdown, /^# CODEMIND/m);
     assert.match(markdown, /^## Overview/m);
+    assert.match(markdown, /^## Freshness/m);
+    assert.match(markdown, /- Status: `fresh`/);
     assert.match(markdown, /^## Files/m);
     assert.match(markdown, /^## Symbols/m);
     assert.match(markdown, /^## Imports/m);
@@ -347,6 +475,8 @@ test("codemind trace reads .codemind/graph.json and reports symbol context", asy
     assert.match(stdout, /^# Trace/m);
     assert.match(stdout, /Query: `greet`/);
     assert.match(stdout, /Matches: 1/);
+    assert.match(stdout, /^## Freshness/m);
+    assert.match(stdout, /- Status: `fresh`/);
     assert.match(stdout, /- Symbol: `function greet`/);
     assert.match(stdout, /- File: `src\/index\.ts`/);
     assert.match(stdout, /^### Imports/m);

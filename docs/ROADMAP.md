@@ -60,6 +60,16 @@ See `docs/OFFICIAL_WEBSITE_PLAN.md`.
 - [x] Connect GitHub repository to Vercel deployment pipeline.
 - [x] Verify production deployment at `https://codemind-graph.vercel.app`.
 
+## Phase 005: Business Strategy And Commercial Validation
+
+See `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`.
+
+- [x] Capture initial business and monetization blueprint.
+- [ ] Finish Slice H Graph freshness before public v0.1 commercial validation.
+- [ ] Prepare Legacy Repo Onboarding Pack one-pager.
+- [ ] Prepare v0.1 README demo and release tag.
+- [ ] Validate first paid onboarding customer.
+
 ## 90-Day Strategic Focus
 
 Day 1-30:
@@ -82,6 +92,7 @@ Day 31-60:
 Day 61-90:
 
 - Add Graph freshness / stale index warning metadata.
+- Use `docs/TASK_DECOMPOSITION_GUIDE.md` as the Slice H task contract.
 - Include freshness status in CLI and read-only MCP outputs.
 - Prepare README demo and v0.1.0 release tag after freshness is implemented.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.

@@ -1,6 +1,6 @@
 # Session State
 
-Last updated: 2026-05-30
+Last updated: 2026-06-01
 
 ## Active session
 
@@ -58,6 +58,11 @@ Implemented in this session:
 - Focused CLI test coverage for MCP startup delegation and invalid MCP startup options.
 - Focused MCP test coverage for symbol lookup, repo map retrieval, no-match behavior, and graph path containment.
 - MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `trace_symbol`.
+- Slice H Graph Freshness is implemented: `codemind index` writes `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint` metadata.
+- CLI `find`, `trace`, and `map` now report stale or unknown graph freshness, including legacy graph files without metadata.
+- MCP `find_symbol`, `get_repo_map`, and `trace_symbol` now return graph freshness status while staying read-only.
+- README now documents the v0.1 quickstart demo, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
+- `docs/LEGACY_REPO_ONBOARDING_PACK.md` defines the first service-oriented commercial wedge.
 
 The 2026-05-28 ChatGPT export has been imported into `Documentations/ChatGPT-專案排序與建議 (4).md`. Its engineering corrections have been distilled into `docs/RUBRIC.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, and `AGENTS.md`.
 
@@ -66,6 +71,12 @@ The 2026-05-28 Export 5 ChatGPT record has been imported into `Documentations/Ch
 The 2026-05-30 Export 6 ChatGPT record has been imported into `Documentations/ChatGPT-專案排序與建議 (6).md`. Its toolchain, Current vs Planned, MCP Host/Client/Server, Engineering Harness, and Slice H guidance has been distilled into `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-05-30 Export 6.md` and `docs/TOOLCHAIN.md`.
 
 The 2026-05-30 Export 7 ChatGPT record has been imported into `Documentations/ChatGPT-專案排序與建議 (7).md`. Its public-narrative corrections and 90-day focus guidance have been distilled into `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-05-30 Export 7.md`. The main action remains Slice H: Graph freshness / stale index warnings.
+
+The 2026-06-01 Export 8 ChatGPT record has been imported into `Documentations/ChatGPT-專案排序與建議 (8).md`. Its Task Decomposition, Task Contract, Agentic Workflow, MCP safety, `/goal`, and Slice H guidance have been distilled into `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-06-01 Export 8.md` and `docs/TASK_DECOMPOSITION_GUIDE.md`. The main action remains Slice H: Graph freshness / stale index warnings, now with an explicit task contract.
+
+The 2026-06-01 Export 9 ChatGPT record has been imported into `Documentations/ChatGPT-專案排序與建議 (9).md`. Its enterprise Agentic Workflow refinements have been distilled into `Documentations/ChatGPT 對話紀錄重點摘要 - 2026-06-01 Export 9.md` and merged into `docs/TASK_DECOMPOSITION_GUIDE.md`. Although the prompt asked for monetization analysis, that export mostly covered enterprise workflow design; the later standalone business blueprint fills the monetization gap.
+
+The CodeMind Graph business and monetization blueprint has been imported into `Documentations/CodeMind Graph 商業化與變現策略藍圖.md` and distilled into `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`. The commercial baseline is open-core plus local-first Pro, Team shared engineering memory, Enterprise governance, and a first paid wedge through Legacy Repo Onboarding Pack.
 
 The 2026 open-source strategy brief provided in-chat has been distilled into `docs/OPEN_SOURCE_STRATEGY_2026.md`. It captures the Knowledge / Trust / Governance / Proof layer framing while preserving publication cautions around public repo state, MCP wording, Python scope, and source verification.
 
@@ -86,14 +97,14 @@ Current design baseline:
 - Public-facing strategy docs should describe MCP as an important open integration protocol rather than the only universal channel.
 - Public-facing security narratives must not collapse the GitHub VS Code extension incident and Mini Shai-Hulud / Shai-Hulud package campaigns into a single uncited event.
 - Engineering standard docs must mark SQLite, Tree-sitter, Python support, full call graph extraction, MCP audit logs, and DevSec integration as planned until implemented.
+- Slice-level implementation should use the Human SOP -> Skill -> Task Contract -> Agentic Workflow model from `docs/TASK_DECOMPOSITION_GUIDE.md`.
 
 ## Next steps
 
-1. Add Graph freshness / stale index warning metadata using source fingerprints rather than mtime alone.
+1. Consider a `v0.1.0` release tag after reviewing the updated README and generated `CODEMIND.md`.
 2. Improve example project coverage beyond a single exported function if trace needs additional fixtures.
 3. Add MCP protocol smoke coverage for negative/error tool calls if needed.
-4. Prepare README demo and v0.1.0 release tag only after graph freshness is implemented.
-5. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
+4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
 
@@ -105,6 +116,20 @@ Website track:
 - Keep website public content separate from private `.codemind/` graph data and engineering memory files.
 - Slice W5 Vercel production deployment is complete.
 - Next website slice: add a custom domain or Git-linked automatic deployment settings only when explicitly requested.
+
+Business strategy track:
+
+- `docs/BUSINESS_MONETIZATION_BLUEPRINT.md` now defines the initial monetization strategy.
+- Commercial positioning: do not sell as another AI IDE or generic graph database; sell repo-specific engineering memory for AI coding agents.
+- First monetizable wedge: Legacy Repo Onboarding Pack.
+- The first wedge is now captured in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.
+- Product strategy remains secondary to finishing Slice H and v0.1 reliability.
+
+Latest implementation update:
+
+- Slice H graph freshness is implemented and verified with `pnpm check`.
+- v0.1 README demo and release-readiness copy are updated.
+- Legacy Repo Onboarding Pack one-page service plan is added.
 
 ## Resume workflow
 

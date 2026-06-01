@@ -1,27 +1,47 @@
 # CodeMind Graph
 
-A local-first code knowledge graph and read-only MCP server that helps AI coding agents understand, query, and maintain large repositories.
+CodeMind Graph is a local-first code knowledge graph and read-only MCP server for AI coding agents.
+
+It turns a TypeScript repository into a deterministic symbol graph, dependency graph, queryable CLI surface, and Markdown repo map that humans and agents can both read.
 
 > Stop feeding agents raw files. Give them a code graph.
 
-## Positioning
+Official website: [codemind-graph.vercel.app](https://codemind-graph.vercel.app)
 
-CodeMind Graph is an AI-native knowledge layer for coding agents. It turns a repository into a deterministic symbol graph, dependency graph, and queryable architecture map.
+## Why This Exists
 
-Official website:
+AI coding agents are useful, but large repositories still break their context. Raw file search, loose summaries, and one-off chat memory do not give an agent a stable model of symbols, files, imports, exports, or stale context.
 
-```text
-https://codemind-graph.vercel.app
-```
+CodeMind Graph focuses on a smaller deterministic loop:
 
-The v0.1 target is intentionally narrow:
+- Build a local graph from repository source files.
+- Query symbols and dependency context from the graph.
+- Generate `CODEMIND.md` as a repo map.
+- Expose the same graph through read-only MCP tools.
+- Warn when `.codemind/graph.json` is stale or missing freshness metadata.
 
-- TypeScript-first repository scanner
-- Symbol graph and dependency graph model
-- CLI-first deterministic queries
-- Read-only MCP server
-- Local-first SQLite storage
-- Persistent project context for long-running Codex sessions
+## v0.1 Scope
+
+Included in v0.1:
+
+- TypeScript-first repository scanner.
+- TypeScript Compiler API extraction for files, imports, exports, functions, classes, interfaces, type aliases, enums, variables, and methods.
+- Deterministic graph schema with stable node and edge IDs.
+- Local `.codemind/graph.json` graph index.
+- Graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
+- CLI commands: `index`, `find`, `trace`, `map`, and `mcp start`.
+- Read-only MCP tools: `find_symbol`, `get_repo_map`, and `trace_symbol`.
+- Deterministic `CODEMIND.md` repo map output.
+
+Non-goals for v0.1:
+
+- No write-capable MCP tools.
+- No automatic code editing.
+- No natural-language `ask` layer.
+- No hosted graph sync.
+- No web dashboard product.
+- No deep Python support.
+- No security scanner.
 
 ## Workspace
 
@@ -60,14 +80,80 @@ pnpm build
 pnpm check
 ```
 
-Run the local graph CLI demo:
+## Quickstart Demo
+
+Build the packages first so the CLI entrypoint exists:
+
+```powershell
+pnpm build:packages
+```
+
+Index the example repository:
 
 ```powershell
 node packages/cli/dist/index.js index examples/ts-basic
+```
+
+Find a symbol:
+
+```powershell
 node packages/cli/dist/index.js find greet --root examples/ts-basic
+```
+
+Trace symbol context:
+
+```powershell
 node packages/cli/dist/index.js trace greet --root examples/ts-basic
+```
+
+Generate the repo map:
+
+```powershell
 node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
 ```
+
+The generated files are:
+
+- `examples/ts-basic/.codemind/graph.json`
+- `examples/ts-basic/CODEMIND.md`
+
+Start the read-only MCP server over stdio:
+
+```powershell
+node packages/cli/dist/index.js mcp start --root examples/ts-basic
+```
+
+`mcp start` intentionally writes no human-readable preamble to stdout because stdout is the MCP protocol stream.
+
+## Freshness Warnings
+
+`codemind index` writes graph freshness metadata into `.codemind/graph.json`:
+
+- `indexedAt`
+- `rootDir`
+- `sourceFileCount`
+- `sourceFingerprint`
+
+`codemind find`, `codemind trace`, `codemind map`, and MCP tools compare the current source fingerprint against the indexed fingerprint. If the index is stale or was created before freshness metadata existed, the output includes a deterministic warning/status instead of crashing.
+
+Example stale warning:
+
+```text
+Warning: graph freshness is stale: source fingerprint changed since the graph was indexed
+```
+
+## Read-only MCP Safety Boundary
+
+The MCP server is read-only by design. v0.1 tools only read `.codemind/graph.json` inside the selected root and return deterministic graph context.
+
+The MCP server does not expose:
+
+- file writes
+- shell execution
+- package installation
+- Git operations
+- code mutation
+- engineering memory files such as `docs/SESSION_STATE.md`
 
 Run the official website locally:
 

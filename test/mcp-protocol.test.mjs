@@ -67,6 +67,8 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     assert.match(findText, /^# find_symbol/m);
     assert.match(findText, /Query: `greet`/);
     assert.match(findText, /Matches: 1/);
+    assert.match(findText, /^## Freshness/m);
+    assert.match(findText, /- Status: `fresh`/);
     assert.match(findText, /\| function \| greet \| src\/index\.ts:1:1 \| yes \|/);
 
     const repoMapResult = await client.callTool({
@@ -77,6 +79,8 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
 
     assert.match(repoMapText, /^# CODEMIND/m);
     assert.match(repoMapText, /^## Overview/m);
+    assert.match(repoMapText, /^## Freshness/m);
+    assert.match(repoMapText, /- Status: `fresh`/);
     assert.match(repoMapText, /^## Symbols/m);
     assert.match(repoMapText, /\| function \| greet \| src\/index\.ts:1:1 \| yes \|/);
 
@@ -90,6 +94,8 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
 
     assert.match(traceText, /^# Trace/m);
     assert.match(traceText, /Query: `greet`/);
+    assert.match(traceText, /^## Freshness/m);
+    assert.match(traceText, /- Status: `fresh`/);
     assert.match(traceText, /- Symbol: `function greet`/);
     assert.match(traceText, /- File: `src\/index\.ts`/);
 

@@ -4,9 +4,11 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+  evaluateGraphFreshness,
   findSymbols,
   formatNodeLocation,
   isGraphIndexFile,
+  renderMarkdownFreshnessSection,
   renderMarkdownRepoMap,
   renderMarkdownSymbolTrace,
   type GraphIndexFile,
@@ -135,6 +137,7 @@ export async function findSymbol(input: FindSymbolInput, options: CodeMindMcpOpt
     root: parsedInput.root,
     graph: parsedInput.graph,
   });
+  const freshness = await evaluateGraphFreshness(indexFile);
   const matches = findSymbols(indexFile.graph, parsedInput.query);
 
   if (matches.length === 0) {
@@ -145,6 +148,8 @@ export async function findSymbol(input: FindSymbolInput, options: CodeMindMcpOpt
       "",
       `Graph: \`${formatOutputPath(graphPath)}\``,
       "",
+      ...renderMarkdownFreshnessSection(freshness),
+      "",
     ].join("\n"));
   }
 
@@ -154,6 +159,8 @@ export async function findSymbol(input: FindSymbolInput, options: CodeMindMcpOpt
     `Query: \`${escapeMarkdown(parsedInput.query)}\``,
     `Graph: \`${formatOutputPath(graphPath)}\``,
     `Matches: ${matches.length}`,
+    "",
+    ...renderMarkdownFreshnessSection(freshness),
     "",
     "| Kind | Name | Location | Exported | Id |",
     "| --- | --- | --- | --- | --- |",
@@ -169,8 +176,9 @@ export async function getRepoMap(input: GetRepoMapInput = {}, options: CodeMindM
     root: parsedInput.root,
     graph: parsedInput.graph,
   });
+  const freshness = await evaluateGraphFreshness(indexFile);
 
-  return textResult(renderMarkdownRepoMap(indexFile));
+  return textResult(renderMarkdownRepoMap(indexFile, freshness));
 }
 
 export async function traceSymbol(input: TraceSymbolInput, options: CodeMindMcpOptions = {}): Promise<CallToolResult> {
@@ -180,8 +188,9 @@ export async function traceSymbol(input: TraceSymbolInput, options: CodeMindMcpO
     root: parsedInput.root,
     graph: parsedInput.graph,
   });
+  const freshness = await evaluateGraphFreshness(indexFile);
 
-  return textResult(renderMarkdownSymbolTrace(indexFile.graph, parsedInput.query));
+  return textResult(renderMarkdownSymbolTrace(indexFile.graph, parsedInput.query, freshness));
 }
 
 async function readGraphIndex(options: GraphReadOptions): Promise<{

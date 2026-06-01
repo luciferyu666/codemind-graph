@@ -26,6 +26,8 @@ test("findSymbol reads graph.json and returns matching symbols", async () => {
     assert.match(text, /^# find_symbol/m);
     assert.match(text, /Query: `greet`/);
     assert.match(text, /Matches: 1/);
+    assert.match(text, /^## Freshness/m);
+    assert.match(text, /- Status: `fresh`/);
     assert.match(text, /\| function \| greet \| src\/index\.ts:1:1 \| yes \|/);
     assert.doesNotMatch(text, /SESSION_STATE/);
   } finally {
@@ -45,6 +47,32 @@ test("findSymbol returns a deterministic no-match response", async () => {
 
     assert.match(text, /^# find_symbol/m);
     assert.match(text, /No symbols found for `missing`\./);
+    assert.match(text, /^## Freshness/m);
+    assert.match(text, /- Status: `fresh`/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("findSymbol reports stale freshness when indexed source content changes", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-mcp-find-stale-"));
+
+  try {
+    await writeSampleProject(rootDir);
+    await indexSampleProject(rootDir);
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      ["export function greet(name: string): string {", "  return `Hi, ${name}`;", "}", ""].join("\n"),
+    );
+
+    const result = await findSymbol({ query: "greet", root: "sample" }, { rootDir });
+    const text = readTextResult(result);
+
+    assert.match(text, /^# find_symbol/m);
+    assert.match(text, /Matches: 1/);
+    assert.match(text, /^## Freshness/m);
+    assert.match(text, /- Status: `stale`/);
+    assert.match(text, /source fingerprint changed/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
   }
@@ -62,6 +90,8 @@ test("getRepoMap reads graph.json and returns markdown repo map", async () => {
 
     assert.match(text, /^# CODEMIND/m);
     assert.match(text, /^## Overview/m);
+    assert.match(text, /^## Freshness/m);
+    assert.match(text, /- Status: `fresh`/);
     assert.match(text, /^## Symbols/m);
     assert.match(text, /\| function \| greet \| src\/index\.ts:1:1 \| yes \|/);
     assert.doesNotMatch(text, /SESSION_STATE/);
@@ -83,6 +113,8 @@ test("traceSymbol reads graph.json and returns markdown symbol trace", async () 
     assert.match(text, /^# Trace/m);
     assert.match(text, /Query: `greet`/);
     assert.match(text, /Matches: 1/);
+    assert.match(text, /^## Freshness/m);
+    assert.match(text, /- Status: `fresh`/);
     assert.match(text, /- Symbol: `function greet`/);
     assert.match(text, /- File: `src\/index\.ts`/);
     assert.match(text, /^### Imports/m);

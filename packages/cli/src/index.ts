@@ -5,9 +5,12 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { extractTypeScriptGraph, type TypeScriptExtractionResult } from "@codemind/adapter-typescript";
 import {
+  createGraphFreshnessMetadata,
+  evaluateGraphFreshness,
   findSymbols,
   formatNodeLocation,
   isGraphIndexFile,
+  renderFreshnessWarning,
   renderMarkdownRepoMap,
   renderMarkdownSymbolTrace,
   traceSymbols,
@@ -387,7 +390,7 @@ function parseMcpArgs(args: readonly string[]): McpArgs {
 async function runIndexCommand(args: IndexArgs, options: ResolvedCliOptions): Promise<void> {
   const rootDir = path.resolve(options.cwd, args.targetPath);
   const extraction = await extractTypeScriptGraph({ rootDir });
-  const graphFile = createGraphIndexFile(extraction);
+  const graphFile = await createGraphIndexFile(extraction);
   const outputPath = args.outputPath === undefined
     ? path.join(rootDir, ".codemind", "graph.json")
     : path.resolve(options.cwd, args.outputPath);
@@ -409,6 +412,8 @@ async function runIndexCommand(args: IndexArgs, options: ResolvedCliOptions): Pr
 async function runFindCommand(args: FindArgs, options: ResolvedCliOptions): Promise<boolean> {
   const graphPath = resolveGraphPath(args, options.cwd);
   const indexFile = await readGraphIndexFile(graphPath);
+  const freshness = await evaluateGraphFreshness(indexFile);
+  writeFreshnessWarning(freshness, options.stdout);
   const matches = findSymbols(indexFile.graph, args.symbol);
 
   if (matches.length === 0) {
@@ -434,8 +439,9 @@ async function runFindCommand(args: FindArgs, options: ResolvedCliOptions): Prom
 async function runTraceCommand(args: TraceArgs, options: ResolvedCliOptions): Promise<boolean> {
   const graphPath = resolveGraphPath(args, options.cwd);
   const indexFile = await readGraphIndexFile(graphPath);
+  const freshness = await evaluateGraphFreshness(indexFile);
   const traces = traceSymbols(indexFile.graph, args.symbol);
-  const markdown = renderMarkdownSymbolTrace(indexFile.graph, args.symbol);
+  const markdown = renderMarkdownSymbolTrace(indexFile.graph, args.symbol, freshness);
 
   options.stdout.write(markdown);
   return traces.length > 0;
@@ -444,12 +450,14 @@ async function runTraceCommand(args: TraceArgs, options: ResolvedCliOptions): Pr
 async function runMapCommand(args: MapArgs, options: ResolvedCliOptions): Promise<void> {
   const graphPath = resolveGraphPath(args, options.cwd);
   const indexFile = await readGraphIndexFile(graphPath);
-  const markdown = renderMarkdownRepoMap(indexFile);
+  const freshness = await evaluateGraphFreshness(indexFile);
+  const markdown = renderMarkdownRepoMap(indexFile, freshness);
   const outputPath = resolveMapOutputPath(args, options.cwd, indexFile.rootDir);
 
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, markdown, "utf8");
 
+  writeFreshnessWarning(freshness, options.stdout);
   options.stdout.write(`Generated CODEMIND map for ${indexFile.sourceFiles.length} TypeScript source file(s).\n`);
   options.stdout.write(`Wrote ${path.relative(options.cwd, outputPath).replaceAll("\\", "/")}\n`);
 }
@@ -496,14 +504,30 @@ async function readGraphIndexFile(graphPath: string): Promise<GraphIndexFile> {
   return parsed;
 }
 
-function createGraphIndexFile(extraction: TypeScriptExtractionResult): GraphIndexFile {
+async function createGraphIndexFile(extraction: TypeScriptExtractionResult): Promise<GraphIndexFile> {
+  const freshness = await createGraphFreshnessMetadata(
+    extraction.rootDir,
+    extraction.sourceFiles,
+  );
+
   return {
     schemaVersion: "0.1.0",
     rootDir: extraction.rootDir,
     sourceFiles: extraction.sourceFiles,
     diagnostics: extraction.diagnostics,
+    freshness,
     graph: extraction.graph,
   };
+}
+
+function writeFreshnessWarning(
+  freshness: Awaited<ReturnType<typeof evaluateGraphFreshness>>,
+  stdout: WritableLike,
+): void {
+  const warning = renderFreshnessWarning(freshness);
+  if (warning !== undefined) {
+    stdout.write(`${warning}\n`);
+  }
 }
 
 function isDirectCliExecution(): boolean {

@@ -1,3 +1,7 @@
+import { createHash } from "node:crypto";
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+
 export const GRAPH_NODE_KINDS = [
   "repository",
   "file",
@@ -89,7 +93,33 @@ export interface GraphIndexFile {
   readonly rootDir: string;
   readonly sourceFiles: readonly string[];
   readonly diagnostics: readonly string[];
+  readonly freshness?: GraphFreshnessMetadata;
   readonly graph: CodeGraph;
+}
+
+export interface GraphFreshnessMetadata {
+  readonly indexedAt: string;
+  readonly rootDir: string;
+  readonly sourceFileCount: number;
+  readonly sourceFingerprint: string;
+}
+
+export type GraphFreshnessStatus = "fresh" | "stale" | "unknown";
+
+export interface GraphFreshnessReport {
+  readonly status: GraphFreshnessStatus;
+  readonly reason: string;
+  readonly indexedAt?: string;
+  readonly rootDir?: string;
+  readonly indexedSourceFileCount?: number;
+  readonly currentSourceFileCount?: number;
+  readonly sourceFingerprint?: string;
+  readonly currentSourceFingerprint?: string;
+}
+
+export interface SourceFingerprintFile {
+  readonly filePath: string;
+  readonly content: string;
 }
 
 export interface SymbolTrace {
@@ -239,13 +269,173 @@ export function isGraphIndexFile(value: unknown): value is GraphIndexFile {
     && typeof candidate.rootDir === "string"
     && Array.isArray(candidate.sourceFiles)
     && Array.isArray(candidate.diagnostics)
+    && (candidate.freshness === undefined || isGraphFreshnessMetadata(candidate.freshness))
     && typeof candidate.graph === "object"
     && candidate.graph !== null
     && Array.isArray(candidate.graph.nodes)
     && Array.isArray(candidate.graph.edges);
 }
 
-export function renderMarkdownRepoMap(indexFile: GraphIndexFile): string {
+export async function createGraphFreshnessMetadata(
+  rootDir: string,
+  sourceFiles: readonly string[],
+  indexedAt: Date = new Date(),
+): Promise<GraphFreshnessMetadata> {
+  const normalizedRootDir = normalizeGraphPath(path.resolve(rootDir));
+  const normalizedSourceFiles = normalizeSourceFileList(sourceFiles);
+  const sourceFingerprint = await createSourceFingerprintForFiles(
+    normalizedRootDir,
+    normalizedSourceFiles,
+  );
+
+  return {
+    indexedAt: indexedAt.toISOString(),
+    rootDir: normalizedRootDir,
+    sourceFileCount: normalizedSourceFiles.length,
+    sourceFingerprint,
+  };
+}
+
+export async function evaluateGraphFreshness(
+  indexFile: GraphIndexFile,
+): Promise<GraphFreshnessReport> {
+  const metadata = indexFile.freshness;
+
+  if (metadata === undefined) {
+    return {
+      status: "unknown",
+      reason: "graph index does not include freshness metadata",
+    };
+  }
+
+  const rootDir = normalizeGraphPath(path.resolve(metadata.rootDir));
+  const indexedSourceFiles = normalizeSourceFileList(indexFile.sourceFiles);
+
+  let currentSourceFiles: readonly string[];
+  try {
+    currentSourceFiles = await scanTypeScriptSourceFiles(rootDir);
+  } catch (error: unknown) {
+    return {
+      status: "unknown",
+      reason: `unable to scan source files: ${formatUnknownError(error)}`,
+      indexedAt: metadata.indexedAt,
+      rootDir,
+      indexedSourceFileCount: metadata.sourceFileCount,
+      sourceFingerprint: metadata.sourceFingerprint,
+    };
+  }
+
+  let currentSourceFingerprint: string;
+  try {
+    currentSourceFingerprint = await createSourceFingerprintForFiles(
+      rootDir,
+      currentSourceFiles,
+    );
+  } catch (error: unknown) {
+    return {
+      status: "stale",
+      reason: `unable to read current source files: ${formatUnknownError(error)}`,
+      indexedAt: metadata.indexedAt,
+      rootDir,
+      indexedSourceFileCount: metadata.sourceFileCount,
+      currentSourceFileCount: currentSourceFiles.length,
+      sourceFingerprint: metadata.sourceFingerprint,
+    };
+  }
+
+  if (
+    metadata.sourceFileCount !== currentSourceFiles.length ||
+    indexedSourceFiles.length !== currentSourceFiles.length ||
+    !sameStringList(indexedSourceFiles, currentSourceFiles)
+  ) {
+    return {
+      status: "stale",
+      reason: "source file list changed since the graph was indexed",
+      indexedAt: metadata.indexedAt,
+      rootDir,
+      indexedSourceFileCount: metadata.sourceFileCount,
+      currentSourceFileCount: currentSourceFiles.length,
+      sourceFingerprint: metadata.sourceFingerprint,
+      currentSourceFingerprint,
+    };
+  }
+
+  if (metadata.sourceFingerprint !== currentSourceFingerprint) {
+    return {
+      status: "stale",
+      reason: "source fingerprint changed since the graph was indexed",
+      indexedAt: metadata.indexedAt,
+      rootDir,
+      indexedSourceFileCount: metadata.sourceFileCount,
+      currentSourceFileCount: currentSourceFiles.length,
+      sourceFingerprint: metadata.sourceFingerprint,
+      currentSourceFingerprint,
+    };
+  }
+
+  return {
+    status: "fresh",
+    reason: "source files match the indexed fingerprint",
+    indexedAt: metadata.indexedAt,
+    rootDir,
+    indexedSourceFileCount: metadata.sourceFileCount,
+    currentSourceFileCount: currentSourceFiles.length,
+    sourceFingerprint: metadata.sourceFingerprint,
+    currentSourceFingerprint,
+  };
+}
+
+export function createSourceFingerprint(
+  files: readonly SourceFingerprintFile[],
+): string {
+  const hash = createHash("sha256");
+  const normalizedFiles = [...files].sort((left, right) =>
+    normalizeGraphPath(left.filePath).localeCompare(
+      normalizeGraphPath(right.filePath),
+    ),
+  );
+
+  for (const file of normalizedFiles) {
+    hash.update(normalizeGraphPath(file.filePath));
+    hash.update("\0");
+    hash.update(file.content);
+    hash.update("\0");
+  }
+
+  return `sha256:${hash.digest("hex")}`;
+}
+
+export function renderFreshnessWarning(
+  freshness: GraphFreshnessReport,
+): string | undefined {
+  if (freshness.status === "fresh") {
+    return undefined;
+  }
+
+  return `Warning: graph freshness is ${freshness.status}: ${freshness.reason}`;
+}
+
+export function renderMarkdownFreshnessSection(
+  freshness: GraphFreshnessReport,
+): readonly string[] {
+  return [
+    "## Freshness",
+    "",
+    `- Status: \`${freshness.status}\``,
+    `- Reason: ${freshness.reason}`,
+    `- Indexed at: \`${freshness.indexedAt ?? "unknown"}\``,
+    `- Root: \`${freshness.rootDir ?? "unknown"}\``,
+    `- Indexed source files: ${freshness.indexedSourceFileCount ?? "unknown"}`,
+    `- Current source files: ${freshness.currentSourceFileCount ?? "unknown"}`,
+    `- Source fingerprint: \`${freshness.sourceFingerprint ?? "unknown"}\``,
+    `- Current fingerprint: \`${freshness.currentSourceFingerprint ?? "unknown"}\``,
+  ];
+}
+
+export function renderMarkdownRepoMap(
+  indexFile: GraphIndexFile,
+  freshness?: GraphFreshnessReport,
+): string {
   const graph = indexFile.graph;
   const lines: string[] = [
     "# CODEMIND",
@@ -260,6 +450,13 @@ export function renderMarkdownRepoMap(indexFile: GraphIndexFile): string {
     `- Nodes: ${graph.nodes.length}`,
     `- Edges: ${graph.edges.length}`,
     `- Diagnostics: ${indexFile.diagnostics.length}`,
+  ];
+
+  if (freshness !== undefined) {
+    lines.push("", ...renderMarkdownFreshnessSection(freshness));
+  }
+
+  lines.push(
     "",
     "## Files",
     "",
@@ -281,21 +478,31 @@ export function renderMarkdownRepoMap(indexFile: GraphIndexFile): string {
     "",
     ...renderDiagnostics(indexFile.diagnostics),
     "",
-  ];
+  );
 
   return `${lines.join("\n")}\n`;
 }
 
-export function renderMarkdownSymbolTrace(graph: CodeGraph, query: string): string {
+export function renderMarkdownSymbolTrace(
+  graph: CodeGraph,
+  query: string,
+  freshness?: GraphFreshnessReport,
+): string {
   const traces = traceSymbols(graph, query);
 
   if (traces.length === 0) {
-    return [
+    const lines = [
       "# Trace",
       "",
       `No symbols found for \`${cell(query)}\`.`,
       "",
-    ].join("\n");
+    ];
+
+    if (freshness !== undefined) {
+      lines.push(...renderMarkdownFreshnessSection(freshness), "");
+    }
+
+    return lines.join("\n");
   }
 
   const lines: string[] = [
@@ -305,6 +512,10 @@ export function renderMarkdownSymbolTrace(graph: CodeGraph, query: string): stri
     `Matches: ${traces.length}`,
     "",
   ];
+
+  if (freshness !== undefined) {
+    lines.push(...renderMarkdownFreshnessSection(freshness), "");
+  }
 
   for (const [index, trace] of traces.entries()) {
     lines.push(
@@ -526,6 +737,94 @@ function uniqueSortedNodes(nodes: readonly (GraphNode | undefined)[]): readonly 
     .sort(compareGraphNodes);
 }
 
+async function scanTypeScriptSourceFiles(rootDir: string): Promise<readonly string[]> {
+  const sourceFiles: string[] = [];
+
+  async function visit(directoryPath: string): Promise<void> {
+    const entries = await readdir(directoryPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const absoluteEntryPath = path.join(directoryPath, entry.name);
+
+      if (entry.isDirectory()) {
+        if (!FRESHNESS_EXCLUDED_DIRECTORIES.has(entry.name)) {
+          await visit(absoluteEntryPath);
+        }
+        continue;
+      }
+
+      if (entry.isFile() && isTypeScriptSourcePath(entry.name)) {
+        sourceFiles.push(
+          normalizeGraphPath(path.relative(rootDir, absoluteEntryPath)),
+        );
+      }
+    }
+  }
+
+  await visit(rootDir);
+  return normalizeSourceFileList(sourceFiles);
+}
+
+async function createSourceFingerprintForFiles(
+  rootDir: string,
+  sourceFiles: readonly string[],
+): Promise<string> {
+  const files = await Promise.all(
+    sourceFiles.map(async (filePath): Promise<SourceFingerprintFile> => {
+      const content = await readFile(path.join(rootDir, filePath), "utf8");
+      return {
+        filePath,
+        content,
+      };
+    }),
+  );
+
+  return createSourceFingerprint(files);
+}
+
+function normalizeSourceFileList(sourceFiles: readonly string[]): readonly string[] {
+  return [...sourceFiles].map(normalizeGraphPath).sort();
+}
+
+function sameStringList(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((entry, index) => entry === right[index]);
+}
+
+function isGraphFreshnessMetadata(
+  value: unknown,
+): value is GraphFreshnessMetadata {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Partial<GraphFreshnessMetadata>;
+
+  return (
+    typeof candidate.indexedAt === "string" &&
+    typeof candidate.rootDir === "string" &&
+    typeof candidate.sourceFileCount === "number" &&
+    typeof candidate.sourceFingerprint === "string"
+  );
+}
+
+function isTypeScriptSourcePath(fileName: string): boolean {
+  return (
+    (fileName.endsWith(".ts") || fileName.endsWith(".tsx")) &&
+    !fileName.endsWith(".d.ts")
+  );
+}
+
+function formatUnknownError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 function cell(value: string): string {
   return value.replaceAll("|", "\\|").replaceAll("\n", " ");
 }
@@ -537,3 +836,11 @@ function compareById<T extends { readonly id: string }>(left: T, right: T): numb
 function encodeIdPart(value: string): string {
   return encodeURIComponent(normalizeGraphPath(value));
 }
+
+const FRESHNESS_EXCLUDED_DIRECTORIES = new Set([
+  ".codemind",
+  ".git",
+  "coverage",
+  "dist",
+  "node_modules",
+]);
