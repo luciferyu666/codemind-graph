@@ -44,7 +44,7 @@ Implemented in this session:
 - Official website Engineering Practices content integration, including landing page `Why CodeMind Graph`, engineering standards, brand positioning sections, and dedicated `/en/engineering` and `/zh-TW/engineering` routes.
 - Vincent Liu digital business card route for `/en/vincent-liu` and `/zh-TW/vincent-liu`, including bilingual profile copy, featured project links, SEO metadata, sitemap/robots coverage, and responsive Browser QA tests.
 - GitHub `main` pushed through release checkpoint `60092e5`, GitHub Actions CI passed `pnpm check`, and release tag `v0.1.0` was pushed.
-- CI workflows now target `windows-2025-vs2026` and opt into `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`.
+- CI workflows now target `windows-2025-vs2026`, opt into `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and use Node.js 24 action majors.
 - Vercel production deployment to `vincent-lius-projects-de5eeb92` is complete.
 - Official website production URL: `https://codemind-graph.vercel.app`.
 - Vincent Liu digital business card has been deployed to production at `/en/vincent-liu` and `/zh-TW/vincent-liu`.
@@ -132,7 +132,7 @@ Latest implementation update:
 - v0.1 README demo and release-readiness copy are updated.
 - Legacy Repo Onboarding Pack one-page service plan is added.
 - v0.1.0 release tag is pushed.
-- CI runtime settings are being updated for GitHub's Node.js 24 JavaScript action runtime and Windows 2025 VS 2026 runner image.
+- CI runtime settings are being updated for GitHub's Node.js 24 JavaScript action runtime, Node.js 24 action majors, and Windows 2025 VS 2026 runner image.
 
 ## Resume workflow
 

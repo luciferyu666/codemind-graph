@@ -44,7 +44,7 @@ Last updated: 2026-06-01
 - GitHub Actions CI is configured in `.github/workflows/ci.yml` for push and pull request.
 - Release checkpoint `60092e5` has been pushed to GitHub `main`; GitHub Actions CI passed `pnpm check`.
 - Release tag `v0.1.0` has been pushed.
-- GitHub Actions CI and Browser QA workflows now target `windows-2025-vs2026` and opt into `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`.
+- GitHub Actions CI and Browser QA workflows now target `windows-2025-vs2026`, opt into `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and use Node.js 24 action majors.
 - Official website and Vercel deployment planning is captured in `docs/OFFICIAL_WEBSITE_PLAN.md`.
 - `apps/web` official website skeleton is implemented with Next.js, React, TypeScript, Tailwind CSS, `/en`, and `/zh-TW`.
 - Root `pnpm check` now includes the web typecheck and production build.

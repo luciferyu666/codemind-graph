@@ -65,8 +65,8 @@ Last updated: 2026-06-01
 - Build: passed with `pnpm build`, including `@codemind/web`.
 - Consolidated check: passed with `pnpm check` on 2026-06-01 after Slice H graph freshness, README demo, and Legacy Repo Onboarding Pack updates.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
-- GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and `pnpm check`.
-- Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026` and `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`.
+- GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
+- Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
 
 ## Website verification
 
@@ -278,5 +278,6 @@ Result:
 - Updated `.github/workflows/ci.yml` to use `windows-2025-vs2026`.
 - Updated `.github/workflows/browser-qa.yml` to use `windows-2025-vs2026`.
 - Added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` to both workflows to opt into the Node.js 24 JavaScript action runtime ahead of GitHub's Node 20 action runtime deprecation.
+- Upgraded GitHub Actions steps to Node.js 24 runtime majors: `actions/checkout@v6`, `actions/setup-node@v6`, `pnpm/action-setup@v6`, and `actions/upload-artifact@v6`.
 - Rationale is based on GitHub Actions deprecation notices for Node.js 20 action runtime and the Windows Server 2025 / Visual Studio 2026 image migration.
 - Local `pnpm check` passed after the workflow and documentation updates.

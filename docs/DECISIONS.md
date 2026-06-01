@@ -126,7 +126,7 @@ Guardrail: Freshness checking remains read-only. MCP tools may report `fresh`, `
 
 Date: 2026-06-01
 
-Decision: GitHub Actions CI and Browser QA workflows use `windows-2025-vs2026` and set `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` at workflow level.
+Decision: GitHub Actions CI and Browser QA workflows use `windows-2025-vs2026`, set `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` at workflow level, and use Node.js 24 runtime action majors for checkout, setup-node, pnpm setup, and artifact upload.
 
 Reasoning: GitHub Actions emitted notices that JavaScript actions running on Node.js 20 are deprecated and that `windows-latest` / `windows-2025` are migrating to the Windows Server 2025 Visual Studio 2026 image in June 2026. Opting in explicitly makes the project test against the incoming default runtime before it becomes implicit.
 
