@@ -33,7 +33,7 @@ Included in v0.1:
 - Local `.codemind/graph.json` graph index.
 - Graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - CLI commands: `index`, `find`, `trace`, `explain`, `map`, and `mcp start`.
-- Read-only MCP tools: `find_symbol`, `get_repo_map`, and `trace_symbol`.
+- Read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - Deterministic `CODEMIND.md` repo map output.
 
 Non-goals for v0.1:

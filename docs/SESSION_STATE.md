@@ -36,7 +36,7 @@ Implemented in this session:
 - `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes `CODEMIND.md`.
 - `packages/cli` `codemind mcp start --root <path>` command that starts the read-only MCP stdio server.
 - `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, graph edges, and symbol trace rendering.
-- `packages/mcp-server` read-only MCP skeleton with `find_symbol`, `get_repo_map`, and `trace_symbol`.
+- `packages/mcp-server` read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - GitHub Actions CI workflow that runs `pnpm install --frozen-lockfile` and `pnpm check`.
 - Temporary official website and Vercel deployment track captured in `docs/OFFICIAL_WEBSITE_PLAN.md`.
 - `apps/web` official website skeleton with Next.js, React, TypeScript, Tailwind CSS, `/en`, and `/zh-TW`.
@@ -59,8 +59,8 @@ Implemented in this session:
 - Rich TypeScript adapter fixture coverage for side-effect imports, default/named imports, type imports, namespace imports, external imports, named re-exports, type re-exports, export-all re-exports, classes, and methods.
 - Focused CLI test coverage for graph file generation, symbol lookup, symbol trace with `CALLS` context, file explain with `CALLS` context, and markdown repo map generation.
 - Focused CLI test coverage for MCP startup delegation and invalid MCP startup options.
-- Focused MCP test coverage for symbol lookup, repo map retrieval, no-match behavior, `CALLS` trace context, and graph path containment.
-- MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `trace_symbol` with `CALLS` context.
+- Focused MCP test coverage for symbol lookup, repo map retrieval, no-match behavior, `CALLS` trace context, file explain context, and graph path containment.
+- MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `trace_symbol` with `CALLS` context and `explain_file`.
 - MCP protocol-level negative/error coverage for missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Slice H Graph Freshness is implemented: `codemind index` writes `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint` metadata.
 - CLI `find`, `trace`, and `map` now report stale or unknown graph freshness, including legacy graph files without metadata.
@@ -105,7 +105,7 @@ Current design baseline:
 
 ## Next steps
 
-1. Run full `pnpm check` after Slice L call-aware explain, then decide whether the next slice should add MCP `explain_file` or richer call resolution.
+1. Run full `pnpm check` after MCP `explain_file`, then decide whether the next slice should add richer call resolution.
 2. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
 3. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
@@ -174,6 +174,15 @@ Latest Slice L call-aware explain update:
 - CLI `codemind explain <path>` returns outgoing calls from symbols defined in the file and external callers of symbols defined in the file.
 - Focused verification passed with `pnpm build:packages; node --test test/core.test.mjs test/cli-index.test.mjs`.
 - Full verification passed with `pnpm check` and 25 focused `node:test` tests.
+
+Latest MCP explain_file update:
+
+- `packages/mcp-server` now exposes a read-only `explain_file` tool.
+- `explain_file` accepts `path`, optional `root`, and optional `graph` inputs.
+- The tool reuses `renderMarkdownFileExplain`, so MCP and CLI file explain output stay aligned.
+- Protocol coverage verifies `tools/list`, read-only annotations, `tools/call` success, invalid input, freshness status, `CALLS` context, and no engineering memory leakage.
+- Focused verification passed with `pnpm build:packages; node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs`.
+- Full verification passed with `pnpm check` and 26 focused `node:test` tests.
 
 ## Resume workflow
 

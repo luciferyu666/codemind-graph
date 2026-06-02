@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { runCli } from "../packages/cli/dist/index.js";
-import { createCodeMindMcpServer, findSymbol, getRepoMap, traceSymbol } from "../packages/mcp-server/dist/index.js";
+import { createCodeMindMcpServer, explainFile, findSymbol, getRepoMap, traceSymbol } from "../packages/mcp-server/dist/index.js";
 
 test("MCP server factory creates a connectable read-only server", () => {
   const server = createCodeMindMcpServer({ rootDir: process.cwd() });
@@ -122,6 +122,31 @@ test("traceSymbol reads graph.json and returns markdown symbol trace", async () 
     assert.match(text, /^### Calls Out/m);
     assert.match(text, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
     assert.match(text, /^### Called By/m);
+    assert.doesNotMatch(text, /SESSION_STATE/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("explainFile reads graph.json and returns markdown file context", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-mcp-explain-"));
+
+  try {
+    await writeSampleProject(rootDir);
+    await indexSampleProject(rootDir);
+
+    const result = await explainFile({ path: "src/index.ts", root: "sample" }, { rootDir });
+    const text = readTextResult(result);
+
+    assert.match(text, /^# File Explain/m);
+    assert.match(text, /File: `src\/index\.ts`/);
+    assert.match(text, /^## Freshness/m);
+    assert.match(text, /- Status: `fresh`/);
+    assert.match(text, /^## File Overview/m);
+    assert.match(text, /- Calls out: 1/);
+    assert.match(text, /^## Calls Out/m);
+    assert.match(text, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(text, /^## Called By/m);
     assert.doesNotMatch(text, /SESSION_STATE/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });

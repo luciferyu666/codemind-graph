@@ -63,7 +63,7 @@ Last updated: 2026-06-02
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
 - Tests: passed with `pnpm test` using 25 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice L call-aware explain integration.
+- Consolidated check: passed with `pnpm check` on 2026-06-02 after MCP `explain_file` integration.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -155,9 +155,10 @@ Result:
 - `find_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol rows.
 - `get_repo_map` reads `.codemind/graph.json` and returns deterministic `CODEMIND.md` Markdown.
 - `trace_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol trace output.
+- `explain_file` reads `.codemind/graph.json` and returns deterministic Markdown file explain output.
 - `codemind mcp start --root <path>` delegates to the read-only MCP stdio server without writing stdout before transport startup.
 - MCP protocol smoke coverage starts `node packages/cli/dist/index.js mcp start --root examples/ts-basic` through SDK stdio transport and verifies initialize, `tools/list`, and `tools/call`.
-- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context.
+- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context; protocol-level `explain_file` returns file explain context.
 - MCP tool responses include graph freshness status.
 - Protocol-level negative/error coverage verifies missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Protocol-level tool metadata verifies read-only, non-destructive, and non-open-world annotations.
@@ -388,6 +389,28 @@ Result:
 ```powershell
 pnpm build:packages
 node --test test/core.test.mjs test/cli-index.test.mjs
+```
+
+- Full verification passed:
+
+```powershell
+pnpm check
+```
+
+## Latest MCP explain_file update
+
+Result:
+
+- Added read-only MCP `explain_file` tool in `packages/mcp-server`.
+- `explain_file` reuses `renderMarkdownFileExplain` from `packages/core`.
+- Input schema accepts `path`, optional `root`, and optional `graph`.
+- Direct MCP tests verify file explain output, freshness, and `CALLS` sections.
+- Protocol tests verify `tools/list`, read-only annotations, `tools/call`, invalid input handling, and no engineering memory leakage.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs
 ```
 
 - Full verification passed:

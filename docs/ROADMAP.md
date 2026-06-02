@@ -27,6 +27,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
   - [x] `find_symbol`
   - [x] `get_repo_map`
   - [x] `trace_symbol`
+  - [x] `explain_file`
 - [x] Wire MCP server through `codemind mcp start`.
 - [x] Add MCP stdio protocol smoke coverage for `find_symbol` and `get_repo_map`.
 - [x] Add MCP stdio protocol negative/error coverage for missing graph, invalid input, path escape, legacy freshness, and stale freshness.
@@ -89,6 +90,7 @@ Day 31-60:
 - Add read-only MCP server. Done.
 - Expose `find_symbol` and `get_repo_map`. Done.
 - Expose `trace_symbol`. Done.
+- Expose `explain_file`. Done.
 - Add schema validation for MCP tool inputs. Done.
 - Wire MCP server through `codemind mcp start`. Done.
 - Add MCP protocol smoke coverage. Done.

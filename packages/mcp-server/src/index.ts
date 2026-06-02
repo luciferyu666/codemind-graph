@@ -9,6 +9,7 @@ import {
   formatNodeLocation,
   isGraphIndexFile,
   renderMarkdownFreshnessSection,
+  renderMarkdownFileExplain,
   renderMarkdownRepoMap,
   renderMarkdownSymbolTrace,
   type GraphIndexFile,
@@ -40,6 +41,12 @@ export interface TraceSymbolInput {
   readonly graph?: string | undefined;
 }
 
+export interface ExplainFileInput {
+  readonly path: string;
+  readonly root?: string | undefined;
+  readonly graph?: string | undefined;
+}
+
 interface GraphReadOptions {
   readonly baseRootDir: string;
   readonly root?: string | undefined;
@@ -63,9 +70,16 @@ const traceSymbolInputSchema = {
   graph: z.string().min(1).optional(),
 };
 
+const explainFileInputSchema = {
+  path: z.string().min(1),
+  root: z.string().min(1).optional(),
+  graph: z.string().min(1).optional(),
+};
+
 const findSymbolInputParser = z.object(findSymbolInputSchema);
 const getRepoMapInputParser = z.object(getRepoMapInputSchema);
 const traceSymbolInputParser = z.object(traceSymbolInputSchema);
+const explainFileInputParser = z.object(explainFileInputSchema);
 
 export function createCodeMindMcpServer(options: CodeMindMcpOptions = {}): McpServer {
   const baseRootDir = path.resolve(options.rootDir ?? process.cwd());
@@ -110,7 +124,7 @@ export function createCodeMindMcpServer(options: CodeMindMcpOptions = {}): McpSe
     "trace_symbol",
     {
       title: "Trace symbol",
-      description: "Trace a symbol to its file imports, exports, and related modules from a CodeMind graph index. Read-only.",
+      description: "Trace a symbol to its file imports, exports, calls, and related modules from a CodeMind graph index. Read-only.",
       inputSchema: traceSymbolInputSchema,
       annotations: {
         readOnlyHint: true,
@@ -120,6 +134,22 @@ export function createCodeMindMcpServer(options: CodeMindMcpOptions = {}): McpSe
       },
     },
     async (input) => traceSymbol(input, { rootDir: baseRootDir }),
+  );
+
+  server.registerTool(
+    "explain_file",
+    {
+      title: "Explain file",
+      description: "Explain an indexed file with symbols, imports, exports, calls, related modules, diagnostics, and freshness status. Read-only.",
+      inputSchema: explainFileInputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async (input) => explainFile(input, { rootDir: baseRootDir }),
   );
 
   return server;
@@ -191,6 +221,18 @@ export async function traceSymbol(input: TraceSymbolInput, options: CodeMindMcpO
   const freshness = await evaluateGraphFreshness(indexFile);
 
   return textResult(renderMarkdownSymbolTrace(indexFile.graph, parsedInput.query, freshness));
+}
+
+export async function explainFile(input: ExplainFileInput, options: CodeMindMcpOptions = {}): Promise<CallToolResult> {
+  const parsedInput = explainFileInputParser.parse(input);
+  const { indexFile } = await readGraphIndex({
+    baseRootDir: path.resolve(options.rootDir ?? process.cwd()),
+    root: parsedInput.root,
+    graph: parsedInput.graph,
+  });
+  const freshness = await evaluateGraphFreshness(indexFile);
+
+  return textResult(renderMarkdownFileExplain(indexFile, parsedInput.path, freshness));
 }
 
 async function readGraphIndex(options: GraphReadOptions): Promise<{

@@ -68,7 +68,7 @@ Reasoning: v0.1 needs deterministic extraction before introducing SQLite storage
 
 Date: 2026-05-28
 
-Decision: The initial MCP server uses `@modelcontextprotocol/sdk` with Zod input schemas and exposes only read-only graph tools: `find_symbol` and `get_repo_map`. These tools read `.codemind/graph.json`, reuse `packages/core` query and map rendering helpers, and do not expose file writes, shell execution, package installation, Git operations, or engineering memory files.
+Decision: The initial MCP server uses `@modelcontextprotocol/sdk` with Zod input schemas and exposes only read-only graph tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`. These tools read `.codemind/graph.json`, reuse `packages/core` query and Markdown rendering helpers, and do not expose file writes, shell execution, package installation, Git operations, or engineering memory files.
 
 Reasoning: MCP should provide AI agents with deterministic product context while preserving the v0.1 safety boundary. Reading an already-generated graph index keeps MCP behavior predictable and avoids mixing indexing side effects into tool calls.
 

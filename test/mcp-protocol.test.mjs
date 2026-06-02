@@ -48,7 +48,7 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     const tools = toolsResult.tools;
     const toolNames = tools.map((tool) => tool.name).sort();
 
-    assert.deepEqual(toolNames, ["find_symbol", "get_repo_map", "trace_symbol"]);
+    assert.deepEqual(toolNames, ["explain_file", "find_symbol", "get_repo_map", "trace_symbol"]);
     for (const tool of tools) {
       assert.equal(tool.annotations?.readOnlyHint, true, `${tool.name} must be read-only`);
       assert.equal(tool.annotations?.destructiveHint, false, `${tool.name} must be non-destructive`);
@@ -102,7 +102,23 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     assert.match(traceText, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
     assert.match(traceText, /^### Called By/m);
 
-    const combinedOutput = `${JSON.stringify(toolsResult)}\n${findText}\n${repoMapText}\n${traceText}`;
+    const explainResult = await client.callTool({
+      name: "explain_file",
+      arguments: {
+        path: "src/index.ts",
+      },
+    });
+    const explainText = readTextToolResult(explainResult);
+
+    assert.match(explainText, /^# File Explain/m);
+    assert.match(explainText, /File: `src\/index\.ts`/);
+    assert.match(explainText, /^## Freshness/m);
+    assert.match(explainText, /- Status: `fresh`/);
+    assert.match(explainText, /^## Calls Out/m);
+    assert.match(explainText, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(explainText, /^## Called By/m);
+
+    const combinedOutput = `${JSON.stringify(toolsResult)}\n${findText}\n${repoMapText}\n${traceText}\n${explainText}`;
     assert.doesNotMatch(combinedOutput, /SESSION_STATE|CURRENT_STATE|ENGINEERING_STATE|SECRET_SESSION_NOTE/);
     assert.equal(stderr, "");
   } finally {
@@ -176,6 +192,14 @@ test("MCP stdio protocol handles negative and freshness edge cases", { timeout: 
     );
     assert.match(invalidInputError, /query|invalid|expected|required/i);
 
+    const invalidExplainInputError = await readRejectedMessage(() =>
+      client.callTool({
+        name: "explain_file",
+        arguments: {},
+      })
+    );
+    assert.match(invalidExplainInputError, /path|invalid|expected|required/i);
+
     await indexExampleProject(rootDir);
     const graphPath = path.join(rootDir, "examples", "ts-basic", ".codemind", "graph.json");
     const legacyGraph = JSON.parse(await readFile(graphPath, "utf8"));
@@ -221,6 +245,7 @@ test("MCP stdio protocol handles negative and freshness edge cases", { timeout: 
       rootEscapeError,
       graphEscapeError,
       invalidInputError,
+      invalidExplainInputError,
       legacyMapText,
       staleFindText,
     ].join("\n");
