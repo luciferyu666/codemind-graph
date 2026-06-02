@@ -9,6 +9,7 @@ import {
   getIncomingEdges,
   getNodeById,
   getOutgoingEdges,
+  listReferences,
   listExports,
   listFiles,
   listCalls,
@@ -173,12 +174,23 @@ test("traceSymbols returns symbol file imports exports and related modules", () 
       resolution: "imported-function",
     },
   });
+  builder.addEdge({
+    id: createEdgeId("REFERENCES", symbolId, helperSymbolId, "formatName"),
+    kind: "REFERENCES",
+    fromId: symbolId,
+    toId: helperSymbolId,
+    metadata: {
+      reference: "formatName",
+      resolution: "imported-symbol",
+    },
+  });
 
   const graph = builder.toGraph("F:/repo");
   const traces = traceSymbols(graph, "run");
   const markdown = renderMarkdownSymbolTrace(graph, "run");
 
   assert.equal(listCalls(graph).length, 1);
+  assert.equal(listReferences(graph).length, 1);
   assert.equal(traces.length, 1);
   assert.equal(traces[0]?.symbol.name, "run");
   assert.equal(traces[0]?.file?.filePath, "src/index.ts");
@@ -186,6 +198,8 @@ test("traceSymbols returns symbol file imports exports and related modules", () 
   assert.equal(traces[0]?.exports.length, 1);
   assert.equal(traces[0]?.callsOut.length, 1);
   assert.equal(traces[0]?.calledBy.length, 0);
+  assert.equal(traces[0]?.referencesOut.length, 1);
+  assert.equal(traces[0]?.referencedBy.length, 0);
   assert.deepEqual(traces[0]?.relatedModules.map((node) => node.name), ["src/helper.ts"]);
   assert.match(markdown, /^# Trace/m);
   assert.match(markdown, /Query: `run`/);
@@ -195,6 +209,10 @@ test("traceSymbols returns symbol file imports exports and related modules", () 
   assert.match(markdown, /\| function:run \| function:formatName \| formatName \| imported-function \|/);
   assert.match(markdown, /^### Called By/m);
   assert.match(markdown, /No incoming calls found\./);
+  assert.match(markdown, /^### References Out/m);
+  assert.match(markdown, /\| function:run \| function:formatName \| formatName \| imported-symbol \|/);
+  assert.match(markdown, /^### Referenced By/m);
+  assert.match(markdown, /No incoming references found\./);
 });
 
 test("renderMarkdownContextPack composes trace explain and repo map context", () => {
@@ -304,6 +322,16 @@ test("renderMarkdownContextPack composes trace explain and repo map context", ()
       resolution: "imported-function",
     },
   });
+  builder.addEdge({
+    id: createEdgeId("REFERENCES", symbolId, helperSymbolId, "formatName"),
+    kind: "REFERENCES",
+    fromId: symbolId,
+    toId: helperSymbolId,
+    metadata: {
+      reference: "formatName",
+      resolution: "imported-symbol",
+    },
+  });
 
   const indexFile = {
     schemaVersion: "0.1.0",
@@ -316,7 +344,7 @@ test("renderMarkdownContextPack composes trace explain and repo map context", ()
       adapter: "@codemind/adapter-typescript",
       adapterVersion: "0.1.0",
       language: "typescript",
-      capabilities: ["symbols", "imports", "exports", "calls"],
+      capabilities: ["symbols", "imports", "exports", "calls", "references"],
     },
     graph: builder.toGraph("F:/repo"),
   };
@@ -335,6 +363,7 @@ test("renderMarkdownContextPack composes trace explain and repo map context", ()
   assert.match(markdown, /^## Symbol Trace/m);
   assert.match(markdown, /### Trace 1: `function run`/);
   assert.match(markdown, /\| function:run \| function:formatName \| formatName \| imported-function \|/);
+  assert.match(markdown, /\| function:run \| function:formatName \| formatName \| imported-symbol \|/);
   assert.match(markdown, /^## File Explain/m);
   assert.match(markdown, /### File 1: `src\/index\.ts`/);
   assert.match(markdown, /^## Repo Map Excerpt/m);

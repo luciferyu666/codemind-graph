@@ -11,11 +11,12 @@ This public demo map is sanitized for stable repository diffs. Local runs will i
 - Indexer: `codemind-cli@0.1.0`
 - Adapter: `@codemind/adapter-typescript@0.1.0`
 - Language: `typescript`
-- Capabilities: `symbols, imports, exports, calls`
+- Capabilities: `symbols, imports, exports, calls, references`
 - Source files: 4
 - Nodes: 27
-- Edges: 46
+- Edges: 90
 - Calls: 9
+- References: 44
 - Diagnostics: 0
 
 ## Freshness
@@ -130,6 +131,93 @@ This public demo map is sanitized for stable repository diffs. Local runs will i
 | function:buildDemoContext | method:GraphStore.fromSeed | GraphStore.fromSeed | imported-method |
 | function:buildDemoContext | class:ContextPackBuilder | new ContextPackBuilder | imported-constructor |
 | function:toSlug | function:normalizeLabel | normalizeLabel | same-file-function |
+
+## References
+
+### Summary
+
+- Reference edges: 44
+- Unique referencers: 13
+- Unique referenced symbols: 14
+
+### Top Referencers
+
+| Symbol | References |
+| --- | ---: |
+| function:buildDemoContext | 8 |
+| method:GraphStore.fromSeed | 8 |
+| method:ContextPackBuilder.buildSummary | 7 |
+| method:ContextPackBuilder.formatNode | 5 |
+| method:GraphStore.addNode | 5 |
+| src/index.ts | 3 |
+| method:GraphStore.findNode | 2 |
+| class:ContextPackBuilder | 1 |
+| class:GraphStore | 1 |
+| src/graph-store.ts | 1 |
+
+### Top Referenced Symbols
+
+| Symbol | References |
+| --- | ---: |
+| interface:RepoNode | 9 |
+| variable:node | 6 |
+| class:GraphStore | 5 |
+| variable:node | 5 |
+| function:normalizeLabel | 4 |
+| variable:store | 3 |
+| class:ContextPackBuilder | 2 |
+| variable:normalizedEntrypoint | 2 |
+| variable:builder | 2 |
+| variable:store | 2 |
+
+### Reference Edges
+
+| Referencer | Referenced Symbol | Reference | Resolution |
+| --- | --- | --- | --- |
+| class:ContextPackBuilder | class:GraphStore | GraphStore | imported-symbol |
+| method:ContextPackBuilder.buildSummary | function:normalizeLabel | text.normalizeLabel | namespace-symbol |
+| method:ContextPackBuilder.buildSummary | variable:normalizedEntrypoint | normalizedEntrypoint | same-file-symbol |
+| method:ContextPackBuilder.buildSummary | variable:node | node | same-file-symbol |
+| method:ContextPackBuilder.buildSummary | variable:normalizedEntrypoint | normalizedEntrypoint | same-file-symbol |
+| method:ContextPackBuilder.buildSummary | method:ContextPackBuilder.formatNode | this.formatNode | same-class-symbol |
+| method:ContextPackBuilder.buildSummary | variable:node | node | same-file-symbol |
+| method:ContextPackBuilder.buildSummary | variable:node | node | same-file-symbol |
+| method:ContextPackBuilder.formatNode | interface:RepoNode | RepoNode | type-imported-symbol |
+| method:ContextPackBuilder.formatNode | variable:node | node | same-file-symbol |
+| method:ContextPackBuilder.formatNode | function:toSlug | text.toSlug | namespace-symbol |
+| method:ContextPackBuilder.formatNode | variable:node | node | same-file-symbol |
+| method:ContextPackBuilder.formatNode | variable:node | node | same-file-symbol |
+| src/graph-store.ts | interface:RepoNode | RepoNode | same-file-symbol |
+| class:GraphStore | interface:RepoNode | RepoNode | same-file-symbol |
+| method:GraphStore.addNode | interface:RepoNode | RepoNode | same-file-symbol |
+| method:GraphStore.addNode | variable:node | node | same-file-symbol |
+| method:GraphStore.addNode | function:normalizeLabel | normalizeLabel | imported-symbol |
+| method:GraphStore.addNode | variable:node | node | same-file-symbol |
+| method:GraphStore.addNode | variable:node | node | same-file-symbol |
+| method:GraphStore.findNode | interface:RepoNode | RepoNode | same-file-symbol |
+| method:GraphStore.findNode | function:normalizeLabel | normalizeLabel | imported-symbol |
+| method:GraphStore.listNodes | interface:RepoNode | RepoNode | same-file-symbol |
+| method:GraphStore.fromSeed | class:GraphStore | GraphStore | same-file-symbol |
+| method:GraphStore.fromSeed | interface:RepoNode | RepoNode | same-file-symbol |
+| method:GraphStore.fromSeed | class:GraphStore | GraphStore | same-file-symbol |
+| method:GraphStore.fromSeed | variable:store | store | same-file-symbol |
+| method:GraphStore.fromSeed | variable:node | node | same-file-symbol |
+| method:GraphStore.fromSeed | variable:node | node | same-file-symbol |
+| method:GraphStore.fromSeed | variable:store | store | same-file-symbol |
+| method:GraphStore.fromSeed | variable:store | store | same-file-symbol |
+| variable:seedNodes | interface:RepoNode | RepoNode | type-imported-symbol |
+| function:buildDemoContext | class:GraphStore | GraphStore | imported-symbol |
+| function:buildDemoContext | method:GraphStore.fromSeed | GraphStore.fromSeed | imported-symbol-member |
+| function:buildDemoContext | variable:seedNodes | seedNodes | same-file-symbol |
+| function:buildDemoContext | variable:store | store | same-file-symbol |
+| function:buildDemoContext | class:ContextPackBuilder | ContextPackBuilder | imported-symbol |
+| function:buildDemoContext | variable:builder | builder | same-file-symbol |
+| function:buildDemoContext | variable:store | store | same-file-symbol |
+| function:buildDemoContext | variable:builder | builder | same-file-symbol |
+| src/index.ts | class:ContextPackBuilder | ContextPackBuilder | re-export-symbol |
+| src/index.ts | class:GraphStore | GraphStore | re-export-symbol |
+| src/index.ts | interface:RepoNode | RepoNode | re-export-symbol |
+| function:toSlug | function:normalizeLabel | normalizeLabel | same-file-symbol |
 
 ## Diagnostics
 

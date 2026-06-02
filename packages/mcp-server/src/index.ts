@@ -159,7 +159,7 @@ export function createCodeMindMcpServer(options: CodeMindMcpOptions = {}): McpSe
     "explain_file",
     {
       title: "Explain file",
-      description: "Explain an indexed file with symbols, imports, exports, calls, related modules, diagnostics, and freshness status. Read-only.",
+      description: "Explain an indexed file with symbols, imports, exports, calls, references, related modules, diagnostics, and freshness status. Read-only.",
       inputSchema: explainFileInputSchema,
       annotations: {
         readOnlyHint: true,

@@ -146,8 +146,18 @@ Guardrail: Do not treat this as a complete TypeScript call graph. Dynamic dispat
 
 Date: 2026-06-02
 
-Decision: `codemind index` writes a top-level `metadata` object into `.codemind/graph.json` with `indexer`, `indexerVersion`, `adapter`, `adapterVersion`, `language`, and `capabilities`. The v0.1 TypeScript adapter reports the deterministic capabilities `symbols`, `imports`, `exports`, and `calls`.
+Decision: `codemind index` writes a top-level `metadata` object into `.codemind/graph.json` with `indexer`, `indexerVersion`, `adapter`, `adapterVersion`, `language`, and `capabilities`. The v0.1 TypeScript adapter reports the deterministic capabilities `symbols`, `imports`, `exports`, `calls`, and `references`.
 
 Reasoning: AI agents need to know which graph features a persisted index supports before deciding whether `find`, `trace`, `explain`, `map`, or MCP tools can answer a question. Keeping this metadata at the graph index level makes it visible without inspecting internal graph nodes or relying on package manager state.
 
 Guardrail: Index metadata is read-only descriptive data. Legacy graph files without top-level metadata remain valid and render `Index metadata: unknown` in repo maps. This ADR does not add write-capable MCP tools, live re-indexing, cloud sync, or SQLite storage.
+
+## ADR-0018: Keep TypeScript REFERENCES extraction conservative in Slice Q1
+
+Date: 2026-06-02
+
+Decision: Implement TypeScript `REFERENCES` edge extraction as a deterministic AST-based MVP. The adapter records same-file symbol references, imported symbol references, namespace symbol references, type-only import references, local export references, and explicit re-export references when they resolve to project-local symbols.
+
+Reasoning: Impact analysis needs more than call relationships, but v0.1 should avoid unstable claims about a complete semantic usage graph. Conservative `REFERENCES` edges make `trace`, `explain`, `context`, repo maps, and MCP output more useful while keeping extraction deterministic and testable.
+
+Guardrail: Do not treat this as a complete TypeScript semantic reference graph. External package references, dynamic property resolution, arbitrary alias flow, TypeChecker-backed usage resolution, and runtime behavior remain future work.

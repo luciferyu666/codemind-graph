@@ -62,11 +62,11 @@ test("codemind index writes .codemind/graph.json", async () => {
       adapter: "@codemind/adapter-typescript",
       adapterVersion: "0.1.0",
       language: "typescript",
-      capabilities: ["symbols", "imports", "exports", "calls"],
+      capabilities: ["symbols", "imports", "exports", "calls", "references"],
     });
     assert.equal(graphFile.graph.metadata.adapter, "@codemind/adapter-typescript");
     assert.equal(graphFile.graph.metadata.adapterVersion, "0.1.0");
-    assert.deepEqual(graphFile.graph.metadata.capabilities, ["symbols", "imports", "exports", "calls"]);
+    assert.deepEqual(graphFile.graph.metadata.capabilities, ["symbols", "imports", "exports", "calls", "references"]);
     assert.deepEqual(graphFile.sourceFiles, ["src/index.ts"]);
     assert.equal(graphFile.diagnostics.length, 0);
     assert.equal(typeof graphFile.freshness.indexedAt, "string");
@@ -256,7 +256,7 @@ test("codemind health reports graph metadata and fresh status", async () => {
     assert.match(stdout, /- Status: `fresh`/);
     assert.match(stdout, /- Schema version: `0\.1\.0`/);
     assert.match(stdout, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
-    assert.match(stdout, /- Capabilities: `symbols, imports, exports, calls`/);
+    assert.match(stdout, /- Capabilities: `symbols, imports, exports, calls, references`/);
     assert.match(stdout, /^## Freshness/m);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
@@ -378,7 +378,7 @@ test("codemind doctor reports runtime graph and MCP readiness", async () => {
     assert.match(stdout, /\| TypeScript config \| pass \| tsconfig\.json found \|/);
     assert.match(stdout, /\| Graph index \| pass \| sample\/\.codemind\/graph\.json \|/);
     assert.match(stdout, /\| Graph freshness \| pass \| fresh: source files match the indexed fingerprint \|/);
-    assert.match(stdout, /\| Graph capabilities \| pass \| symbols, imports, exports, calls \|/);
+    assert.match(stdout, /\| Graph capabilities \| pass \| symbols, imports, exports, calls, references \|/);
     assert.match(stdout, /\| Read-only MCP tools \| pass \| find_symbol, get_repo_map, trace_symbol, explain_file \|/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
@@ -592,7 +592,7 @@ test("codemind map writes deterministic CODEMIND.md", async () => {
     assert.match(markdown, /- Indexer: `codemind-cli@0\.1\.0`/);
     assert.match(markdown, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
     assert.match(markdown, /- Language: `typescript`/);
-    assert.match(markdown, /- Capabilities: `symbols, imports, exports, calls`/);
+    assert.match(markdown, /- Capabilities: `symbols, imports, exports, calls, references`/);
     assert.match(markdown, /^## Freshness/m);
     assert.match(markdown, /- Status: `fresh`/);
     assert.match(markdown, /^## Files/m);
@@ -600,8 +600,10 @@ test("codemind map writes deterministic CODEMIND.md", async () => {
     assert.match(markdown, /^## Imports/m);
     assert.match(markdown, /^## Exports/m);
     assert.match(markdown, /^## Calls/m);
+    assert.match(markdown, /^## References/m);
     assert.match(markdown, /^## Diagnostics/m);
     assert.match(markdown, /- Calls: 1/);
+    assert.match(markdown, /- References: 1/);
     assert.match(markdown, /- Call edges: 1/);
     assert.match(markdown, /- Unique callers: 1/);
     assert.match(markdown, /- Unique callees: 1/);
@@ -611,6 +613,7 @@ test("codemind map writes deterministic CODEMIND.md", async () => {
     assert.match(markdown, /\| function:greet \| 1 \|/);
     assert.match(markdown, /\| function:formatName \| 1 \|/);
     assert.match(markdown, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(markdown, /\| function:greet \| function:formatName \| formatName \| imported-symbol \|/);
     assert.match(markdown, /No diagnostics\./);
   } finally {
     await rm(rootDir, { recursive: true, force: true });

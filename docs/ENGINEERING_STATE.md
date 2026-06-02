@@ -66,7 +66,7 @@ Last updated: 2026-06-02
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
 - Tests: passed with `pnpm test` using 26 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice O Graph Index Metadata Versioning.
+- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice Q1 REFERENCES edge MVP.
 - Slice P0 focused CLI verification: passed with `pnpm build:packages` and `node --test test/cli-index.test.mjs`.
 - Slice P0 focused TypeScript adapter fixture verification: passed with `pnpm build:packages` and `node --test test/typescript-adapter.test.mjs`.
 - Slice P0 consolidated check: passed with `pnpm check`, 30 focused `node:test` tests, and the Next.js production build.
@@ -74,6 +74,8 @@ Last updated: 2026-06-02
 - Slice Q0 consolidated check: passed with `pnpm check`, 34 focused `node:test` tests, and the Next.js production build.
 - Slice Q0b focused MCP context verification: passed with `pnpm build:packages` and `node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs`.
 - Slice Q0b consolidated check: passed with `pnpm check`, 35 focused `node:test` tests, and the Next.js production build.
+- Slice Q1 focused REFERENCES verification: passed with `pnpm build:packages`, `node --test test/typescript-adapter.test.mjs`, `node --test test/core.test.mjs`, `node --test test/cli-index.test.mjs`, `node --test test/mcp-server.test.mjs`, and `node --test test/mcp-protocol.test.mjs`.
+- Slice Q1 consolidated check: passed with `pnpm check`, 35 focused `node:test` tests, and the Next.js production build.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -138,14 +140,15 @@ Result:
 - Graph index now includes freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - Found `function greet` in `src/index.ts`.
 - Traced `function greet` to its file-level imports, exports, and related modules.
-- Explained `src/index.ts` with file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
+- Explained `src/index.ts` with file overview, symbols, imports, exports, calls, references, related modules, diagnostics, and freshness status.
 - Built a context packet for `greet` with overview, freshness, target context, symbol trace, file explain, and repo map excerpt.
 - `find` returned no freshness warning for a fresh index.
 - `trace`, `explain`, and `map` include a `Freshness` section when run against a graph index.
-- Wrote call-aware `examples/ts-basic/CODEMIND.md` during map verification with graph index metadata rendered in the Overview section.
+- Wrote call/reference-aware `examples/ts-basic/CODEMIND.md` during map verification with graph index metadata rendered in the Overview section.
 - Indexed 4 TypeScript source files in `examples/ts-agent-workspace`.
 - `health` reports fresh graph status, index metadata, adapter metadata, language, and capabilities.
 - `doctor` reports Node.js runtime, repository root, TypeScript config, graph index, graph freshness, graph capabilities, and read-only MCP tools.
+- Manual Slice Q1 smoke confirmed `trace`, `explain`, `context`, and `doctor` expose `references` capability plus `References Out`, `Referenced By`, `imported-symbol-member`, and `re-export-symbol` output.
 
 ## Trace verification
 
@@ -153,7 +156,7 @@ Result:
 
 - `packages/core` exposes `traceSymbols` and `renderMarkdownSymbolTrace`.
 - `codemind trace <symbol>` reads `.codemind/graph.json` and emits deterministic Markdown.
-- Trace output includes symbol, location, file, imports, exports, `Calls Out`, `Called By`, and related module tables.
+- Trace output includes symbol, location, file, imports, exports, `Calls Out`, `Called By`, `References Out`, `Referenced By`, and related module tables.
 - Trace output includes graph freshness status.
 - No-match trace returns exit code `2` with deterministic Markdown output.
 
@@ -163,7 +166,7 @@ Result:
 
 - `packages/core` exposes `explainFile` and `renderMarkdownFileExplain`.
 - `codemind explain <path>` reads `.codemind/graph.json` and emits deterministic Markdown.
-- Explain output includes file overview, symbols, imports, exports, `Calls Out`, `Called By`, related modules, diagnostics, and graph freshness status.
+- Explain output includes file overview, symbols, imports, exports, `Calls Out`, `Called By`, `References Out`, `Referenced By`, related modules, diagnostics, and graph freshness status.
 - No-match explain returns exit code `2` with deterministic Markdown output.
 
 ## Context pack verification
@@ -172,7 +175,7 @@ Result:
 
 - `packages/core` exposes `createContextPack` and `renderMarkdownContextPack`.
 - `codemind context <symbol-or-path>` reads `.codemind/graph.json` and emits deterministic Markdown.
-- Context output includes overview, freshness, target context, selected symbol traces, selected file explanations, and a bounded repo map excerpt.
+- Context output includes overview, freshness, target context, selected symbol traces, selected file explanations, call/reference tables, and a bounded repo map excerpt.
 - `--limit <n>` controls selected trace/file context count.
 - `--repo-map-lines <n>` controls the repo map excerpt line count.
 - Symbol targets return exit code `0` when matched.
@@ -185,14 +188,14 @@ Result:
 
 - `packages/mcp-server` creates a stdio-capable MCP server with read-only tool annotations.
 - `find_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol rows.
-- `get_repo_map` reads `.codemind/graph.json` and returns deterministic call-aware `CODEMIND.md` Markdown.
+- `get_repo_map` reads `.codemind/graph.json` and returns deterministic call/reference-aware `CODEMIND.md` Markdown.
 - `get_repo_map` returns graph index metadata through the shared repo map renderer.
 - `trace_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol trace output.
 - `explain_file` reads `.codemind/graph.json` and returns deterministic Markdown file explain output.
 - `get_context_pack` reads `.codemind/graph.json` and returns deterministic bounded Markdown context packet output.
 - `codemind mcp start --root <path>` delegates to the read-only MCP stdio server without writing stdout before transport startup.
 - MCP protocol smoke coverage starts `node packages/cli/dist/index.js mcp start --root examples/ts-basic` through SDK stdio transport and verifies initialize, `tools/list`, and `tools/call`.
-- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns graph index metadata and call-aware Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context; protocol-level `explain_file` returns file explain context; protocol-level `get_context_pack` returns bounded context packet output.
+- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns graph index metadata and call/reference-aware Markdown repo map content; protocol-level `trace_symbol` returns symbol trace with `CALLS` and `REFERENCES` context; protocol-level `explain_file` returns file explain context; protocol-level `get_context_pack` returns bounded context packet output.
 - MCP tool responses include graph freshness status.
 - Protocol-level negative/error coverage verifies missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Protocol-level tool metadata verifies read-only, non-destructive, and non-open-world annotations.
@@ -207,6 +210,7 @@ Result:
 - Re-export fixture coverage verifies named re-exports, type re-exports, export-all re-exports, and deterministic `exportNames` metadata.
 - Class and method fixture coverage verifies exported classes and non-exported method symbols with `ClassName.methodName` names.
 - Slice K/M `CALLS` edge fixture coverage verifies same-file function calls, imported function calls, namespace calls, constructor calls, same-class `this.method()` calls, same-file/imported class method calls, simple chained class method calls, and top-level variable initializer callers.
+- Slice Q1 `REFERENCES` edge fixture coverage verifies same-file symbols, imported symbols, namespace symbols, type-only imports, local exports, explicit re-exports, and public demo reference edges.
 
 ## Documentation imports
 
@@ -480,7 +484,7 @@ Result:
 
 - Added top-level graph index metadata to `.codemind/graph.json`.
 - Metadata includes `indexer`, `indexerVersion`, `adapter`, `adapterVersion`, `language`, and `capabilities`.
-- The TypeScript adapter now exports deterministic adapter metadata and capabilities: `symbols`, `imports`, `exports`, and `calls`.
+- The TypeScript adapter now exports deterministic adapter metadata and capabilities: `symbols`, `imports`, `exports`, `calls`, and `references`.
 - `renderMarkdownRepoMap` renders graph index metadata in the Overview section.
 - Legacy graph indexes without top-level metadata remain valid and render `Index metadata: unknown`.
 - Focused verification passed:
@@ -570,3 +574,40 @@ node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs
 ```
 
 - Full `pnpm check` passed for this checkpoint with 35 `node:test` tests and the Next.js production build.
+
+## Latest Slice Q1 REFERENCES edge update
+
+Result:
+
+- Added conservative deterministic TypeScript `REFERENCES` edge extraction in `packages/adapter-typescript`.
+- Covered same-file symbol references, imported symbol references, namespace symbol references, type-only import references, local export references, and explicit re-export references.
+- Added `references` to graph index capability metadata.
+- Added `packages/core` `listReferences`.
+- Symbol traces and file explanations now include `referencesOut` and `referencedBy`.
+- `renderMarkdownSymbolTrace`, `renderMarkdownFileExplain`, `renderMarkdownContextPack`, and `renderMarkdownRepoMap` now render reference context.
+- CLI and MCP surfaces inherit reference-aware output through shared core renderers.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/typescript-adapter.test.mjs
+node --test test/core.test.mjs
+node --test test/cli-index.test.mjs
+node --test test/mcp-server.test.mjs
+node --test test/mcp-protocol.test.mjs
+```
+
+- Full verification passed:
+
+```powershell
+pnpm check
+```
+
+- Manual CLI smoke passed:
+
+```powershell
+node packages/cli/dist/index.js trace buildDemoContext --root examples/ts-agent-workspace
+node packages/cli/dist/index.js explain src/index.ts --root examples/ts-agent-workspace
+node packages/cli/dist/index.js context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 60
+node packages/cli/dist/index.js doctor --root examples/ts-agent-workspace
+```

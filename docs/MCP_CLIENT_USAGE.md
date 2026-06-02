@@ -78,6 +78,7 @@ Expected output:
 - Imports
 - Exports
 - Calls
+- References
 - Diagnostics
 
 ### `trace_symbol`
@@ -97,6 +98,8 @@ Expected output:
 - exports
 - Calls Out
 - Called By
+- References Out
+- Referenced By
 - related modules
 - freshness status
 
@@ -118,6 +121,8 @@ Expected output:
 - exports
 - Calls Out
 - Called By
+- References Out
+- Referenced By
 - related modules
 - diagnostics
 - freshness status
@@ -141,6 +146,7 @@ Expected output:
 - target context
 - selected symbol traces
 - selected file explanations
+- call/reference context
 - row-limited tables
 - bounded repo map excerpt
 

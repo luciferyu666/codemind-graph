@@ -80,7 +80,7 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     assert.match(repoMapText, /^# CODEMIND/m);
     assert.match(repoMapText, /^## Overview/m);
     assert.match(repoMapText, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
-    assert.match(repoMapText, /- Capabilities: `symbols, imports, exports, calls`/);
+    assert.match(repoMapText, /- Capabilities: `symbols, imports, exports, calls, references`/);
     assert.match(repoMapText, /^## Freshness/m);
     assert.match(repoMapText, /- Status: `fresh`/);
     assert.match(repoMapText, /^## Symbols/m);

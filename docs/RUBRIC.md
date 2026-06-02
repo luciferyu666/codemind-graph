@@ -14,12 +14,13 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `packages/adapter-typescript` extracts TypeScript source files, functions, classes, interfaces, imports, and exports with the TypeScript Compiler API.
 - [x] TypeScript adapter fixtures cover import kinds, local/external module resolution, re-exports, classes, and class methods.
 - [x] TypeScript adapter extracts basic deterministic `CALLS` edges for same-file function calls, imported function calls, namespace calls, constructors, same-class methods, same-file/imported class methods, and simple chained class methods.
+- [x] TypeScript adapter extracts conservative deterministic `REFERENCES` edges for same-file symbols, imported symbols, namespace symbols, type-only imports, and explicit re-exports.
 - [x] `codemind index examples/ts-basic` writes graph data under `.codemind/`.
 - [x] `codemind find <symbol>` returns a deterministic result.
-- [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, call, and related module context.
-- [x] `codemind explain <path>` returns deterministic file overview, symbols, imports, exports, calls out, called-by context, related modules, diagnostics, and freshness status.
+- [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, call, reference, and related module context.
+- [x] `codemind explain <path>` returns deterministic file overview, symbols, imports, exports, calls out, called-by context, references out, referenced-by context, related modules, diagnostics, and freshness status.
 - [x] `codemind context <symbol-or-path>` returns a deterministic, bounded Markdown context packet with overview, freshness, target context, selected symbol traces, selected file explanations, row-limited tables, and repo map excerpt.
-- [x] `codemind map --format markdown` generates call-aware `CODEMIND.md` output with calls summary, top callers, top callees, and call edge tables.
+- [x] `codemind map --format markdown` generates call/reference-aware `CODEMIND.md` output with calls summary, references summary, top callers, top callees, top referencers, top referenced symbols, and edge tables.
 - [x] `codemind health` reports graph freshness, index metadata, source counts, node counts, edge counts, and capabilities.
 - [x] `codemind doctor` reports local runtime, repository root, TypeScript config, graph index, graph freshness, capabilities, and read-only MCP readiness.
 - [x] `.codemind/graph.json` includes graph index metadata with indexer, indexer version, adapter, adapter version, language, and capabilities.
@@ -29,8 +30,8 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `packages/mcp-server` exposes read-only `trace_symbol` over the same core trace helper used by CLI.
 - [x] `packages/mcp-server` exposes read-only `explain_file` over the same core file explain helper used by CLI.
 - [x] `packages/mcp-server` exposes read-only `get_context_pack` over the same core context pack helper used by CLI.
-- [x] MCP `get_repo_map` returns the same call-aware `CODEMIND.md` map as CLI.
-- [x] `trace_symbol` includes the same `Calls Out` and `Called By` context as CLI trace output.
+- [x] MCP `get_repo_map` returns the same call/reference-aware `CODEMIND.md` map as CLI.
+- [x] `trace_symbol` includes the same `Calls Out`, `Called By`, `References Out`, and `Referenced By` context as CLI trace output.
 - [x] MCP `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file` responses include graph freshness status.
 - [x] `codemind mcp start` exposes read-only tools.
 - [x] MCP stdio protocol smoke coverage verifies initialize, `tools/list`, and `tools/call` for `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
@@ -48,7 +49,7 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 | Dimension | Weight | Standard |
 | --- | ---: | --- |
 | Scope control | 30% | Work stays inside TypeScript, CLI, local graph, and read-only MCP v0.1 scope. |
-| Model quality | 40% | Symbol graph, dependency edges, basic static call edges, and context packets are deterministic and covered by focused tests. |
+| Model quality | 40% | Symbol graph, dependency edges, basic static call/reference edges, and context packets are deterministic and covered by focused tests. |
 | Code integrity | 30% | `pnpm check` passes, public APIs use explicit types, and production TypeScript avoids `any`. |
 
 ## Anti-patterns

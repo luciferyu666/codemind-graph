@@ -119,7 +119,8 @@ Day 61-90:
 - Slice M richer TypeScript `CALLS` resolution is implemented.
 - `codemind trace` and MCP `trace_symbol` now render `Calls Out` and `Called By` sections from indexed `CALLS` edges.
 - `codemind explain` now renders file-level `Calls Out` and `Called By` sections from indexed `CALLS` edges.
-- `codemind map` and MCP `get_repo_map` now render a call-aware `CODEMIND.md` overview with call counts, top callers, top callees, and call edge tables.
+- `codemind map` and MCP `get_repo_map` now render a call/reference-aware `CODEMIND.md` overview with call counts, reference counts, top callers, top callees, top referencers, top referenced symbols, and edge tables.
+- Slice Q1 TypeScript `REFERENCES` edge MVP is implemented for conservative project-local same-file, imported, namespace, type-only import, local export, and explicit re-export references.
 - `.codemind/graph.json` now records indexer, adapter, adapter version, language, and graph capabilities.
 - `codemind health` and `codemind doctor` now provide public-MVP readiness checks.
 - `codemind context` now composes selected trace, explain, and repo map context into a bounded Markdown packet.

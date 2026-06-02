@@ -29,6 +29,7 @@ Implemented:
 - graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint`.
 - graph index metadata with indexer, adapter, language, and capabilities.
 - conservative TypeScript `CALLS` edges for functions, methods, namespace calls, constructors, static methods, and simple chained class methods.
+- conservative TypeScript `REFERENCES` edges for same-file symbols, imported symbols, namespace symbols, type-only imports, local exports, and explicit re-exports.
 - `CODEMIND.md` markdown repo map output.
 - read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - official website on Vercel at `https://codemind-graph.vercel.app`.
@@ -45,7 +46,7 @@ Not yet implemented:
 - packaged npm release
 - SQLite storage
 - context ranking
-- `REFERENCES` edge extraction
+- full TypeChecker-backed `REFERENCES` edge extraction
 - full TypeChecker-backed call graph resolution
 - SaaS product surface
 
@@ -220,7 +221,7 @@ Deliverables:
 - class method tests done
 - interface/type alias coverage
 - external module nodes done
-- basic `REFERENCES` edges
+- basic `REFERENCES` edges done
 - later `CALLS` edges
 
 Why this matters:
@@ -647,31 +648,23 @@ pnpm test:e2e
 
 ## Recommended Next Task
 
-After Slice Q0b, the next task should be:
-
-```text
-Slice Q1: REFERENCES edge MVP
-```
-
-Reason:
-
-The deterministic CLI and MCP context loop now includes bounded context packets. The next highest-leverage graph-quality step is indexing simple identifier references so impact analysis can answer more than call relationships.
-
-Recommended scope:
-
-- same-file identifier references
-- imported symbol references
-- exported symbol references
-- conservative, deterministic `REFERENCES` edges only
-- no TypeChecker-backed full semantic usage graph yet
-
-Alternative near-term task:
+After Slice Q1, the next task should be:
 
 ```text
 Slice Q2: npm package / bin readiness
 ```
 
-This would make external trial easier, but graph quality should come first if the goal remains Agent context value.
+Reason:
+
+The deterministic CLI and MCP context loop now includes bounded context packets plus conservative call/reference context. The next highest-leverage public-MVP step is making the CLI easier for external developers to try without manually invoking `node packages/cli/dist/index.js`.
+
+Alternative near-term task:
+
+```text
+Impact Analysis MVP over REFERENCES
+```
+
+This would add a dedicated deterministic impact query over `REFERENCES` and `CALLS`, but package/bin readiness should come first if the goal is external trial and GitHub adoption.
 
 Business note:
 

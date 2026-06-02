@@ -29,16 +29,17 @@ Implemented in this session:
 - `packages/core` graph schema with node kinds, edge kinds, source locations, metadata, deterministic IDs, and `GraphBuilder`.
 - `packages/adapter-typescript` TypeScript Compiler API extraction for source files, imports, exports, functions, classes, interfaces, type aliases, enums, variables, and methods.
 - `packages/adapter-typescript` TypeScript `CALLS` extraction for same-file function calls, imported function calls, namespace calls, constructors, same-class methods, same-file/imported class methods, and simple chained class methods.
+- `packages/adapter-typescript` TypeScript `REFERENCES` extraction for conservative deterministic same-file, imported, namespace, type-only import, local export, and explicit re-export references.
 - `packages/cli` `codemind index <path>` command that writes `<path>/.codemind/graph.json`.
 - `packages/cli` `codemind find <symbol>` command that reads `.codemind/graph.json` and returns deterministic symbol matches.
-- `packages/cli` `codemind trace <symbol>` command that reads `.codemind/graph.json` and reports symbol file imports, exports, calls out, called-by context, and related modules.
-- `packages/cli` `codemind explain <path>` command that reads `.codemind/graph.json` and reports file overview, symbols, imports, exports, calls out, external callers, related modules, diagnostics, and freshness status.
+- `packages/cli` `codemind trace <symbol>` command that reads `.codemind/graph.json` and reports symbol file imports, exports, calls out, called-by context, references out, referenced-by context, and related modules.
+- `packages/cli` `codemind explain <path>` command that reads `.codemind/graph.json` and reports file overview, symbols, imports, exports, calls out, external callers, references out, external references, related modules, diagnostics, and freshness status.
 - `packages/cli` `codemind context <symbol-or-path>` command that reads `.codemind/graph.json` and reports deterministic agent-ready context packets.
-- `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes call-aware `CODEMIND.md`.
+- `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes call/reference-aware `CODEMIND.md`.
 - `packages/cli` `codemind health` and `codemind doctor` commands for public-MVP graph readiness checks.
 - `packages/cli` `codemind mcp start --root <path>` command that starts the read-only MCP stdio server.
 - `packages/cli` graph index metadata output with indexer, indexer version, adapter, adapter version, language, and capabilities.
-- `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, graph edges, symbol trace rendering, file explain rendering, and repo map call overview rendering.
+- `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, `REFERENCES` edges, graph edges, symbol trace rendering, file explain rendering, and repo map call/reference overview rendering.
 - `packages/core` reusable context pack helpers that compose selected trace, explain, and repo map context into bounded Markdown.
 - `packages/mcp-server` read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
 - `docs/MCP_CLIENT_USAGE.md` with read-only MCP stdio client setup, tool usage, graph path options, safety boundary, and troubleshooting.
@@ -63,11 +64,11 @@ Implemented in this session:
 - Browser automation environment diagnostics captured in `docs/BROWSER_QA_WORKFLOW.md`.
 - Focused `node:test` coverage for graph builder behavior and TypeScript adapter extraction.
 - Rich TypeScript adapter fixture coverage for side-effect imports, default/named imports, type imports, namespace imports, external imports, named re-exports, type re-exports, export-all re-exports, classes, and methods.
-- Focused CLI test coverage for graph file generation, symbol lookup, symbol trace with `CALLS` context, file explain with `CALLS` context, and call-aware markdown repo map generation.
+- Focused CLI test coverage for graph file generation, symbol lookup, symbol trace with `CALLS` / `REFERENCES` context, file explain with `CALLS` / `REFERENCES` context, and call/reference-aware markdown repo map generation.
 - Focused CLI test coverage for graph index metadata and legacy graph indexes without top-level metadata.
 - Focused CLI test coverage for MCP startup delegation and invalid MCP startup options.
-- Focused MCP test coverage for symbol lookup, call-aware repo map retrieval with graph index metadata, no-match behavior, `CALLS` trace context, file explain context, and graph path containment.
-- MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `get_repo_map` with graph index metadata and call-aware output, `trace_symbol` with `CALLS` context, and `explain_file`.
+- Focused MCP test coverage for symbol lookup, call/reference-aware repo map retrieval with graph index metadata, no-match behavior, `CALLS` / `REFERENCES` trace context, file explain context, and graph path containment.
+- MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `get_repo_map` with graph index metadata and call/reference-aware output, `trace_symbol` with `CALLS` / `REFERENCES` context, and `explain_file`.
 - MCP protocol-level negative/error coverage for missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Slice H Graph Freshness is implemented: `codemind index` writes `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint` metadata.
 - CLI `find`, `trace`, and `map` now report stale or unknown graph freshness, including legacy graph files without metadata.
@@ -115,7 +116,7 @@ Current design baseline:
 
 1. Commit and push the Slice Q0b checkpoint to `origin/main`.
 2. Confirm GitHub Actions CI passes on `main`.
-3. Start Slice Q1 `REFERENCES` edge MVP when the next engineering task begins.
+3. Push the Slice Q1 `REFERENCES` edge MVP checkpoint and confirm GitHub Actions CI.
 4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
@@ -214,7 +215,7 @@ Latest Slice O graph index metadata update:
 Latest v0.1.1 release update:
 
 - README now includes v0.1.1 highlights.
-- README quickstart now calls out graph index metadata, freshness metadata, call-aware repo map sections, and read-only MCP tools.
+- README quickstart now calls out graph index metadata, freshness metadata, call/reference-aware repo map sections, and read-only MCP tools.
 - `docs/RELEASE_NOTES_v0.1.1.md` is published as the GitHub Release notes.
 - GitHub Release `v0.1.1` is published at `https://github.com/luciferyu666/codemind-graph/releases/tag/v0.1.1`.
 - No TypeScript source files changed in this documentation checkpoint.
@@ -276,6 +277,27 @@ node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs
 ```
 
 - Full `pnpm check` passed for the Slice Q0b checkpoint with 35 `node:test` tests and the Next.js production build.
+
+Latest Slice Q1 REFERENCES edge update:
+
+- Implemented conservative deterministic TypeScript `REFERENCES` edges in `packages/adapter-typescript`.
+- Indexed same-file symbol references, imported symbol references, namespace symbol references, type-only import references, local export references, and explicit re-export references when they resolve to project-local symbols.
+- Added `references` to graph index capabilities.
+- `packages/core` now exposes `listReferences` and includes `referencesOut` / `referencedBy` in symbol traces and file explanations.
+- `renderMarkdownSymbolTrace`, `renderMarkdownFileExplain`, `renderMarkdownContextPack`, and `renderMarkdownRepoMap` now render reference context.
+- CLI and MCP surfaces inherit reference-aware output through shared core renderers.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/typescript-adapter.test.mjs
+node --test test/core.test.mjs
+node --test test/cli-index.test.mjs
+node --test test/mcp-server.test.mjs
+node --test test/mcp-protocol.test.mjs
+```
+- Full verification passed with `pnpm check`, 35 focused `node:test` tests, and the Next.js production build.
+- Manual CLI smoke confirmed `trace`, `explain`, `context`, and `doctor` expose reference-aware output for `examples/ts-agent-workspace`.
 
 ## Resume workflow
 

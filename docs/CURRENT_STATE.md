@@ -33,17 +33,18 @@ Last updated: 2026-06-02
 - `packages/core` graph schema is implemented.
 - `packages/adapter-typescript` TypeScript Compiler API extraction is implemented.
 - `packages/adapter-typescript` now extracts basic static `CALLS` edges for same-file function calls, imported function calls, namespace calls, constructors, same-class methods, same-file/imported class methods, and simple chained class methods.
+- `packages/adapter-typescript` now extracts conservative static `REFERENCES` edges for same-file symbols, imported symbols, namespace symbols, type-only imports, local exports, and explicit re-exports.
 - `packages/cli` supports `index` and writes `.codemind/graph.json`.
 - `packages/cli` supports `find` and reads `.codemind/graph.json` for symbol lookup.
-- `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency and call context.
-- `packages/cli` supports `explain` and reads `.codemind/graph.json` for deterministic file-level context, including outgoing calls and external callers.
+- `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency, call, and reference context.
+- `packages/cli` supports `explain` and reads `.codemind/graph.json` for deterministic file-level context, including outgoing calls, external callers, outgoing references, and external references.
 - `packages/cli` supports `context` and reads `.codemind/graph.json` for deterministic agent-ready context packets.
-- `packages/cli` supports `map` and writes call-aware `CODEMIND.md` output.
+- `packages/cli` supports `map` and writes call/reference-aware `CODEMIND.md` output.
 - `packages/cli` supports `health` and `doctor` for public-MVP graph readiness checks.
 - `packages/cli` writes graph index metadata during `index`, including indexer, adapter, adapter version, language, and capabilities.
 - `packages/cli` writes graph freshness metadata during `index` and reports stale or unknown freshness during `find`, `trace`, and `map`.
 - `packages/cli` supports `mcp start --root <path>` and delegates to the read-only MCP server.
-- `packages/core` exposes reusable graph query helpers used by CLI commands, including `CALLS` edge trace, file explain context, and repo map call overview.
+- `packages/core` exposes reusable graph query helpers used by CLI commands, including `CALLS` and `REFERENCES` edge trace, file explain context, and repo map overviews.
 - `packages/core` exposes reusable context pack helpers that compose selected trace, explain, and repo map context.
 - `packages/mcp-server` exposes read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
 - `packages/mcp-server` reports graph freshness status in `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file` responses.
@@ -66,19 +67,19 @@ Last updated: 2026-06-02
 - GitHub repository is connected to the Vercel project under `vincent-lius-projects-de5eeb92`.
 - Vercel project Root Directory is configured as `apps/web`.
 - Focused tests cover graph builder determinism and TypeScript extraction.
-- TypeScript adapter fixtures now cover richer imports, re-exports, classes, methods, namespace calls, constructors, same-file static methods, simple chained class methods, and basic `CALLS` edge extraction for future trace work.
+- TypeScript adapter fixtures now cover richer imports, re-exports, classes, methods, namespace calls, constructors, same-file static methods, simple chained class methods, basic `CALLS` edge extraction, and conservative `REFERENCES` edge extraction for impact analysis.
 - `examples/ts-agent-workspace` provides a richer public TypeScript demo fixture with imports, re-exports, classes, methods, constructors, namespace calls, and simple call context.
 - `examples/ts-agent-workspace/CODEMIND.md` provides the first committed sanitized public demo repo map.
-- Focused CLI tests cover symbol trace success, no-match behavior, and rendered `CALLS` edge context.
-- Focused CLI tests cover file explain success, no-match behavior, and rendered file-level `CALLS` context.
+- Focused CLI tests cover symbol trace success, no-match behavior, and rendered `CALLS` / `REFERENCES` edge context.
+- Focused CLI tests cover file explain success, no-match behavior, and rendered file-level `CALLS` / `REFERENCES` context.
 - Focused CLI tests cover context pack success for symbol targets, file targets, and no-match behavior.
 - Focused CLI tests cover stale source fingerprints and legacy graph files without freshness metadata.
 - Focused CLI tests cover graph index metadata and legacy graph files without index metadata.
 - Focused CLI tests cover `codemind health` fresh/stale behavior and `codemind doctor` readiness output.
 - Focused CLI tests cover MCP startup delegation and invalid MCP startup options.
-- Focused MCP tests cover symbol lookup, call-aware markdown repo map retrieval with graph index metadata, symbol trace retrieval with `CALLS` edge context, file explain retrieval with `CALLS` edge context, freshness status, stale source fingerprints, and graph path containment.
+- Focused MCP tests cover symbol lookup, call/reference-aware markdown repo map retrieval with graph index metadata, symbol trace retrieval with `CALLS` / `REFERENCES` edge context, file explain retrieval with `CALLS` / `REFERENCES` edge context, freshness status, stale source fingerprints, and graph path containment.
 - Focused MCP tests cover context pack retrieval with bounded Markdown output.
-- MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, graph index metadata, freshness status, call-aware repo map output, `CALLS` trace context, file explain context, and context pack output for `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
+- MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, graph index metadata, freshness status, call/reference-aware repo map output, `CALLS` / `REFERENCES` trace context, file explain context, and context pack output for `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
 - MCP protocol negative/error coverage verifies missing graph, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and no engineering memory leakage.
 - `docs/NEXT_DEVELOPMENT_TOPICS.md` defines the next AI-native graph platform development topics and slice plan.
 - README now documents the v0.1 quickstart demo, v0.1.1 highlights, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
@@ -92,7 +93,7 @@ Last updated: 2026-06-02
 - CLI supports `index`, `find`, `trace`, `explain`, `context`, `map`, `health`, `doctor`, and `mcp start`.
 - Phase 001 minimum graph, freshness, trace, explain, map, read-only MCP flow, and richer TypeScript fixture coverage are implemented.
 - SQLite storage is not implemented yet; the current index target is JSON under `.codemind/graph.json`.
-- Full TypeScript call graph resolution is not implemented yet; Slice K/M only covers conservative static function, method, namespace, constructor, and simple chained class call edges.
+- Full TypeScript call/reference graph resolution is not implemented yet; Slice K/M/Q1 only covers conservative static function, method, namespace, constructor, simple chained class call edges, and project-local reference edges.
 - MCP currently reads only `.codemind/graph.json`; live indexing from MCP is intentionally out of scope.
 - Custom domain setup is not implemented yet.
 - The Vincent Liu digital business card uses a normalized portrait asset generated from `C:\Users\vince\Downloads\20260528_161756790.JPG`.
@@ -127,6 +128,8 @@ Slice Q0 Context Pack MVP is implemented with `codemind context <symbol-or-path>
 
 Slice Q0b MCP `get_context_pack` is implemented with focused direct MCP and MCP protocol tests.
 
-Immediate target: after the Slice Q0b checkpoint is pushed and CI is verified, start Slice Q1 `REFERENCES` edge MVP.
+Slice Q1 `REFERENCES` edge MVP is implemented with conservative deterministic project-local references and focused adapter/core/CLI/MCP tests.
+
+Immediate target: after the Slice Q1 checkpoint is pushed and CI is verified, continue with the next graph-quality task, likely Slice Q2 npm package / bin readiness or a bounded impact-analysis query over `REFERENCES`.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

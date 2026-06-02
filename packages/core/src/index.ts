@@ -53,6 +53,7 @@ export const GRAPH_INDEX_CAPABILITIES = [
   "imports",
   "exports",
   "calls",
+  "references",
 ] as const;
 
 export type GraphIndexSchemaVersion = typeof GRAPH_INDEX_SCHEMA_VERSION;
@@ -151,6 +152,8 @@ export interface SymbolTrace {
   readonly exports: readonly GraphEdge[];
   readonly callsOut: readonly GraphEdge[];
   readonly calledBy: readonly GraphEdge[];
+  readonly referencesOut: readonly GraphEdge[];
+  readonly referencedBy: readonly GraphEdge[];
   readonly relatedModules: readonly GraphNode[];
 }
 
@@ -161,6 +164,8 @@ export interface FileExplanation {
   readonly exports: readonly GraphEdge[];
   readonly callsOut: readonly GraphEdge[];
   readonly calledBy: readonly GraphEdge[];
+  readonly referencesOut: readonly GraphEdge[];
+  readonly referencedBy: readonly GraphEdge[];
   readonly relatedModules: readonly GraphNode[];
 }
 
@@ -280,6 +285,8 @@ export function traceSymbols(graph: CodeGraph, query: string): readonly SymbolTr
     const exports = file === undefined ? [] : listExports(graph).filter((edge) => edge.fromId === file.id);
     const callsOut = listCalls(graph).filter((edge) => edge.fromId === symbol.id);
     const calledBy = listCalls(graph).filter((edge) => edge.toId === symbol.id);
+    const referencesOut = listReferences(graph).filter((edge) => edge.fromId === symbol.id);
+    const referencedBy = listReferences(graph).filter((edge) => edge.toId === symbol.id);
     const relatedModules = uniqueSortedNodes([
       ...imports.map((edge) => getNodeById(graph, edge.toId)),
       ...exports.map((edge) => getNodeById(graph, edge.toId)).filter((node) => node?.kind === "module"),
@@ -292,6 +299,8 @@ export function traceSymbols(graph: CodeGraph, query: string): readonly SymbolTr
       exports,
       callsOut,
       calledBy,
+      referencesOut,
+      referencedBy,
       relatedModules,
     };
   });
@@ -317,8 +326,11 @@ export function explainFile(
   const imports = listImports(graph).filter((edge) => edge.fromId === file.id);
   const exports = listExports(graph).filter((edge) => edge.fromId === file.id);
   const symbolIds = new Set(symbols.map((node) => node.id));
+  const fileAndSymbolIds = new Set([file.id, ...symbolIds]);
   const callsOut = listCalls(graph).filter((edge) => symbolIds.has(edge.fromId));
   const calledBy = listCalls(graph).filter((edge) => symbolIds.has(edge.toId) && !symbolIds.has(edge.fromId));
+  const referencesOut = listReferences(graph).filter((edge) => fileAndSymbolIds.has(edge.fromId));
+  const referencedBy = listReferences(graph).filter((edge) => symbolIds.has(edge.toId) && !fileAndSymbolIds.has(edge.fromId));
   const relatedModules = uniqueSortedNodes([
     ...imports.map((edge) => getNodeById(graph, edge.toId)),
     ...exports.map((edge) => getNodeById(graph, edge.toId)).filter((node) => node?.kind === "module"),
@@ -331,6 +343,8 @@ export function explainFile(
     exports,
     callsOut,
     calledBy,
+    referencesOut,
+    referencedBy,
     relatedModules,
   };
 }
@@ -345,6 +359,10 @@ export function listExports(graph: CodeGraph): readonly GraphEdge[] {
 
 export function listCalls(graph: CodeGraph): readonly GraphEdge[] {
   return graph.edges.filter((edge) => edge.kind === "CALLS").sort(compareGraphEdges);
+}
+
+export function listReferences(graph: CodeGraph): readonly GraphEdge[] {
+  return graph.edges.filter((edge) => edge.kind === "REFERENCES").sort(compareGraphEdges);
 }
 
 export function getOutgoingEdges(graph: CodeGraph, nodeId: GraphNodeId): readonly GraphEdge[] {
@@ -535,6 +553,7 @@ export function renderMarkdownRepoMap(
 ): string {
   const graph = indexFile.graph;
   const calls = listCalls(graph);
+  const references = listReferences(graph);
   const lines: string[] = [
     "# CODEMIND",
     "",
@@ -549,6 +568,7 @@ export function renderMarkdownRepoMap(
     `- Nodes: ${graph.nodes.length}`,
     `- Edges: ${graph.edges.length}`,
     `- Calls: ${calls.length}`,
+    `- References: ${references.length}`,
     `- Diagnostics: ${indexFile.diagnostics.length}`,
   ];
 
@@ -577,6 +597,10 @@ export function renderMarkdownRepoMap(
     "## Calls",
     "",
     ...renderCallsOverview(graph, calls),
+    "",
+    "## References",
+    "",
+    ...renderReferencesOverview(graph, references),
     "",
     "## Diagnostics",
     "",
@@ -645,6 +669,14 @@ export function renderMarkdownSymbolTrace(
       "",
       ...renderCallEdgeTable(graph, trace.calledBy, "No incoming calls found."),
       "",
+      "### References Out",
+      "",
+      ...renderReferenceEdgeTable(graph, trace.referencesOut, "No outgoing references found."),
+      "",
+      "### Referenced By",
+      "",
+      ...renderReferenceEdgeTable(graph, trace.referencedBy, "No incoming references found."),
+      "",
       "### Related Modules",
       "",
       ...renderRelatedModulesTable(trace.relatedModules),
@@ -694,6 +726,8 @@ export function renderMarkdownFileExplain(
     `- Exports: ${explanation.exports.length}`,
     `- Calls out: ${explanation.callsOut.length}`,
     `- Called by: ${explanation.calledBy.length}`,
+    `- References out: ${explanation.referencesOut.length}`,
+    `- Referenced by: ${explanation.referencedBy.length}`,
     `- Related modules: ${explanation.relatedModules.length}`,
     "",
     "## Symbols",
@@ -715,6 +749,14 @@ export function renderMarkdownFileExplain(
     "## Called By",
     "",
     ...renderCallEdgeTable(indexFile.graph, explanation.calledBy, "No incoming calls found."),
+    "",
+    "## References Out",
+    "",
+    ...renderReferenceEdgeTable(indexFile.graph, explanation.referencesOut, "No outgoing references found."),
+    "",
+    "## Referenced By",
+    "",
+    ...renderReferenceEdgeTable(indexFile.graph, explanation.referencedBy, "No incoming references found."),
     "",
     "## Related Modules",
     "",
@@ -795,6 +837,7 @@ export function renderMarkdownContextPack(
     `- Nodes: ${graph.nodes.length}`,
     `- Edges: ${graph.edges.length}`,
     `- Calls: ${listCalls(graph).length}`,
+    `- References: ${listReferences(graph).length}`,
     `- Diagnostics: ${indexFile.diagnostics.length}`,
     ...renderGraphIndexMetadataOverview(indexFile.metadata),
   ];
@@ -852,6 +895,8 @@ function renderContextSymbolTraces(
     const exports = limitItems(trace.exports, rowLimit);
     const callsOut = limitItems(trace.callsOut, rowLimit);
     const calledBy = limitItems(trace.calledBy, rowLimit);
+    const referencesOut = limitItems(trace.referencesOut, rowLimit);
+    const referencedBy = limitItems(trace.referencedBy, rowLimit);
     const relatedModules = limitItems(trace.relatedModules, rowLimit);
 
     return [
@@ -863,6 +908,8 @@ function renderContextSymbolTraces(
       `- Exports: ${trace.exports.length}`,
       `- Calls out: ${trace.callsOut.length}`,
       `- Called by: ${trace.calledBy.length}`,
+      `- References out: ${trace.referencesOut.length}`,
+      `- Referenced by: ${trace.referencedBy.length}`,
       "",
       "#### Imports",
       "",
@@ -883,6 +930,16 @@ function renderContextSymbolTraces(
       "",
       ...renderCallEdgeTable(graph, calledBy.items, "No incoming calls found."),
       ...renderTruncationNote("incoming calls", calledBy, rowLimit),
+      "",
+      "#### References Out",
+      "",
+      ...renderReferenceEdgeTable(graph, referencesOut.items, "No outgoing references found."),
+      ...renderTruncationNote("outgoing references", referencesOut, rowLimit),
+      "",
+      "#### Referenced By",
+      "",
+      ...renderReferenceEdgeTable(graph, referencedBy.items, "No incoming references found."),
+      ...renderTruncationNote("incoming references", referencedBy, rowLimit),
       "",
       "#### Related Modules",
       "",
@@ -910,6 +967,8 @@ function renderContextFileExplanations(
     const exports = limitItems(explanation.exports, rowLimit);
     const callsOut = limitItems(explanation.callsOut, rowLimit);
     const calledBy = limitItems(explanation.calledBy, rowLimit);
+    const referencesOut = limitItems(explanation.referencesOut, rowLimit);
+    const referencedBy = limitItems(explanation.referencedBy, rowLimit);
     const diagnostics = limitItems(fileDiagnostics, rowLimit);
 
     return [
@@ -921,6 +980,8 @@ function renderContextFileExplanations(
       `- Exports: ${explanation.exports.length}`,
       `- Calls out: ${explanation.callsOut.length}`,
       `- Called by: ${explanation.calledBy.length}`,
+      `- References out: ${explanation.referencesOut.length}`,
+      `- Referenced by: ${explanation.referencedBy.length}`,
       `- Related modules: ${explanation.relatedModules.length}`,
       "",
       "#### Symbols",
@@ -947,6 +1008,16 @@ function renderContextFileExplanations(
       "",
       ...renderCallEdgeTable(indexFile.graph, calledBy.items, "No incoming calls found."),
       ...renderTruncationNote("incoming calls", calledBy, rowLimit),
+      "",
+      "#### References Out",
+      "",
+      ...renderReferenceEdgeTable(indexFile.graph, referencesOut.items, "No outgoing references found."),
+      ...renderTruncationNote("outgoing references", referencesOut, rowLimit),
+      "",
+      "#### Referenced By",
+      "",
+      ...renderReferenceEdgeTable(indexFile.graph, referencedBy.items, "No incoming references found."),
+      ...renderTruncationNote("incoming references", referencedBy, rowLimit),
       "",
       "#### Diagnostics",
       "",
@@ -1242,6 +1313,27 @@ function renderCallEdgeTable(graph: CodeGraph, edges: readonly GraphEdge[], empt
   ];
 }
 
+function renderReferenceEdgeTable(graph: CodeGraph, edges: readonly GraphEdge[], emptyMessage: string): readonly string[] {
+  if (edges.length === 0) {
+    return [emptyMessage];
+  }
+
+  return [
+    "| Referencer | Referenced Symbol | Reference | Resolution |",
+    "| --- | --- | --- | --- |",
+    ...edges.map((edge) => {
+      const fromNode = getNodeById(graph, edge.fromId);
+      const toNode = getNodeById(graph, edge.toId);
+      return [
+        formatEdgeNode(fromNode),
+        formatEdgeNode(toNode),
+        String(edge.metadata?.reference ?? ""),
+        String(edge.metadata?.resolution ?? ""),
+      ].map(cell).join(" | ").replace(/^/, "| ").replace(/$/, " |");
+    }),
+  ];
+}
+
 function renderCallsOverview(graph: CodeGraph, calls: readonly GraphEdge[]): readonly string[] {
   const callerIds = new Set(calls.map((edge) => edge.fromId));
   const calleeIds = new Set(calls.map((edge) => edge.toId));
@@ -1264,6 +1356,31 @@ function renderCallsOverview(graph: CodeGraph, calls: readonly GraphEdge[]): rea
     "### Call Edges",
     "",
     ...renderCallEdgeTable(graph, calls, "No call edges indexed."),
+  ];
+}
+
+function renderReferencesOverview(graph: CodeGraph, references: readonly GraphEdge[]): readonly string[] {
+  const referencerIds = new Set(references.map((edge) => edge.fromId));
+  const referencedIds = new Set(references.map((edge) => edge.toId));
+
+  return [
+    "### Summary",
+    "",
+    `- Reference edges: ${references.length}`,
+    `- Unique referencers: ${referencerIds.size}`,
+    `- Unique referenced symbols: ${referencedIds.size}`,
+    "",
+    "### Top Referencers",
+    "",
+    ...renderReferenceRankTable(graph, rankReferenceNodes(references, "referencer"), "No referencers indexed."),
+    "",
+    "### Top Referenced Symbols",
+    "",
+    ...renderReferenceRankTable(graph, rankReferenceNodes(references, "referenced"), "No referenced symbols indexed."),
+    "",
+    "### Reference Edges",
+    "",
+    ...renderReferenceEdgeTable(graph, references, "No reference edges indexed."),
   ];
 }
 
@@ -1290,6 +1407,29 @@ function rankCallNodes(
     .slice(0, 10);
 }
 
+function rankReferenceNodes(
+  references: readonly GraphEdge[],
+  direction: "referencer" | "referenced",
+): readonly { readonly nodeId: GraphNodeId; readonly count: number }[] {
+  const counts = new Map<GraphNodeId, number>();
+
+  for (const edge of references) {
+    const nodeId = direction === "referencer" ? edge.fromId : edge.toId;
+    counts.set(nodeId, (counts.get(nodeId) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .map(([nodeId, count]) => ({ nodeId, count }))
+    .sort((left, right) => {
+      if (left.count !== right.count) {
+        return right.count - left.count;
+      }
+
+      return left.nodeId.localeCompare(right.nodeId);
+    })
+    .slice(0, 10);
+}
+
 function renderCallRankTable(
   graph: CodeGraph,
   rankedNodes: readonly { readonly nodeId: GraphNodeId; readonly count: number }[],
@@ -1301,6 +1441,24 @@ function renderCallRankTable(
 
   return [
     "| Symbol | Calls |",
+    "| --- | ---: |",
+    ...rankedNodes.map((rankedNode) =>
+      `| ${cell(formatEdgeNode(getNodeById(graph, rankedNode.nodeId)))} | ${rankedNode.count} |`
+    ),
+  ];
+}
+
+function renderReferenceRankTable(
+  graph: CodeGraph,
+  rankedNodes: readonly { readonly nodeId: GraphNodeId; readonly count: number }[],
+  emptyMessage: string,
+): readonly string[] {
+  if (rankedNodes.length === 0) {
+    return [emptyMessage];
+  }
+
+  return [
+    "| Symbol | References |",
     "| --- | ---: |",
     ...rankedNodes.map((rankedNode) =>
       `| ${cell(formatEdgeNode(getNodeById(graph, rankedNode.nodeId)))} | ${rankedNode.count} |`

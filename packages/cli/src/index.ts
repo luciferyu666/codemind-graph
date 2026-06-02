@@ -932,7 +932,7 @@ function renderMarkdownDoctor(rootDir: string, graphPath: string, checks: readon
 
 function hasRequiredCapabilities(indexFile: GraphIndexFile): boolean {
   const capabilities = indexFile.metadata?.capabilities ?? [];
-  const requiredCapabilities = ["symbols", "imports", "exports", "calls"] as const;
+  const requiredCapabilities = ["symbols", "imports", "exports", "calls", "references"] as const;
   return requiredCapabilities.every((capability) => capabilities.includes(capability));
 }
 

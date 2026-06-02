@@ -77,6 +77,7 @@ test("extractTypeScriptGraph extracts files, symbols, imports, and exports", asy
     const importEdges = graph.edges.filter((edge) => edge.kind === "IMPORTS");
     const exportEdges = graph.edges.filter((edge) => edge.kind === "EXPORTS");
 
+    assert.deepEqual(graph.metadata.capabilities, ["symbols", "imports", "exports", "calls", "references"]);
     assert.deepEqual(result.sourceFiles, ["src/index.ts", "src/user.ts"]);
     assert.equal(result.diagnostics.length, 0);
     assert.ok(nodesByName.has("file:index.ts"));
@@ -92,6 +93,14 @@ test("extractTypeScriptGraph extracts files, symbols, imports, and exports", asy
     assert.ok(importEdges.some((edge) => edge.metadata?.specifier === "external-lib"));
     assert.ok(exportEdges.some((edge) => graph.nodes.find((node) => node.id === edge.toId)?.name === "createUser"));
     assert.ok(exportEdges.some((edge) => graph.nodes.find((node) => node.id === edge.toId)?.name === "apiName"));
+    assertReferenceEdge(graph, "variable", "apiName", "function", "createUser", {
+      reference: "createUser",
+      resolution: "imported-symbol",
+    });
+    assertReferenceEdge(graph, "file", "src/index.ts", "class", "UserService", {
+      reference: "UserService",
+      resolution: "export-symbol",
+    });
   } finally {
     await rm(rootDir, { recursive: true, force: true });
   }
@@ -319,6 +328,35 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
       callee: "ReportService.create",
       resolution: "same-file-method",
     });
+
+    assertReferenceEdge(graph, "function", "doubleSum", "function", "sum", {
+      reference: "sum",
+      resolution: "same-file-symbol",
+    });
+    assertReferenceEdge(graph, "method", "ReportService.build", "function", "calculate", {
+      reference: "calculate",
+      resolution: "imported-symbol",
+    });
+    assertReferenceEdge(graph, "method", "ReportService.build", "function", "sum", {
+      reference: "add",
+      resolution: "imported-symbol",
+    });
+    assertReferenceEdge(graph, "method", "ReportService.build", "interface", "NumericValue", {
+      reference: "NumericValue",
+      resolution: "type-imported-symbol",
+    });
+    assertReferenceEdge(graph, "method", "ReportService.build", "interface", "Report", {
+      reference: "models.Report",
+      resolution: "namespace-symbol",
+    });
+    assertReferenceEdge(graph, "variable", "reportStatus", "enum", "ReportStatus", {
+      reference: "models.ReportStatus",
+      resolution: "namespace-symbol",
+    });
+    assertReferenceEdge(graph, "file", "src/barrel.ts", "class", "Calculator", {
+      reference: "Calculator",
+      resolution: "re-export-symbol",
+    });
   } finally {
     await rm(rootDir, { recursive: true, force: true });
   }
@@ -329,6 +367,7 @@ test("extractTypeScriptGraph indexes the public agent workspace example", async 
   const result = await extractTypeScriptGraph({ rootDir });
   const graph = result.graph;
   const callEdges = graph.edges.filter((edge) => edge.kind === "CALLS");
+  const referenceEdges = graph.edges.filter((edge) => edge.kind === "REFERENCES");
 
   assert.deepEqual(result.sourceFiles, [
     "src/context-pack.ts",
@@ -341,6 +380,7 @@ test("extractTypeScriptGraph indexes the public agent workspace example", async 
   assertSymbol(graph, "class", "ContextPackBuilder", { exported: true, filePath: "src/context-pack.ts" });
   assertSymbol(graph, "function", "buildDemoContext", { exported: true, filePath: "src/index.ts" });
   assert.ok(callEdges.length >= 8);
+  assert.ok(referenceEdges.length >= 8);
   assertCallEdge(graph, "method", "ContextPackBuilder.buildSummary", "function", "normalizeLabel", {
     callee: "text.normalizeLabel",
     resolution: "namespace-function",
@@ -348,6 +388,14 @@ test("extractTypeScriptGraph indexes the public agent workspace example", async 
   assertCallEdge(graph, "function", "buildDemoContext", "method", "GraphStore.fromSeed", {
     callee: "GraphStore.fromSeed",
     resolution: "imported-method",
+  });
+  assertReferenceEdge(graph, "method", "ContextPackBuilder.buildSummary", "function", "normalizeLabel", {
+    reference: "text.normalizeLabel",
+    resolution: "namespace-symbol",
+  });
+  assertReferenceEdge(graph, "function", "buildDemoContext", "method", "GraphStore.fromSeed", {
+    reference: "GraphStore.fromSeed",
+    resolution: "imported-symbol-member",
   });
 });
 
@@ -412,6 +460,31 @@ function assertCallEdge(graph, fromKind, fromName, toKind, toName, expected) {
   ));
 
   assert.ok(edge, `Expected CALLS edge ${fromKind}:${fromName} -> ${toKind}:${toName}`);
+}
+
+function assertReferenceEdge(graph, fromKind, fromName, toKind, toName, expected) {
+  const fromNode = findNodeByKindAndName(graph, fromKind, fromName);
+  const toNode = findNodeByKindAndName(graph, toKind, toName);
+
+  const edge = graph.edges.find((candidate) => (
+    candidate.kind === "REFERENCES"
+    && candidate.fromId === fromNode.id
+    && candidate.toId === toNode.id
+    && candidate.metadata?.reference === expected.reference
+    && candidate.metadata?.resolution === expected.resolution
+  ));
+
+  assert.ok(edge, `Expected REFERENCES edge ${fromKind}:${fromName} -> ${toKind}:${toName}`);
+}
+
+function findNodeByKindAndName(graph, kind, name) {
+  const node = graph.nodes.find((candidate) => (
+    candidate.kind === kind
+    && (candidate.name === name || candidate.filePath === name)
+  ));
+
+  assert.ok(node, `Expected ${kind}:${name}`);
+  return node;
 }
 
 function findFileEdge(graph, kind, filePath, specifier, edgeKind) {

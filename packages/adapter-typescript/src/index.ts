@@ -24,6 +24,7 @@ export const TYPESCRIPT_ADAPTER_CAPABILITIES = [
   "imports",
   "exports",
   "calls",
+  "references",
 ] as const satisfies readonly GraphIndexCapability[];
 
 export interface TypeScriptExtractionOptions {
@@ -67,15 +68,22 @@ interface CallVisitContext {
   readonly caller?: GraphNode;
 }
 
-interface CallSymbolIndex {
+interface SymbolIndex {
   readonly symbolsByFileAndName: ReadonlyMap<string, readonly GraphNode[]>;
   readonly exportedSymbolsByFileAndName: ReadonlyMap<string, GraphNode>;
+  readonly fileNodesByPath: ReadonlyMap<string, GraphNode>;
 }
 
 interface ImportBinding {
   readonly importedName: string;
   readonly moduleFilePath: string | undefined;
   readonly kind: "default" | "named" | "namespace";
+  readonly isTypeOnly: boolean;
+}
+
+interface ResolvedGraphTarget {
+  readonly node: GraphNode;
+  readonly resolution: string;
 }
 
 const DEFAULT_EXCLUDED_DIRECTORIES = new Set([
@@ -85,6 +93,17 @@ const DEFAULT_EXCLUDED_DIRECTORIES = new Set([
   "dist",
   "node_modules",
 ]);
+
+const REFERENCE_TARGET_NODE_KINDS = [
+  "function",
+  "class",
+  "interface",
+  "type",
+  "enum",
+  "variable",
+  "method",
+  "property",
+] as const satisfies readonly GraphNodeKind[];
 
 export async function extractTypeScriptGraph(
   options: TypeScriptExtractionOptions,
@@ -114,9 +133,13 @@ export async function extractTypeScriptGraph(
     extractSourceFile(builder, rootDir, sourceFile, compilerOptions, repositoryNode.id);
   }
 
-  const callSymbolIndex = buildCallSymbolIndex(builder.toGraph(rootDir));
+  const symbolIndex = buildSymbolIndex(builder.toGraph(rootDir));
   for (const sourceFile of sourceFiles) {
-    extractCalls(builder, rootDir, sourceFile, compilerOptions, callSymbolIndex);
+    extractCalls(builder, rootDir, sourceFile, compilerOptions, symbolIndex);
+  }
+
+  for (const sourceFile of sourceFiles) {
+    extractReferences(builder, rootDir, sourceFile, compilerOptions, symbolIndex);
   }
 
   const diagnostics = [
@@ -272,7 +295,7 @@ function extractCalls(
   rootDir: string,
   sourceFile: ts.SourceFile,
   compilerOptions: ts.CompilerOptions,
-  callSymbolIndex: CallSymbolIndex,
+  symbolIndex: SymbolIndex,
 ): void {
   const relativeFilePath = normalizePath(path.relative(rootDir, sourceFile.fileName));
   const importBindings = collectImportBindings(rootDir, sourceFile, compilerOptions);
@@ -280,7 +303,7 @@ function extractCalls(
   function visit(node: ts.Node, context: CallVisitContext): void {
     const target = context.caller === undefined
       ? undefined
-      : resolveCallLikeTarget(node, relativeFilePath, context, importBindings, callSymbolIndex, sourceFile);
+      : resolveCallLikeTarget(node, relativeFilePath, context, importBindings, symbolIndex, sourceFile);
 
     if (target !== undefined && context.caller !== undefined) {
       builder.addEdge(createGraphEdge("CALLS", context.caller.id, target.node.id, sourceFile, node, relativeFilePath, {
@@ -289,7 +312,48 @@ function extractCalls(
       }));
     }
 
-    const childContext = contextForCallChildren(node, context, relativeFilePath, callSymbolIndex);
+    const childContext = contextForCallChildren(node, context, relativeFilePath, symbolIndex);
+    node.forEachChild((child) => {
+      visit(child, childContext);
+    });
+  }
+
+  sourceFile.forEachChild((node) => {
+    visit(node, {});
+  });
+}
+
+function extractReferences(
+  builder: GraphBuilder,
+  rootDir: string,
+  sourceFile: ts.SourceFile,
+  compilerOptions: ts.CompilerOptions,
+  symbolIndex: SymbolIndex,
+): void {
+  const relativeFilePath = normalizePath(path.relative(rootDir, sourceFile.fileName));
+  const importBindings = collectImportBindings(rootDir, sourceFile, compilerOptions);
+  const fileNode = symbolIndex.fileNodesByPath.get(relativeFilePath);
+
+  if (fileNode === undefined) {
+    return;
+  }
+
+  sourceFile.forEachChild((node) => {
+    addExportDeclarationReferences(builder, rootDir, sourceFile, compilerOptions, relativeFilePath, fileNode, importBindings, symbolIndex, node);
+  });
+
+  function visit(node: ts.Node, context: CallVisitContext): void {
+    const referencer = context.caller ?? fileNode;
+    const target = resolveReferenceTarget(node, relativeFilePath, context, importBindings, symbolIndex);
+
+    if (referencer !== undefined && target !== undefined && target.node.id !== referencer.id) {
+      builder.addEdge(createGraphEdge("REFERENCES", referencer.id, target.node.id, sourceFile, node, relativeFilePath, {
+        reference: referenceTextForNode(node, sourceFile),
+        resolution: target.resolution,
+      }));
+    }
+
+    const childContext = contextForCallChildren(node, context, relativeFilePath, symbolIndex);
     node.forEachChild((child) => {
       visit(child, childContext);
     });
@@ -314,7 +378,7 @@ function collectImportBindings(
 
     const moduleFilePath = resolveProjectModuleFilePath(rootDir, sourceFile.fileName, node.moduleSpecifier.text, compilerOptions);
     const importClause = node.importClause;
-    if (importClause === undefined || importClause.isTypeOnly) {
+    if (importClause === undefined) {
       return;
     }
 
@@ -323,6 +387,7 @@ function collectImportBindings(
         importedName: "default",
         moduleFilePath,
         kind: "default",
+        isTypeOnly: importClause.isTypeOnly,
       });
     }
 
@@ -336,19 +401,17 @@ function collectImportBindings(
         importedName: "*",
         moduleFilePath,
         kind: "namespace",
+        isTypeOnly: importClause.isTypeOnly,
       });
       return;
     }
 
     for (const element of namedBindings.elements) {
-      if (element.isTypeOnly) {
-        continue;
-      }
-
       bindings.set(element.name.text, {
         importedName: element.propertyName?.text ?? element.name.text,
         moduleFilePath,
         kind: "named",
+        isTypeOnly: importClause.isTypeOnly || element.isTypeOnly,
       });
     }
   });
@@ -394,19 +457,21 @@ function contextForCallChildren(
   node: ts.Node,
   context: CallVisitContext,
   relativeFilePath: string,
-  callSymbolIndex: CallSymbolIndex,
+  symbolIndex: SymbolIndex,
 ): CallVisitContext {
   let nextContext = context;
 
   if (ts.isClassDeclaration(node) && node.name !== undefined) {
+    const caller = findSymbolByFileAndName(symbolIndex, relativeFilePath, node.name.text, ["class"]);
     nextContext = {
       ...nextContext,
       className: node.name.text,
+      ...(caller === undefined || context.caller !== undefined ? {} : { caller }),
     };
   }
 
   if (ts.isFunctionDeclaration(node) && node.name !== undefined) {
-    const caller = findSymbolByFileAndName(callSymbolIndex, relativeFilePath, node.name.text, ["function"]);
+    const caller = findSymbolByFileAndName(symbolIndex, relativeFilePath, node.name.text, ["function"]);
     nextContext = caller === undefined ? nextContext : {
       ...nextContext,
       caller,
@@ -415,7 +480,7 @@ function contextForCallChildren(
 
   if (ts.isMethodDeclaration(node) && node.name !== undefined && ts.isIdentifier(node.name)) {
     const methodName = nextContext.className === undefined ? node.name.text : `${nextContext.className}.${node.name.text}`;
-    const caller = findSymbolByFileAndName(callSymbolIndex, relativeFilePath, methodName, ["method"]);
+    const caller = findSymbolByFileAndName(symbolIndex, relativeFilePath, methodName, ["method"]);
     nextContext = caller === undefined ? nextContext : {
       ...nextContext,
       caller,
@@ -423,7 +488,7 @@ function contextForCallChildren(
   }
 
   if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && context.caller === undefined) {
-    const caller = findSymbolByFileAndName(callSymbolIndex, relativeFilePath, node.name.text, ["variable"]);
+    const caller = findSymbolByFileAndName(symbolIndex, relativeFilePath, node.name.text, ["variable"]);
     nextContext = caller === undefined ? nextContext : {
       ...nextContext,
       caller,
@@ -433,12 +498,19 @@ function contextForCallChildren(
   return nextContext;
 }
 
-function buildCallSymbolIndex(graph: CodeGraph): CallSymbolIndex {
+function buildSymbolIndex(graph: CodeGraph): SymbolIndex {
   const symbolsByFileAndName = new Map<string, GraphNode[]>();
   const exportedSymbolsByFileAndName = new Map<string, GraphNode>();
+  const fileNodesByPath = new Map<string, GraphNode>();
 
   for (const node of graph.nodes) {
-    if (!isCallableTargetNode(node)) {
+    if (node.kind === "file") {
+      const filePath = node.filePath ?? node.name;
+      fileNodesByPath.set(normalizePath(filePath), node);
+      continue;
+    }
+
+    if (!isSymbolLikeNode(node)) {
       continue;
     }
 
@@ -459,7 +531,7 @@ function buildCallSymbolIndex(graph: CodeGraph): CallSymbolIndex {
 
     const fromNode = graph.nodes.find((node) => node.id === edge.fromId);
     const toNode = graph.nodes.find((node) => node.id === edge.toId);
-    if (fromNode?.kind !== "file" || toNode === undefined || !isCallableTargetNode(toNode)) {
+    if (fromNode?.kind !== "file" || toNode === undefined || !isSymbolLikeNode(toNode)) {
       continue;
     }
 
@@ -474,6 +546,7 @@ function buildCallSymbolIndex(graph: CodeGraph): CallSymbolIndex {
   return {
     symbolsByFileAndName,
     exportedSymbolsByFileAndName,
+    fileNodesByPath,
   };
 }
 
@@ -482,11 +555,11 @@ function resolveCallLikeTarget(
   relativeFilePath: string,
   context: CallVisitContext,
   importBindings: ReadonlyMap<string, ImportBinding>,
-  callSymbolIndex: CallSymbolIndex,
+  symbolIndex: SymbolIndex,
   sourceFile: ts.SourceFile,
 ): { readonly node: GraphNode; readonly resolution: string; readonly callee: string } | undefined {
   if (ts.isCallExpression(node)) {
-    const target = resolveCallTarget(node, relativeFilePath, context, importBindings, callSymbolIndex);
+    const target = resolveCallTarget(node, relativeFilePath, context, importBindings, symbolIndex);
     return target === undefined ? undefined : {
       ...target,
       callee: node.expression.getText(sourceFile),
@@ -494,7 +567,7 @@ function resolveCallLikeTarget(
   }
 
   if (ts.isNewExpression(node)) {
-    const target = resolveConstructorTarget(node, relativeFilePath, importBindings, callSymbolIndex);
+    const target = resolveConstructorTarget(node, relativeFilePath, importBindings, symbolIndex);
     return target === undefined ? undefined : {
       ...target,
       callee: `new ${node.expression.getText(sourceFile)}`,
@@ -509,16 +582,16 @@ function resolveCallTarget(
   relativeFilePath: string,
   context: CallVisitContext,
   importBindings: ReadonlyMap<string, ImportBinding>,
-  callSymbolIndex: CallSymbolIndex,
-): { readonly node: GraphNode; readonly resolution: string } | undefined {
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
   const expression = callExpression.expression;
 
   if (ts.isIdentifier(expression)) {
-    return resolveIdentifierCallTarget(expression.text, relativeFilePath, importBindings, callSymbolIndex);
+    return resolveIdentifierCallTarget(expression.text, relativeFilePath, importBindings, symbolIndex);
   }
 
   if (ts.isPropertyAccessExpression(expression)) {
-    return resolvePropertyAccessCallTarget(expression, relativeFilePath, context, importBindings, callSymbolIndex);
+    return resolvePropertyAccessCallTarget(expression, relativeFilePath, context, importBindings, symbolIndex);
   }
 
   return undefined;
@@ -528,12 +601,12 @@ function resolveIdentifierCallTarget(
   localName: string,
   relativeFilePath: string,
   importBindings: ReadonlyMap<string, ImportBinding>,
-  callSymbolIndex: CallSymbolIndex,
-): { readonly node: GraphNode; readonly resolution: string } | undefined {
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
   const binding = importBindings.get(localName);
-  if (binding !== undefined && binding.moduleFilePath !== undefined && binding.kind !== "namespace") {
-    const imported = findImportedCallableSymbol(callSymbolIndex, binding.moduleFilePath, binding, localName);
-    if (imported !== undefined) {
+  if (binding !== undefined && !binding.isTypeOnly && binding.moduleFilePath !== undefined && binding.kind !== "namespace") {
+    const imported = findImportedSymbol(symbolIndex, binding.moduleFilePath, binding, localName);
+    if (imported !== undefined && isCallableTargetNode(imported)) {
       return {
         node: imported,
         resolution: "imported-function",
@@ -541,7 +614,7 @@ function resolveIdentifierCallTarget(
     }
   }
 
-  const sameFile = findSymbolByFileAndName(callSymbolIndex, relativeFilePath, localName, ["function", "method", "variable"]);
+  const sameFile = findSymbolByFileAndName(symbolIndex, relativeFilePath, localName, ["function", "method", "variable"]);
   if (sameFile !== undefined) {
     return {
       node: sameFile,
@@ -557,12 +630,12 @@ function resolvePropertyAccessCallTarget(
   relativeFilePath: string,
   context: CallVisitContext,
   importBindings: ReadonlyMap<string, ImportBinding>,
-  callSymbolIndex: CallSymbolIndex,
-): { readonly node: GraphNode; readonly resolution: string } | undefined {
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
   const propertyName = expression.name.text;
 
   if (expression.expression.kind === ts.SyntaxKind.ThisKeyword && context.className !== undefined) {
-    const method = findSymbolByFileAndName(callSymbolIndex, relativeFilePath, `${context.className}.${propertyName}`, ["method"]);
+    const method = findSymbolByFileAndName(symbolIndex, relativeFilePath, `${context.className}.${propertyName}`, ["method"]);
     if (method !== undefined) {
       return {
         node: method,
@@ -571,7 +644,7 @@ function resolvePropertyAccessCallTarget(
     }
   }
 
-  const namespaceTarget = resolveNamespaceCallTarget(expression, importBindings, callSymbolIndex);
+  const namespaceTarget = resolveNamespaceCallTarget(expression, importBindings, symbolIndex);
   if (namespaceTarget !== undefined) {
     return namespaceTarget;
   }
@@ -582,9 +655,9 @@ function resolvePropertyAccessCallTarget(
   }
 
   const binding = importBindings.get(classReference.className);
-  if (binding !== undefined && binding.moduleFilePath !== undefined && binding.kind !== "namespace") {
+  if (binding !== undefined && !binding.isTypeOnly && binding.moduleFilePath !== undefined && binding.kind !== "namespace") {
     const method = findSymbolByFileAndName(
-      callSymbolIndex,
+      symbolIndex,
       binding.moduleFilePath,
       `${binding.importedName}.${propertyName}`,
       ["method"],
@@ -597,7 +670,7 @@ function resolvePropertyAccessCallTarget(
     }
   }
 
-  const sameFileMethod = findSymbolByFileAndName(callSymbolIndex, relativeFilePath, `${classReference.className}.${propertyName}`, ["method"]);
+  const sameFileMethod = findSymbolByFileAndName(symbolIndex, relativeFilePath, `${classReference.className}.${propertyName}`, ["method"]);
   if (sameFileMethod !== undefined) {
     return {
       node: sameFileMethod,
@@ -611,18 +684,18 @@ function resolvePropertyAccessCallTarget(
 function resolveNamespaceCallTarget(
   expression: ts.PropertyAccessExpression,
   importBindings: ReadonlyMap<string, ImportBinding>,
-  callSymbolIndex: CallSymbolIndex,
-): { readonly node: GraphNode; readonly resolution: string } | undefined {
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
   const propertyName = expression.name.text;
 
   if (ts.isIdentifier(expression.expression)) {
     const binding = importBindings.get(expression.expression.text);
-    if (binding?.kind !== "namespace" || binding.moduleFilePath === undefined) {
+    if (binding?.kind !== "namespace" || binding.isTypeOnly || binding.moduleFilePath === undefined) {
       return undefined;
     }
 
-    const exported = findExportedSymbolByFileAndName(callSymbolIndex, binding.moduleFilePath, propertyName);
-    if (exported !== undefined) {
+    const exported = findExportedSymbolByFileAndName(symbolIndex, binding.moduleFilePath, propertyName);
+    if (exported !== undefined && isCallableTargetNode(exported)) {
       return {
         node: exported,
         resolution: "namespace-function",
@@ -632,12 +705,12 @@ function resolveNamespaceCallTarget(
 
   if (ts.isPropertyAccessExpression(expression.expression) && ts.isIdentifier(expression.expression.expression)) {
     const binding = importBindings.get(expression.expression.expression.text);
-    if (binding?.kind !== "namespace" || binding.moduleFilePath === undefined) {
+    if (binding?.kind !== "namespace" || binding.isTypeOnly || binding.moduleFilePath === undefined) {
       return undefined;
     }
 
     const method = findSymbolByFileAndName(
-      callSymbolIndex,
+      symbolIndex,
       binding.moduleFilePath,
       `${expression.expression.name.text}.${propertyName}`,
       ["method"],
@@ -657,14 +730,14 @@ function resolveConstructorTarget(
   expression: ts.NewExpression,
   relativeFilePath: string,
   importBindings: ReadonlyMap<string, ImportBinding>,
-  callSymbolIndex: CallSymbolIndex,
-): { readonly node: GraphNode; readonly resolution: string } | undefined {
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
   if (ts.isIdentifier(expression.expression)) {
     const className = expression.expression.text;
     const binding = importBindings.get(className);
 
-    if (binding !== undefined && binding.moduleFilePath !== undefined && binding.kind !== "namespace") {
-      const imported = findImportedClassSymbol(callSymbolIndex, binding.moduleFilePath, binding, className);
+    if (binding !== undefined && !binding.isTypeOnly && binding.moduleFilePath !== undefined && binding.kind !== "namespace") {
+      const imported = findImportedClassSymbol(symbolIndex, binding.moduleFilePath, binding, className);
       if (imported !== undefined) {
         return {
           node: imported,
@@ -673,7 +746,7 @@ function resolveConstructorTarget(
       }
     }
 
-    const sameFile = findSymbolByFileAndName(callSymbolIndex, relativeFilePath, className, ["class"]);
+    const sameFile = findSymbolByFileAndName(symbolIndex, relativeFilePath, className, ["class"]);
     if (sameFile !== undefined) {
       return {
         node: sameFile,
@@ -684,8 +757,8 @@ function resolveConstructorTarget(
 
   if (ts.isPropertyAccessExpression(expression.expression) && ts.isIdentifier(expression.expression.expression)) {
     const binding = importBindings.get(expression.expression.expression.text);
-    if (binding?.kind === "namespace" && binding.moduleFilePath !== undefined) {
-      const exported = findExportedSymbolByFileAndName(callSymbolIndex, binding.moduleFilePath, expression.expression.name.text);
+    if (binding?.kind === "namespace" && !binding.isTypeOnly && binding.moduleFilePath !== undefined) {
+      const exported = findExportedSymbolByFileAndName(symbolIndex, binding.moduleFilePath, expression.expression.name.text);
       if (exported?.kind === "class") {
         return {
           node: exported,
@@ -722,6 +795,279 @@ function classReferenceForPropertyBase(expression: ts.Expression): { readonly cl
   }
 
   return undefined;
+}
+
+function addExportDeclarationReferences(
+  builder: GraphBuilder,
+  rootDir: string,
+  sourceFile: ts.SourceFile,
+  compilerOptions: ts.CompilerOptions,
+  relativeFilePath: string,
+  fileNode: GraphNode,
+  importBindings: ReadonlyMap<string, ImportBinding>,
+  symbolIndex: SymbolIndex,
+  node: ts.Node,
+): void {
+  if (!ts.isExportDeclaration(node) || node.exportClause === undefined || ts.isNamespaceExport(node.exportClause)) {
+    return;
+  }
+
+  const moduleFilePath = node.moduleSpecifier !== undefined && ts.isStringLiteral(node.moduleSpecifier)
+    ? resolveProjectModuleFilePath(rootDir, sourceFile.fileName, node.moduleSpecifier.text, compilerOptions)
+    : undefined;
+
+  for (const element of node.exportClause.elements) {
+    const referencedName = element.propertyName?.text ?? element.name.text;
+    const target = moduleFilePath === undefined
+      ? resolveLocalOrImportedReferenceByName(referencedName, relativeFilePath, importBindings, symbolIndex)
+      : findExportedSymbolByFileAndName(symbolIndex, moduleFilePath, referencedName);
+
+    if (target === undefined || target.id === fileNode.id) {
+      continue;
+    }
+
+    builder.addEdge(createGraphEdge("REFERENCES", fileNode.id, target.id, sourceFile, element, relativeFilePath, {
+      reference: element.getText(sourceFile),
+      resolution: moduleFilePath === undefined ? "export-symbol" : "re-export-symbol",
+    }));
+  }
+}
+
+function resolveReferenceTarget(
+  node: ts.Node,
+  relativeFilePath: string,
+  context: CallVisitContext,
+  importBindings: ReadonlyMap<string, ImportBinding>,
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
+  if (ts.isIdentifier(node) && isReferenceIdentifier(node)) {
+    return resolveIdentifierReferenceTarget(node.text, relativeFilePath, importBindings, symbolIndex);
+  }
+
+  if (ts.isPropertyAccessExpression(node)) {
+    return resolvePropertyAccessReferenceTarget(node, relativeFilePath, context, importBindings, symbolIndex);
+  }
+
+  if (ts.isQualifiedName(node)) {
+    return resolveQualifiedNameReferenceTarget(node, importBindings, symbolIndex);
+  }
+
+  return undefined;
+}
+
+function resolveIdentifierReferenceTarget(
+  localName: string,
+  relativeFilePath: string,
+  importBindings: ReadonlyMap<string, ImportBinding>,
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
+  const imported = resolveImportedReferenceByName(localName, importBindings, symbolIndex);
+  if (imported !== undefined) {
+    return imported;
+  }
+
+  const sameFile = findSymbolByFileAndName(symbolIndex, relativeFilePath, localName, REFERENCE_TARGET_NODE_KINDS);
+  if (sameFile !== undefined) {
+    return {
+      node: sameFile,
+      resolution: "same-file-symbol",
+    };
+  }
+
+  return undefined;
+}
+
+function resolveLocalOrImportedReferenceByName(
+  localName: string,
+  relativeFilePath: string,
+  importBindings: ReadonlyMap<string, ImportBinding>,
+  symbolIndex: SymbolIndex,
+): GraphNode | undefined {
+  return resolveIdentifierReferenceTarget(localName, relativeFilePath, importBindings, symbolIndex)?.node;
+}
+
+function resolveImportedReferenceByName(
+  localName: string,
+  importBindings: ReadonlyMap<string, ImportBinding>,
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
+  const binding = importBindings.get(localName);
+  if (binding === undefined || binding.moduleFilePath === undefined || binding.kind === "namespace") {
+    return undefined;
+  }
+
+  const imported = findImportedSymbol(symbolIndex, binding.moduleFilePath, binding, localName);
+  if (imported === undefined) {
+    return undefined;
+  }
+
+  return {
+    node: imported,
+    resolution: binding.isTypeOnly ? "type-imported-symbol" : "imported-symbol",
+  };
+}
+
+function resolvePropertyAccessReferenceTarget(
+  expression: ts.PropertyAccessExpression,
+  relativeFilePath: string,
+  context: CallVisitContext,
+  importBindings: ReadonlyMap<string, ImportBinding>,
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
+  const propertyName = expression.name.text;
+
+  if (expression.expression.kind === ts.SyntaxKind.ThisKeyword && context.className !== undefined) {
+    const method = findSymbolByFileAndName(symbolIndex, relativeFilePath, `${context.className}.${propertyName}`, ["method"]);
+    if (method !== undefined) {
+      return {
+        node: method,
+        resolution: "same-class-symbol",
+      };
+    }
+  }
+
+  const namespaceTarget = resolveNamespaceReferenceTarget(expression, importBindings, symbolIndex);
+  if (namespaceTarget !== undefined) {
+    return namespaceTarget;
+  }
+
+  const classReference = classReferenceForPropertyBase(expression.expression);
+  if (classReference === undefined) {
+    return undefined;
+  }
+
+  const binding = importBindings.get(classReference.className);
+  if (binding !== undefined && binding.moduleFilePath !== undefined && binding.kind !== "namespace") {
+    const method = findSymbolByFileAndName(
+      symbolIndex,
+      binding.moduleFilePath,
+      `${binding.importedName}.${propertyName}`,
+      ["method"],
+    );
+    if (method !== undefined) {
+      return {
+        node: method,
+        resolution: classReference.isChained ? "imported-chained-symbol" : "imported-symbol-member",
+      };
+    }
+  }
+
+  const sameFileMethod = findSymbolByFileAndName(symbolIndex, relativeFilePath, `${classReference.className}.${propertyName}`, ["method"]);
+  if (sameFileMethod !== undefined) {
+    return {
+      node: sameFileMethod,
+      resolution: classReference.isChained ? "same-file-chained-symbol" : "same-file-symbol-member",
+    };
+  }
+
+  return undefined;
+}
+
+function resolveNamespaceReferenceTarget(
+  expression: ts.PropertyAccessExpression,
+  importBindings: ReadonlyMap<string, ImportBinding>,
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
+  if (!ts.isIdentifier(expression.expression)) {
+    return undefined;
+  }
+
+  const binding = importBindings.get(expression.expression.text);
+  if (binding?.kind !== "namespace" || binding.moduleFilePath === undefined) {
+    return undefined;
+  }
+
+  const exported = findExportedSymbolByFileAndName(symbolIndex, binding.moduleFilePath, expression.name.text);
+  if (exported === undefined) {
+    return undefined;
+  }
+
+  return {
+    node: exported,
+    resolution: binding.isTypeOnly ? "type-namespace-symbol" : "namespace-symbol",
+  };
+}
+
+function resolveQualifiedNameReferenceTarget(
+  qualifiedName: ts.QualifiedName,
+  importBindings: ReadonlyMap<string, ImportBinding>,
+  symbolIndex: SymbolIndex,
+): ResolvedGraphTarget | undefined {
+  if (!ts.isIdentifier(qualifiedName.left)) {
+    return undefined;
+  }
+
+  const binding = importBindings.get(qualifiedName.left.text);
+  if (binding?.kind !== "namespace" || binding.moduleFilePath === undefined) {
+    return undefined;
+  }
+
+  const exported = findExportedSymbolByFileAndName(symbolIndex, binding.moduleFilePath, qualifiedName.right.text);
+  if (exported === undefined) {
+    return undefined;
+  }
+
+  return {
+    node: exported,
+    resolution: binding.isTypeOnly ? "type-namespace-symbol" : "namespace-symbol",
+  };
+}
+
+function isReferenceIdentifier(node: ts.Identifier): boolean {
+  const parent = node.parent;
+
+  if (parent === undefined) {
+    return true;
+  }
+
+  if (
+    (ts.isPropertyAccessExpression(parent) && parent.name === node) ||
+    ts.isQualifiedName(parent) ||
+    isDeclarationName(parent, node) ||
+    isImportOrExportBindingIdentifier(parent, node)
+  ) {
+    return false;
+  }
+
+  if (
+    (ts.isPropertyAssignment(parent) && parent.name === node) ||
+    (ts.isEnumMember(parent) && parent.name === node)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function isDeclarationName(parent: ts.Node, node: ts.Identifier): boolean {
+  return (
+    (ts.isFunctionDeclaration(parent) && parent.name === node) ||
+    (ts.isClassDeclaration(parent) && parent.name === node) ||
+    (ts.isInterfaceDeclaration(parent) && parent.name === node) ||
+    (ts.isTypeAliasDeclaration(parent) && parent.name === node) ||
+    (ts.isEnumDeclaration(parent) && parent.name === node) ||
+    (ts.isMethodDeclaration(parent) && parent.name === node) ||
+    (ts.isPropertyDeclaration(parent) && parent.name === node) ||
+    (ts.isParameter(parent) && parent.name === node) ||
+    (ts.isVariableDeclaration(parent) && parent.name === node) ||
+    (ts.isBindingElement(parent) && parent.name === node) ||
+    (ts.isTypeParameterDeclaration(parent) && parent.name === node) ||
+    (ts.isModuleDeclaration(parent) && parent.name === node)
+  );
+}
+
+function isImportOrExportBindingIdentifier(parent: ts.Node, node: ts.Identifier): boolean {
+  return (
+    (ts.isImportClause(parent) && parent.name === node) ||
+    (ts.isNamespaceImport(parent) && parent.name === node) ||
+    (ts.isImportSpecifier(parent) && (parent.name === node || parent.propertyName === node)) ||
+    (ts.isExportSpecifier(parent) && (parent.name === node || parent.propertyName === node)) ||
+    (ts.isNamespaceExport(parent) && parent.name === node)
+  );
+}
+
+function referenceTextForNode(node: ts.Node, sourceFile: ts.SourceFile): string {
+  return ts.isIdentifier(node) ? node.text : node.getText(sourceFile);
 }
 
 function getSymbolNodeOptions(
@@ -1008,42 +1354,42 @@ function resolveProjectModuleFilePath(
 }
 
 function findSymbolByFileAndName(
-  callSymbolIndex: CallSymbolIndex,
+  symbolIndex: SymbolIndex,
   filePath: string,
   name: string,
   preferredKinds: readonly GraphNodeKind[],
 ): GraphNode | undefined {
-  const candidates = callSymbolIndex.symbolsByFileAndName.get(symbolIndexKey(filePath, name)) ?? [];
+  const candidates = symbolIndex.symbolsByFileAndName.get(symbolIndexKey(filePath, name)) ?? [];
   return preferredKinds
     .map((kind) => candidates.find((node) => node.kind === kind))
     .find((node): node is GraphNode => node !== undefined);
 }
 
 function findExportedSymbolByFileAndName(
-  callSymbolIndex: CallSymbolIndex,
+  symbolIndex: SymbolIndex,
   filePath: string,
   name: string,
 ): GraphNode | undefined {
-  return callSymbolIndex.exportedSymbolsByFileAndName.get(symbolIndexKey(filePath, name));
+  return symbolIndex.exportedSymbolsByFileAndName.get(symbolIndexKey(filePath, name));
 }
 
-function findImportedCallableSymbol(
-  callSymbolIndex: CallSymbolIndex,
+function findImportedSymbol(
+  symbolIndex: SymbolIndex,
   filePath: string,
   binding: ImportBinding,
   localName: string,
 ): GraphNode | undefined {
-  return findExportedSymbolByFileAndName(callSymbolIndex, filePath, binding.importedName)
-    ?? (binding.kind === "default" ? findExportedSymbolByFileAndName(callSymbolIndex, filePath, localName) : undefined);
+  return findExportedSymbolByFileAndName(symbolIndex, filePath, binding.importedName)
+    ?? (binding.kind === "default" ? findExportedSymbolByFileAndName(symbolIndex, filePath, localName) : undefined);
 }
 
 function findImportedClassSymbol(
-  callSymbolIndex: CallSymbolIndex,
+  symbolIndex: SymbolIndex,
   filePath: string,
   binding: ImportBinding,
   localName: string,
 ): GraphNode | undefined {
-  const imported = findImportedCallableSymbol(callSymbolIndex, filePath, binding, localName);
+  const imported = findImportedSymbol(symbolIndex, filePath, binding, localName);
   return imported?.kind === "class" ? imported : undefined;
 }
 
@@ -1053,6 +1399,10 @@ function symbolIndexKey(filePath: string, name: string): string {
 
 function isCallableTargetNode(node: GraphNode): boolean {
   return ["function", "method", "class", "variable"].includes(node.kind);
+}
+
+function isSymbolLikeNode(node: GraphNode): boolean {
+  return (REFERENCE_TARGET_NODE_KINDS as readonly string[]).includes(node.kind);
 }
 
 function isPathInside(rootDir: string, targetPath: string): boolean {

@@ -4,7 +4,7 @@
 
 CodeMind Graph is a local-first code knowledge graph and read-only MCP server for AI coding agents.
 
-It turns a TypeScript repository into a deterministic symbol graph, dependency graph, basic static call graph, queryable CLI surface, and Markdown repo map that humans and agents can both read.
+It turns a TypeScript repository into a deterministic symbol graph, dependency graph, basic static call/reference graph, queryable CLI surface, and Markdown repo map that humans and agents can both read.
 
 > Stop feeding agents raw files. Give them a code graph.
 
@@ -19,8 +19,9 @@ CodeMind Graph focuses on a smaller deterministic loop:
 - Build a local graph from repository source files.
 - Query symbols and dependency context from the graph.
 - Capture conservative `CALLS` edges for static function and method calls.
+- Capture conservative `REFERENCES` edges for project-local symbol usage and re-exports.
 - Build deterministic context packets for AI agents.
-- Generate `CODEMIND.md` as a call-aware repo map.
+- Generate `CODEMIND.md` as a call/reference-aware repo map.
 - Expose the same graph through read-only MCP tools.
 - Warn when `.codemind/graph.json` is stale or missing freshness metadata.
 - Check local graph readiness with `codemind health` and `codemind doctor`.
@@ -32,14 +33,16 @@ Included in v0.1:
 - TypeScript-first repository scanner.
 - TypeScript Compiler API extraction for files, imports, exports, functions, classes, interfaces, type aliases, enums, variables, and methods.
 - Basic static `CALLS` edge extraction for same-file function calls, imported function calls, namespace calls, constructors, same-class `this.method()` calls, same-file/imported class methods, and simple chained class methods.
+- Conservative static `REFERENCES` edge extraction for same-file symbols, imported symbols, namespace symbols, type-only imports, and explicit re-exports.
 - `trace` / `trace_symbol` output includes `Calls Out` and `Called By` sections when `CALLS` edges are indexed.
+- `trace`, `explain`, `context`, and `map` output includes reference context when `REFERENCES` edges are indexed.
 - Deterministic graph schema with stable node and edge IDs.
 - Local `.codemind/graph.json` graph index.
 - Graph index metadata with indexer, adapter, adapter version, language, and capabilities.
 - Graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - CLI commands: `index`, `find`, `trace`, `explain`, `context`, `map`, `health`, `doctor`, and `mcp start`.
 - Read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
-- Deterministic `CODEMIND.md` repo map output with call edge summary, top callers, top callees, and call edge tables.
+- Deterministic `CODEMIND.md` repo map output with call/reference edge summaries, top callers, top callees, top referencers, top referenced symbols, and edge tables.
 
 ## v0.1.1 Highlights
 
@@ -60,6 +63,7 @@ Current `main` also includes the post-v0.1.1 Public MVP Hardening Pack:
 - `codemind health` and `codemind doctor` readiness checks.
 - `codemind context <symbol-or-path>` for deterministic agent-ready Markdown context packets.
 - read-only MCP `get_context_pack` for the same bounded context packet.
+- conservative deterministic `REFERENCES` edges for project-local impact analysis.
 - CI badge and install-from-source quickstart polish.
 - richer public demo fixture in `examples/ts-agent-workspace`.
 - sanitized committed demo map at `examples/ts-agent-workspace/CODEMIND.md`.
@@ -154,7 +158,7 @@ Trace symbol context:
 node packages/cli/dist/index.js trace buildDemoContext --root examples/ts-agent-workspace
 ```
 
-Trace output includes symbol location, imports, exports, related modules, and indexed call context through `Calls Out` / `Called By`.
+Trace output includes symbol location, imports, exports, related modules, indexed call context through `Calls Out` / `Called By`, and reference context through `References Out` / `Referenced By`.
 
 Explain one indexed file:
 
@@ -162,7 +166,7 @@ Explain one indexed file:
 node packages/cli/dist/index.js explain src/context-pack.ts --root examples/ts-agent-workspace
 ```
 
-Explain output includes file symbols, imports, exports, outgoing calls, external callers, related modules, diagnostics, and freshness status.
+Explain output includes file symbols, imports, exports, outgoing calls, external callers, outgoing references, external references, related modules, diagnostics, and freshness status.
 
 Build an agent-ready context packet:
 
@@ -170,7 +174,7 @@ Build an agent-ready context packet:
 node packages/cli/dist/index.js context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 80
 ```
 
-Context output includes graph overview, freshness, target context, selected symbol traces, selected file explanations, row-limited tables, and a bounded repo map excerpt.
+Context output includes graph overview, freshness, target context, selected symbol traces, selected file explanations, call/reference tables, row-limited tables, and a bounded repo map excerpt.
 
 Generate the repo map:
 
@@ -178,7 +182,7 @@ Generate the repo map:
 node packages/cli/dist/index.js map --root examples/ts-agent-workspace --format markdown
 ```
 
-Repo map output includes files, symbols, imports, exports, diagnostics, graph index metadata, freshness status, and a deterministic calls overview for indexed `CALLS` edges.
+Repo map output includes files, symbols, imports, exports, diagnostics, graph index metadata, freshness status, deterministic calls overview for indexed `CALLS` edges, and deterministic references overview for indexed `REFERENCES` edges.
 
 Expected map sections:
 
@@ -190,6 +194,7 @@ Expected map sections:
 ## Imports
 ## Exports
 ## Calls
+## References
 ## Diagnostics
 ```
 
@@ -251,7 +256,7 @@ MCP client setup notes: [`docs/MCP_CLIENT_USAGE.md`](docs/MCP_CLIENT_USAGE.md)
 `metadata.capabilities` currently reports:
 
 ```text
-symbols, imports, exports, calls
+symbols, imports, exports, calls, references
 ```
 
 `codemind find`, `codemind trace`, `codemind explain`, `codemind map`, and MCP tools compare the current source fingerprint against the indexed fingerprint. If the index is stale or was created before freshness metadata existed, the output includes a deterministic warning/status instead of crashing.
