@@ -229,7 +229,8 @@ Recommended metadata:
 
 - `indexedAt`
 - root path
-- scanner name and version
+- indexer name and version (implemented in Slice O as top-level graph index metadata)
+- adapter name, adapter version, language, and capabilities (implemented in Slice O)
 - source file count
 - latest mtime fast path
 - source fingerprint based on normalized paths and file contents
@@ -273,4 +274,3 @@ Expected behavior:
 - Sonatype Q1 2026 Open Source Malware Index: https://www.sonatype.com/press-releases/sonatype-q1-2026-open-source-malware-index
 - Sonatype 2026 Open Source Malware report: https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware
 - GitHub internal repository incident coverage: https://techcrunch.com/2026/05/20/github-says-hackers-stole-data-from-thousands-of-internal-repositories/
-

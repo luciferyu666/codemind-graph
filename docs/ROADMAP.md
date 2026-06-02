@@ -34,6 +34,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [x] Add MCP stdio protocol smoke coverage for `find_symbol` and `get_repo_map`.
 - [x] Add MCP stdio protocol negative/error coverage for missing graph, invalid input, path escape, legacy freshness, and stale freshness.
 - [x] Generate `CODEMIND.md` repository map.
+- [x] Add graph index metadata versioning with indexer, adapter, language, and capabilities.
 - [x] Add GitHub Actions CI for `pnpm check`.
 
 ## Phase 002: Context ranking and ecosystem integration
@@ -111,6 +112,7 @@ Day 61-90:
 - `codemind trace` and MCP `trace_symbol` now render `Calls Out` and `Called By` sections from indexed `CALLS` edges.
 - `codemind explain` now renders file-level `Calls Out` and `Called By` sections from indexed `CALLS` edges.
 - `codemind map` and MCP `get_repo_map` now render a call-aware `CODEMIND.md` overview with call counts, top callers, top callees, and call edge tables.
+- `.codemind/graph.json` now records indexer, adapter, adapter version, language, and graph capabilities.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.
 
 Day 90+:

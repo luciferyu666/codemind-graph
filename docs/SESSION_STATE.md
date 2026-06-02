@@ -35,6 +35,7 @@ Implemented in this session:
 - `packages/cli` `codemind explain <path>` command that reads `.codemind/graph.json` and reports file overview, symbols, imports, exports, calls out, external callers, related modules, diagnostics, and freshness status.
 - `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes call-aware `CODEMIND.md`.
 - `packages/cli` `codemind mcp start --root <path>` command that starts the read-only MCP stdio server.
+- `packages/cli` graph index metadata output with indexer, indexer version, adapter, adapter version, language, and capabilities.
 - `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, graph edges, symbol trace rendering, file explain rendering, and repo map call overview rendering.
 - `packages/mcp-server` read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - GitHub Actions CI workflow that runs `pnpm install --frozen-lockfile` and `pnpm check`.
@@ -58,9 +59,10 @@ Implemented in this session:
 - Focused `node:test` coverage for graph builder behavior and TypeScript adapter extraction.
 - Rich TypeScript adapter fixture coverage for side-effect imports, default/named imports, type imports, namespace imports, external imports, named re-exports, type re-exports, export-all re-exports, classes, and methods.
 - Focused CLI test coverage for graph file generation, symbol lookup, symbol trace with `CALLS` context, file explain with `CALLS` context, and call-aware markdown repo map generation.
+- Focused CLI test coverage for graph index metadata and legacy graph indexes without top-level metadata.
 - Focused CLI test coverage for MCP startup delegation and invalid MCP startup options.
-- Focused MCP test coverage for symbol lookup, call-aware repo map retrieval, no-match behavior, `CALLS` trace context, file explain context, and graph path containment.
-- MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `get_repo_map` with call-aware output, `trace_symbol` with `CALLS` context, and `explain_file`.
+- Focused MCP test coverage for symbol lookup, call-aware repo map retrieval with graph index metadata, no-match behavior, `CALLS` trace context, file explain context, and graph path containment.
+- MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `get_repo_map` with graph index metadata and call-aware output, `trace_symbol` with `CALLS` context, and `explain_file`.
 - MCP protocol-level negative/error coverage for missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Slice H Graph Freshness is implemented: `codemind index` writes `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint` metadata.
 - CLI `find`, `trace`, and `map` now report stale or unknown graph freshness, including legacy graph files without metadata.
@@ -105,10 +107,9 @@ Current design baseline:
 
 ## Next steps
 
-1. Commit the Slice N call-aware repo map checkpoint.
-2. Consider Slice O Graph Index Metadata Versioning so agents can inspect adapter version and graph capabilities.
-3. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
-4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
+1. Commit the Slice O Graph Index Metadata Versioning checkpoint.
+2. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
+3. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
 
@@ -192,6 +193,15 @@ Latest Slice N call-aware repo map update:
 - Repo map output includes call edge count, unique callers, unique callees, top callers, top callees, and deterministic call edge rows.
 - CLI `codemind map` and MCP `get_repo_map` share the same renderer, so both surfaces expose the same call-aware `CODEMIND.md` output.
 - Focused verification passed with `pnpm build:packages; node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs`.
+- Full verification passed with `pnpm check` and 26 focused `node:test` tests.
+
+Latest Slice O graph index metadata update:
+
+- `.codemind/graph.json` now includes top-level `metadata` with indexer, indexer version, adapter, adapter version, language, and graph capabilities.
+- The TypeScript adapter exports deterministic adapter metadata and capabilities: `symbols`, `imports`, `exports`, and `calls`.
+- `renderMarkdownRepoMap` now renders index metadata in the Overview section; legacy graph indexes without top-level metadata render `Index metadata: unknown`.
+- CLI, direct MCP, and MCP protocol tests verify metadata visibility through `codemind map` and `get_repo_map`.
+- Focused verification passed with `pnpm build:packages; node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs test/typescript-adapter.test.mjs`.
 - Full verification passed with `pnpm check` and 26 focused `node:test` tests.
 
 ## Resume workflow

@@ -38,6 +38,7 @@ Last updated: 2026-06-02
 - `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency and call context.
 - `packages/cli` supports `explain` and reads `.codemind/graph.json` for deterministic file-level context, including outgoing calls and external callers.
 - `packages/cli` supports `map` and writes call-aware `CODEMIND.md` output.
+- `packages/cli` writes graph index metadata during `index`, including indexer, adapter, adapter version, language, and capabilities.
 - `packages/cli` writes graph freshness metadata during `index` and reports stale or unknown freshness during `find`, `trace`, and `map`.
 - `packages/cli` supports `mcp start --root <path>` and delegates to the read-only MCP server.
 - `packages/core` exposes reusable graph query helpers used by CLI commands, including `CALLS` edge trace, file explain context, and repo map call overview.
@@ -65,9 +66,10 @@ Last updated: 2026-06-02
 - Focused CLI tests cover symbol trace success, no-match behavior, and rendered `CALLS` edge context.
 - Focused CLI tests cover file explain success, no-match behavior, and rendered file-level `CALLS` context.
 - Focused CLI tests cover stale source fingerprints and legacy graph files without freshness metadata.
+- Focused CLI tests cover graph index metadata and legacy graph files without index metadata.
 - Focused CLI tests cover MCP startup delegation and invalid MCP startup options.
-- Focused MCP tests cover symbol lookup, call-aware markdown repo map retrieval, symbol trace retrieval with `CALLS` edge context, file explain retrieval with `CALLS` edge context, freshness status, stale source fingerprints, and graph path containment.
-- MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, freshness status, call-aware repo map output, `CALLS` trace context, and file explain context for `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
+- Focused MCP tests cover symbol lookup, call-aware markdown repo map retrieval with graph index metadata, symbol trace retrieval with `CALLS` edge context, file explain retrieval with `CALLS` edge context, freshness status, stale source fingerprints, and graph path containment.
+- MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, graph index metadata, freshness status, call-aware repo map output, `CALLS` trace context, and file explain context for `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - MCP protocol negative/error coverage verifies missing graph, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and no engineering memory leakage.
 - `docs/NEXT_DEVELOPMENT_TOPICS.md` defines the next AI-native graph platform development topics and slice plan.
 - README now documents the v0.1 quickstart demo, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
@@ -105,6 +107,8 @@ MCP `explain_file` is implemented and verified with focused tests and full `pnpm
 
 Slice N call-aware `CODEMIND.md` repo map output is implemented and verified with focused CLI, direct MCP, MCP protocol tests, and full `pnpm check`.
 
-Immediate target: commit the Slice N checkpoint, then consider Slice O Graph Index Metadata Versioning.
+Slice O Graph Index Metadata Versioning is implemented and verified with focused CLI, direct MCP, MCP protocol, adapter tests, and full `pnpm check`.
+
+Immediate target: commit the Slice O checkpoint, then consider the next v0.1.1 follow-up slice.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

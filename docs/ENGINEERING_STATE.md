@@ -63,7 +63,7 @@ Last updated: 2026-06-02
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
 - Tests: passed with `pnpm test` using 26 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice N call-aware repo map output.
+- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice O Graph Index Metadata Versioning.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -120,13 +120,14 @@ Result:
 
 - Indexed 1 TypeScript source file.
 - Wrote `examples/ts-basic/.codemind/graph.json`.
-- Graph index now includes `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
+- Graph index now includes top-level metadata with indexer, indexer version, adapter, adapter version, language, and capabilities.
+- Graph index now includes freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - Found `function greet` in `src/index.ts`.
 - Traced `function greet` to its file-level imports, exports, and related modules.
 - Explained `src/index.ts` with file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
 - `find` returned no freshness warning for a fresh index.
 - `trace`, `explain`, and `map` include a `Freshness` section when run against a graph index.
-- Wrote call-aware `examples/ts-basic/CODEMIND.md` during map verification.
+- Wrote call-aware `examples/ts-basic/CODEMIND.md` during map verification with graph index metadata rendered in the Overview section.
 
 ## Trace verification
 
@@ -154,11 +155,12 @@ Result:
 - `packages/mcp-server` creates a stdio-capable MCP server with read-only tool annotations.
 - `find_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol rows.
 - `get_repo_map` reads `.codemind/graph.json` and returns deterministic call-aware `CODEMIND.md` Markdown.
+- `get_repo_map` returns graph index metadata through the shared repo map renderer.
 - `trace_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol trace output.
 - `explain_file` reads `.codemind/graph.json` and returns deterministic Markdown file explain output.
 - `codemind mcp start --root <path>` delegates to the read-only MCP stdio server without writing stdout before transport startup.
 - MCP protocol smoke coverage starts `node packages/cli/dist/index.js mcp start --root examples/ts-basic` through SDK stdio transport and verifies initialize, `tools/list`, and `tools/call`.
-- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns call-aware Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context; protocol-level `explain_file` returns file explain context.
+- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns graph index metadata and call-aware Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context; protocol-level `explain_file` returns file explain context.
 - MCP tool responses include graph freshness status.
 - Protocol-level negative/error coverage verifies missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Protocol-level tool metadata verifies read-only, non-destructive, and non-open-world annotations.
@@ -432,6 +434,28 @@ Result:
 ```powershell
 pnpm build:packages
 node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs
+```
+
+- Full verification passed:
+
+```powershell
+pnpm check
+```
+
+## Latest Slice O graph index metadata update
+
+Result:
+
+- Added top-level graph index metadata to `.codemind/graph.json`.
+- Metadata includes `indexer`, `indexerVersion`, `adapter`, `adapterVersion`, `language`, and `capabilities`.
+- The TypeScript adapter now exports deterministic adapter metadata and capabilities: `symbols`, `imports`, `exports`, and `calls`.
+- `renderMarkdownRepoMap` renders graph index metadata in the Overview section.
+- Legacy graph indexes without top-level metadata remain valid and render `Index metadata: unknown`.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs test/typescript-adapter.test.mjs
 ```
 
 - Full verification passed:

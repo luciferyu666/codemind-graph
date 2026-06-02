@@ -56,6 +56,17 @@ test("codemind index writes .codemind/graph.json", async () => {
     assert.match(stdout, /sample\/\.codemind\/graph\.json/);
     assert.equal(stderr, "");
     assert.equal(graphFile.schemaVersion, "0.1.0");
+    assert.deepEqual(graphFile.metadata, {
+      indexer: "codemind-cli",
+      indexerVersion: "0.1.0",
+      adapter: "@codemind/adapter-typescript",
+      adapterVersion: "0.1.0",
+      language: "typescript",
+      capabilities: ["symbols", "imports", "exports", "calls"],
+    });
+    assert.equal(graphFile.graph.metadata.adapter, "@codemind/adapter-typescript");
+    assert.equal(graphFile.graph.metadata.adapterVersion, "0.1.0");
+    assert.deepEqual(graphFile.graph.metadata.capabilities, ["symbols", "imports", "exports", "calls"]);
     assert.deepEqual(graphFile.sourceFiles, ["src/index.ts"]);
     assert.equal(graphFile.diagnostics.length, 0);
     assert.equal(typeof graphFile.freshness.indexedAt, "string");
@@ -163,6 +174,7 @@ test("codemind find warns but does not crash for legacy graph files without fres
 
     const graphFilePath = path.join(rootDir, "sample", ".codemind", "graph.json");
     const graphFile = JSON.parse(await readFile(graphFilePath, "utf8"));
+    delete graphFile.metadata;
     delete graphFile.freshness;
     await writeFile(graphFilePath, `${JSON.stringify(graphFile, null, 2)}\n`, "utf8");
 
@@ -395,6 +407,10 @@ test("codemind map writes deterministic CODEMIND.md", async () => {
     assert.match(stdout, /sample\/CODEMIND\.md/);
     assert.match(markdown, /^# CODEMIND/m);
     assert.match(markdown, /^## Overview/m);
+    assert.match(markdown, /- Indexer: `codemind-cli@0\.1\.0`/);
+    assert.match(markdown, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
+    assert.match(markdown, /- Language: `typescript`/);
+    assert.match(markdown, /- Capabilities: `symbols, imports, exports, calls`/);
     assert.match(markdown, /^## Freshness/m);
     assert.match(markdown, /- Status: `fresh`/);
     assert.match(markdown, /^## Files/m);

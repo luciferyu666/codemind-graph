@@ -46,6 +46,18 @@ export type GraphScalar = string | number | boolean | null;
 export type GraphMetadataValue = GraphScalar | readonly GraphScalar[];
 export type GraphMetadata = Readonly<Record<string, GraphMetadataValue>>;
 
+export const GRAPH_INDEX_SCHEMA_VERSION = "0.1.0" as const;
+
+export const GRAPH_INDEX_CAPABILITIES = [
+  "symbols",
+  "imports",
+  "exports",
+  "calls",
+] as const;
+
+export type GraphIndexSchemaVersion = typeof GRAPH_INDEX_SCHEMA_VERSION;
+export type GraphIndexCapability = (typeof GRAPH_INDEX_CAPABILITIES)[number];
+
 export interface SourcePosition {
   readonly line: number;
   readonly column: number;
@@ -89,12 +101,22 @@ export interface CodeGraph {
 }
 
 export interface GraphIndexFile {
-  readonly schemaVersion: "0.1.0";
+  readonly schemaVersion: GraphIndexSchemaVersion;
   readonly rootDir: string;
   readonly sourceFiles: readonly string[];
   readonly diagnostics: readonly string[];
+  readonly metadata?: GraphIndexMetadata;
   readonly freshness?: GraphFreshnessMetadata;
   readonly graph: CodeGraph;
+}
+
+export interface GraphIndexMetadata {
+  readonly indexer: string;
+  readonly indexerVersion: string;
+  readonly adapter: string;
+  readonly adapterVersion: string;
+  readonly language: string;
+  readonly capabilities: readonly GraphIndexCapability[];
 }
 
 export interface GraphFreshnessMetadata {
@@ -323,10 +345,11 @@ export function isGraphIndexFile(value: unknown): value is GraphIndexFile {
   }
 
   const candidate = value as Partial<GraphIndexFile>;
-  return candidate.schemaVersion === "0.1.0"
+  return candidate.schemaVersion === GRAPH_INDEX_SCHEMA_VERSION
     && typeof candidate.rootDir === "string"
     && Array.isArray(candidate.sourceFiles)
     && Array.isArray(candidate.diagnostics)
+    && (candidate.metadata === undefined || isGraphIndexMetadata(candidate.metadata))
     && (candidate.freshness === undefined || isGraphFreshnessMetadata(candidate.freshness))
     && typeof candidate.graph === "object"
     && candidate.graph !== null
@@ -505,6 +528,7 @@ export function renderMarkdownRepoMap(
     "",
     `- Schema version: \`${indexFile.schemaVersion}\``,
     `- Root: \`${indexFile.rootDir}\``,
+    ...renderGraphIndexMetadataOverview(indexFile.metadata),
     `- Source files: ${indexFile.sourceFiles.length}`,
     `- Nodes: ${graph.nodes.length}`,
     `- Edges: ${graph.edges.length}`,
@@ -830,6 +854,19 @@ function renderDiagnostics(diagnostics: readonly string[]): readonly string[] {
   return diagnostics.map((diagnostic) => `- ${diagnostic}`);
 }
 
+function renderGraphIndexMetadataOverview(metadata: GraphIndexMetadata | undefined): readonly string[] {
+  if (metadata === undefined) {
+    return ["- Index metadata: `unknown`"];
+  }
+
+  return [
+    `- Indexer: \`${metadata.indexer}@${metadata.indexerVersion}\``,
+    `- Adapter: \`${metadata.adapter}@${metadata.adapterVersion}\``,
+    `- Language: \`${metadata.language}\``,
+    `- Capabilities: \`${metadata.capabilities.join(", ")}\``,
+  ];
+}
+
 function formatEdgeNode(node: GraphNode | undefined): string {
   if (node === undefined) {
     return "unknown";
@@ -1060,6 +1097,31 @@ function isGraphFreshnessMetadata(
     typeof candidate.sourceFileCount === "number" &&
     typeof candidate.sourceFingerprint === "string"
   );
+}
+
+function isGraphIndexMetadata(value: unknown): value is GraphIndexMetadata {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Partial<GraphIndexMetadata>;
+  const capabilities = candidate.capabilities;
+
+  return (
+    typeof candidate.indexer === "string" &&
+    typeof candidate.indexerVersion === "string" &&
+    typeof candidate.adapter === "string" &&
+    typeof candidate.adapterVersion === "string" &&
+    typeof candidate.language === "string" &&
+    Array.isArray(capabilities) &&
+    capabilities.every((capability): capability is GraphIndexCapability =>
+      typeof capability === "string" && isGraphIndexCapability(capability)
+    )
+  );
+}
+
+function isGraphIndexCapability(value: string): value is GraphIndexCapability {
+  return GRAPH_INDEX_CAPABILITIES.includes(value as GraphIndexCapability);
 }
 
 function isTypeScriptSourcePath(fileName: string): boolean {

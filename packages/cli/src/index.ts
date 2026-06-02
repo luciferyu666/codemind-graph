@@ -3,13 +3,21 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { extractTypeScriptGraph, type TypeScriptExtractionResult } from "@codemind/adapter-typescript";
+import {
+  extractTypeScriptGraph,
+  TYPESCRIPT_ADAPTER_CAPABILITIES,
+  TYPESCRIPT_ADAPTER_LANGUAGE,
+  TYPESCRIPT_ADAPTER_NAME,
+  TYPESCRIPT_ADAPTER_VERSION,
+  type TypeScriptExtractionResult,
+} from "@codemind/adapter-typescript";
 import {
   createGraphFreshnessMetadata,
   evaluateGraphFreshness,
   explainFile,
   findSymbols,
   formatNodeLocation,
+  GRAPH_INDEX_SCHEMA_VERSION,
   isGraphIndexFile,
   renderFreshnessWarning,
   renderMarkdownFileExplain,
@@ -20,6 +28,9 @@ import {
   type GraphNode,
 } from "@codemind/core";
 import type { CodeMindMcpOptions } from "@codemind/mcp-server";
+
+const CODEMIND_CLI_INDEXER_NAME = "codemind-cli";
+const CODEMIND_CLI_INDEXER_VERSION = "0.1.0";
 
 export interface CliOptions {
   readonly cwd?: string;
@@ -588,10 +599,18 @@ async function createGraphIndexFile(extraction: TypeScriptExtractionResult): Pro
   );
 
   return {
-    schemaVersion: "0.1.0",
+    schemaVersion: GRAPH_INDEX_SCHEMA_VERSION,
     rootDir: extraction.rootDir,
     sourceFiles: extraction.sourceFiles,
     diagnostics: extraction.diagnostics,
+    metadata: {
+      indexer: CODEMIND_CLI_INDEXER_NAME,
+      indexerVersion: CODEMIND_CLI_INDEXER_VERSION,
+      adapter: TYPESCRIPT_ADAPTER_NAME,
+      adapterVersion: TYPESCRIPT_ADAPTER_VERSION,
+      language: TYPESCRIPT_ADAPTER_LANGUAGE,
+      capabilities: TYPESCRIPT_ADAPTER_CAPABILITIES,
+    },
     freshness,
     graph: extraction.graph,
   };

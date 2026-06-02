@@ -6,6 +6,7 @@ import {
   GraphBuilder,
   type CodeGraph,
   type GraphEdge,
+  type GraphIndexCapability,
   type GraphMetadata,
   type GraphNode,
   type GraphNodeId,
@@ -14,6 +15,16 @@ import {
   type SourcePosition,
 } from "@codemind/core";
 import ts from "typescript";
+
+export const TYPESCRIPT_ADAPTER_NAME = "@codemind/adapter-typescript";
+export const TYPESCRIPT_ADAPTER_VERSION = "0.1.0";
+export const TYPESCRIPT_ADAPTER_LANGUAGE = "typescript";
+export const TYPESCRIPT_ADAPTER_CAPABILITIES = [
+  "symbols",
+  "imports",
+  "exports",
+  "calls",
+] as const satisfies readonly GraphIndexCapability[];
 
 export interface TypeScriptExtractionOptions {
   readonly rootDir: string;
@@ -116,8 +127,10 @@ export async function extractTypeScriptGraph(
   return {
     rootDir: normalizePath(rootDir),
     graph: builder.toGraph(rootDir, {
-      language: "typescript",
-      adapter: "@codemind/adapter-typescript",
+      language: TYPESCRIPT_ADAPTER_LANGUAGE,
+      adapter: TYPESCRIPT_ADAPTER_NAME,
+      adapterVersion: TYPESCRIPT_ADAPTER_VERSION,
+      capabilities: TYPESCRIPT_ADAPTER_CAPABILITIES,
     }),
     sourceFiles: sourceFiles.map((sourceFile) => normalizePath(path.relative(rootDir, sourceFile.fileName))),
     diagnostics,
@@ -811,7 +824,7 @@ function createFileNode(relativeFilePath: string, sourceFile: ts.SourceFile): Gr
     filePath: relativeFilePath,
     location: sourceLocation(sourceFile, sourceFile, relativeFilePath),
     metadata: {
-      language: "typescript",
+      language: TYPESCRIPT_ADAPTER_LANGUAGE,
     },
   };
 }

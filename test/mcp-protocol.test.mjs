@@ -79,6 +79,8 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
 
     assert.match(repoMapText, /^# CODEMIND/m);
     assert.match(repoMapText, /^## Overview/m);
+    assert.match(repoMapText, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
+    assert.match(repoMapText, /- Capabilities: `symbols, imports, exports, calls`/);
     assert.match(repoMapText, /^## Freshness/m);
     assert.match(repoMapText, /- Status: `fresh`/);
     assert.match(repoMapText, /^## Symbols/m);
@@ -206,6 +208,7 @@ test("MCP stdio protocol handles negative and freshness edge cases", { timeout: 
     await indexExampleProject(rootDir);
     const graphPath = path.join(rootDir, "examples", "ts-basic", ".codemind", "graph.json");
     const legacyGraph = JSON.parse(await readFile(graphPath, "utf8"));
+    delete legacyGraph.metadata;
     delete legacyGraph.freshness;
     await writeFile(graphPath, `${JSON.stringify(legacyGraph, null, 2)}\n`, "utf8");
 
@@ -218,6 +221,7 @@ test("MCP stdio protocol handles negative and freshness edge cases", { timeout: 
     const legacyMapText = readTextToolResult(legacyMapResult);
 
     assert.match(legacyMapText, /^# CODEMIND/m);
+    assert.match(legacyMapText, /- Index metadata: `unknown`/);
     assert.match(legacyMapText, /^## Freshness/m);
     assert.match(legacyMapText, /- Status: `unknown`/);
     assert.match(legacyMapText, /graph index does not include freshness metadata/);

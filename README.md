@@ -31,6 +31,7 @@ Included in v0.1:
 - `trace` / `trace_symbol` output includes `Calls Out` and `Called By` sections when `CALLS` edges are indexed.
 - Deterministic graph schema with stable node and edge IDs.
 - Local `.codemind/graph.json` graph index.
+- Graph index metadata with indexer, adapter, adapter version, language, and capabilities.
 - Graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - CLI commands: `index`, `find`, `trace`, `explain`, `map`, and `mcp start`.
 - Read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
@@ -145,10 +146,22 @@ node packages/cli/dist/index.js mcp start --root examples/ts-basic
 
 `codemind index` writes graph freshness metadata into `.codemind/graph.json`:
 
+- `metadata.indexer`
+- `metadata.indexerVersion`
+- `metadata.adapter`
+- `metadata.adapterVersion`
+- `metadata.language`
+- `metadata.capabilities`
 - `indexedAt`
 - `rootDir`
 - `sourceFileCount`
 - `sourceFingerprint`
+
+`metadata.capabilities` currently reports:
+
+```text
+symbols, imports, exports, calls
+```
 
 `codemind find`, `codemind trace`, `codemind explain`, `codemind map`, and MCP tools compare the current source fingerprint against the indexed fingerprint. If the index is stale or was created before freshness metadata existed, the output includes a deterministic warning/status instead of crashing.
 
