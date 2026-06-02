@@ -104,7 +104,7 @@ export function createCodeMindMcpServer(options: CodeMindMcpOptions = {}): McpSe
   const baseRootDir = path.resolve(options.rootDir ?? process.cwd());
   const server = new McpServer({
     name: "codemind-graph",
-    version: "0.1.0",
+    version: "0.1.2",
   });
 
   server.registerTool(

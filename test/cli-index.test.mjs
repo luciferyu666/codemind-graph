@@ -58,14 +58,14 @@ test("codemind index writes .codemind/graph.json", async () => {
     assert.equal(graphFile.schemaVersion, "0.1.0");
     assert.deepEqual(graphFile.metadata, {
       indexer: "codemind-cli",
-      indexerVersion: "0.1.0",
+      indexerVersion: "0.1.2",
       adapter: "@codemind/adapter-typescript",
-      adapterVersion: "0.1.0",
+      adapterVersion: "0.1.2",
       language: "typescript",
       capabilities: ["symbols", "imports", "exports", "calls", "references"],
     });
     assert.equal(graphFile.graph.metadata.adapter, "@codemind/adapter-typescript");
-    assert.equal(graphFile.graph.metadata.adapterVersion, "0.1.0");
+    assert.equal(graphFile.graph.metadata.adapterVersion, "0.1.2");
     assert.deepEqual(graphFile.graph.metadata.capabilities, ["symbols", "imports", "exports", "calls", "references"]);
     assert.deepEqual(graphFile.sourceFiles, ["src/index.ts"]);
     assert.equal(graphFile.diagnostics.length, 0);
@@ -255,7 +255,7 @@ test("codemind health reports graph metadata and fresh status", async () => {
     assert.match(stdout, /^# Health/m);
     assert.match(stdout, /- Status: `fresh`/);
     assert.match(stdout, /- Schema version: `0\.1\.0`/);
-    assert.match(stdout, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
+    assert.match(stdout, /- Adapter: `@codemind\/adapter-typescript@0\.1\.2`/);
     assert.match(stdout, /- Capabilities: `symbols, imports, exports, calls, references`/);
     assert.match(stdout, /^## Freshness/m);
   } finally {
@@ -589,8 +589,8 @@ test("codemind map writes deterministic CODEMIND.md", async () => {
     assert.match(stdout, /sample\/CODEMIND\.md/);
     assert.match(markdown, /^# CODEMIND/m);
     assert.match(markdown, /^## Overview/m);
-    assert.match(markdown, /- Indexer: `codemind-cli@0\.1\.0`/);
-    assert.match(markdown, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
+    assert.match(markdown, /- Indexer: `codemind-cli@0\.1\.2`/);
+    assert.match(markdown, /- Adapter: `@codemind\/adapter-typescript@0\.1\.2`/);
     assert.match(markdown, /- Language: `typescript`/);
     assert.match(markdown, /- Capabilities: `symbols, imports, exports, calls, references`/);
     assert.match(markdown, /^## Freshness/m);

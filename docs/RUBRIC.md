@@ -41,6 +41,8 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] README documents install-from-source, CI status, the v0.1.1 quickstart demo, health/doctor checks, read-only MCP boundary, and v0.1 non-goals.
 - [x] `examples/ts-agent-workspace` provides a richer public TypeScript fixture with classes, methods, imports, re-exports, constructors, namespace calls, and a sanitized committed `CODEMIND.md`.
 - [x] `docs/MCP_CLIENT_USAGE.md` documents read-only MCP client startup, available tools, root/graph options, path containment, and troubleshooting.
+- [x] `pnpm codemind --help` exposes the source-built CLI from the workspace root for human trial commands.
+- [x] Runtime packages are npm-pack-ready with public package metadata, `bin` readiness for `@codemind/cli`, typed ESM exports, dist-only package file lists, and semver-packed internal dependencies.
 - [x] Legacy Repo Onboarding Pack is documented as the first service-oriented wedge.
 - [x] `docs/SESSION_STATE.md` and `docs/DECISIONS.md` are updated.
 
@@ -60,3 +62,4 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - Do not expose `docs/SESSION_STATE.md`, `docs/CURRENT_STATE.md`, or other engineering notes through MCP tools by default.
 - Do not add web dashboard, natural-language QA, Python deep support, DevSec scanning, or write-capable MCP tools in v0.1.
 - Do not describe the Slice K/M `CALLS` edge work as a complete runtime, dynamic-dispatch, or TypeChecker-backed call graph.
+- Do not recommend `pnpm codemind mcp start` for MCP stdio clients from source, because package-manager preambles can corrupt stdout protocol streams.

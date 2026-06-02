@@ -8,8 +8,8 @@ This public demo map is sanitized for stable repository diffs. Local runs will i
 
 - Schema version: `0.1.0`
 - Root: `examples/ts-agent-workspace`
-- Indexer: `codemind-cli@0.1.0`
-- Adapter: `@codemind/adapter-typescript@0.1.0`
+- Indexer: `codemind-cli@0.1.2`
+- Adapter: `@codemind/adapter-typescript@0.1.2`
 - Language: `typescript`
 - Capabilities: `symbols, imports, exports, calls, references`
 - Source files: 4

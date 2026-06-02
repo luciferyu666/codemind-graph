@@ -33,7 +33,7 @@ import {
 import type { CodeMindMcpOptions } from "@codemind/mcp-server";
 
 const CODEMIND_CLI_INDEXER_NAME = "codemind-cli";
-const CODEMIND_CLI_INDEXER_VERSION = "0.1.0";
+const CODEMIND_CLI_INDEXER_VERSION = "0.1.2";
 
 export interface CliOptions {
   readonly cwd?: string;

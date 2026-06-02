@@ -8,6 +8,8 @@
   "scripts": {
     "build": "pnpm build:packages && pnpm --filter @codemind/web build",
     "build:packages": "tsc -b",
+    "codemind": "node packages/cli/dist/index.js",
+    "pack:packages": "pnpm build:packages && node scripts/pack-packages.mjs",
     "typecheck": "tsc -b --pretty false && pnpm --filter @codemind/web typecheck",
     "test": "pnpm build:packages && node --test \"test/*.test.mjs\"",
     "test:e2e": "pnpm --filter @codemind/web build && playwright test",

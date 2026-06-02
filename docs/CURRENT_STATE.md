@@ -41,6 +41,10 @@ Last updated: 2026-06-02
 - `packages/cli` supports `context` and reads `.codemind/graph.json` for deterministic agent-ready context packets.
 - `packages/cli` supports `map` and writes call/reference-aware `CODEMIND.md` output.
 - `packages/cli` supports `health` and `doctor` for public-MVP graph readiness checks.
+- `packages/cli` is prepared as an npm package with a `codemind` bin pointing to `dist/index.js`.
+- The repository root exposes `pnpm codemind` for source-based human CLI trials.
+- `pnpm pack:packages` builds and packs runtime packages into `.codemind/npm-pack/`.
+- Runtime package metadata is npm-pack-ready for `@codemind/core`, `@codemind/adapter-typescript`, `@codemind/mcp-server`, and `@codemind/cli`.
 - `packages/cli` writes graph index metadata during `index`, including indexer, adapter, adapter version, language, and capabilities.
 - `packages/cli` writes graph freshness metadata during `index` and reports stale or unknown freshness during `find`, `trace`, and `map`.
 - `packages/cli` supports `mcp start --root <path>` and delegates to the read-only MCP server.
@@ -86,6 +90,7 @@ Last updated: 2026-06-02
 - `docs/MCP_CLIENT_USAGE.md` documents read-only MCP stdio startup, client config, available tools, graph path options, safety boundary, and troubleshooting.
 - `docs/RELEASE_NOTES_v0.1.1.md` is published as the v0.1.1 release notes.
 - `docs/LEGACY_REPO_ONBOARDING_PACK.md` documents the first paid service wedge.
+- `test/package-readiness.test.mjs` covers npm package metadata, workspace CLI bin access, dist-only tarballs, and semver-packed internal dependencies.
 
 ## Known gaps
 
@@ -95,6 +100,7 @@ Last updated: 2026-06-02
 - SQLite storage is not implemented yet; the current index target is JSON under `.codemind/graph.json`.
 - Full TypeScript call/reference graph resolution is not implemented yet; Slice K/M/Q1 only covers conservative static function, method, namespace, constructor, simple chained class call edges, and project-local reference edges.
 - MCP currently reads only `.codemind/graph.json`; live indexing from MCP is intentionally out of scope.
+- Runtime packages are pack-ready but have not been published to npm yet.
 - Custom domain setup is not implemented yet.
 - The Vincent Liu digital business card uses a normalized portrait asset generated from `C:\Users\vince\Downloads\20260528_161756790.JPG`.
 - Codex in-app Browser currently has no registered `iab` backend in this app runtime.
@@ -130,6 +136,8 @@ Slice Q0b MCP `get_context_pack` is implemented with focused direct MCP and MCP 
 
 Slice Q1 `REFERENCES` edge MVP is implemented with conservative deterministic project-local references and focused adapter/core/CLI/MCP tests.
 
-Immediate target: after the Slice Q1 checkpoint is pushed and CI is verified, continue with the next graph-quality task, likely Slice Q2 npm package / bin readiness or a bounded impact-analysis query over `REFERENCES`.
+Slice Q2 npm package / bin readiness is implemented with source CLI access through `pnpm codemind`, dist-only pack output, and package-readiness tests.
+
+Immediate target: after the Slice Q2 checkpoint is pushed and CI is verified, continue with a bounded impact-analysis query over `REFERENCES` / `CALLS`, or add an install-from-tarball smoke test before any npm publish decision.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

@@ -17,7 +17,7 @@ import {
 import ts from "typescript";
 
 export const TYPESCRIPT_ADAPTER_NAME = "@codemind/adapter-typescript";
-export const TYPESCRIPT_ADAPTER_VERSION = "0.1.0";
+export const TYPESCRIPT_ADAPTER_VERSION = "0.1.2";
 export const TYPESCRIPT_ADAPTER_LANGUAGE = "typescript";
 export const TYPESCRIPT_ADAPTER_CAPABILITIES = [
   "symbols",

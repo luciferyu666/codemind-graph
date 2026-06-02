@@ -97,7 +97,7 @@ test("getRepoMap reads graph.json and returns markdown repo map", async () => {
 
     assert.match(text, /^# CODEMIND/m);
     assert.match(text, /^## Overview/m);
-    assert.match(text, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
+    assert.match(text, /- Adapter: `@codemind\/adapter-typescript@0\.1\.2`/);
     assert.match(text, /- Capabilities: `symbols, imports, exports, calls, references`/);
     assert.match(text, /^## Freshness/m);
     assert.match(text, /- Status: `fresh`/);

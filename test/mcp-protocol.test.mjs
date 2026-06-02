@@ -40,7 +40,7 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
 
     assert.deepEqual(client.getServerVersion(), {
       name: "codemind-graph",
-      version: "0.1.0",
+      version: "0.1.2",
     });
     assert.ok(client.getServerCapabilities()?.tools);
 
@@ -79,7 +79,7 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
 
     assert.match(repoMapText, /^# CODEMIND/m);
     assert.match(repoMapText, /^## Overview/m);
-    assert.match(repoMapText, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
+    assert.match(repoMapText, /- Adapter: `@codemind\/adapter-typescript@0\.1\.2`/);
     assert.match(repoMapText, /- Capabilities: `symbols, imports, exports, calls, references`/);
     assert.match(repoMapText, /^## Freshness/m);
     assert.match(repoMapText, /- Status: `fresh`/);

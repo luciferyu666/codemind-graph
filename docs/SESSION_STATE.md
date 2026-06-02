@@ -74,6 +74,10 @@ Implemented in this session:
 - CLI `find`, `trace`, and `map` now report stale or unknown graph freshness, including legacy graph files without metadata.
 - MCP `find_symbol`, `get_repo_map`, and `trace_symbol` now return graph freshness status while staying read-only.
 - README now documents the v0.1 quickstart demo, v0.1.1 highlights, install-from-source flow, CI badge, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
+- Runtime packages are now prepared for npm packing: `@codemind/core`, `@codemind/adapter-typescript`, `@codemind/mcp-server`, and `@codemind/cli`.
+- Root `pnpm codemind` now exposes the source-built CLI for human trial commands after `pnpm build:packages`.
+- Root `pnpm pack:packages` now builds and packs runtime packages into `.codemind/npm-pack/`.
+- `test/package-readiness.test.mjs` now covers package metadata, source CLI bin access, dist-only tarballs, and semver-packed internal dependencies.
 - `docs/LEGACY_REPO_ONBOARDING_PACK.md` defines the first service-oriented commercial wedge.
 - `docs/RELEASE_NOTES_v0.1.1.md` is published as the v0.1.1 release notes.
 
@@ -114,9 +118,9 @@ Current design baseline:
 
 ## Next steps
 
-1. Commit and push the Slice Q0b checkpoint to `origin/main`.
+1. Commit and push the Slice Q2 package/bin readiness checkpoint to `origin/main`.
 2. Confirm GitHub Actions CI passes on `main`.
-3. Push the Slice Q1 `REFERENCES` edge MVP checkpoint and confirm GitHub Actions CI.
+3. Continue with a bounded impact-analysis query over `REFERENCES` / `CALLS`, or add install-from-tarball smoke coverage before any npm publish decision.
 4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
@@ -298,6 +302,18 @@ node --test test/mcp-protocol.test.mjs
 ```
 - Full verification passed with `pnpm check`, 35 focused `node:test` tests, and the Next.js production build.
 - Manual CLI smoke confirmed `trace`, `explain`, `context`, and `doctor` expose reference-aware output for `examples/ts-agent-workspace`.
+
+Latest Slice Q2 npm package / bin readiness update:
+
+- Runtime packages now carry public package metadata, typed ESM exports, dist-only `files` lists, Node engine metadata, and package repository metadata.
+- `@codemind/cli` now has npm-ready `bin.codemind`.
+- Root `pnpm codemind --help` works for source-based human CLI trials.
+- `pnpm pack:packages` produces local tarballs in `.codemind/npm-pack/`.
+- `test/package-readiness.test.mjs` verifies package metadata, root CLI script access, dist-only tarballs, and semver-packed internal dependencies.
+- Source-based MCP stdio docs still use `node packages/cli/dist/index.js mcp start ...` to avoid pnpm preamble output on stdout.
+- Focused verification passed with `pnpm build:packages`, `pnpm codemind --help`, `pnpm pack:packages`, and `node --test test/package-readiness.test.mjs`.
+- Full verification passed with `pnpm check`, 38 focused `node:test` tests, and the Next.js production build.
+- Frozen install verification passed with `pnpm install --frozen-lockfile`.
 
 ## Resume workflow
 

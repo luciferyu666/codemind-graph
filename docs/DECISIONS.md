@@ -161,3 +161,13 @@ Decision: Implement TypeScript `REFERENCES` edge extraction as a deterministic A
 Reasoning: Impact analysis needs more than call relationships, but v0.1 should avoid unstable claims about a complete semantic usage graph. Conservative `REFERENCES` edges make `trace`, `explain`, `context`, repo maps, and MCP output more useful while keeping extraction deterministic and testable.
 
 Guardrail: Do not treat this as a complete TypeScript semantic reference graph. External package references, dynamic property resolution, arbitrary alias flow, TypeChecker-backed usage resolution, and runtime behavior remain future work.
+
+## ADR-0019: Prepare runtime packages for npm packing before publishing
+
+Date: 2026-06-02
+
+Decision: Keep the repository root private, but make the runtime workspace packages npm-pack-ready: `@codemind/core`, `@codemind/adapter-typescript`, `@codemind/mcp-server`, and `@codemind/cli`. The source workspace keeps internal dependencies as `workspace:*`; `pnpm pack` converts those internal dependencies to the current semver package version. The root exposes `pnpm codemind` for source-based human CLI trials, and `pnpm pack:packages` runs package-local `pnpm pack` commands into `.codemind/npm-pack/`.
+
+Reasoning: External developers need an easier path to try the CLI from a clean clone, but the project should not publish npm packages before the owner explicitly approves naming, release policy, and support expectations. Pack-ready metadata catches bin, export, type, file-list, and dependency issues without crossing the publishing boundary.
+
+Guardrail: Do not use `pnpm codemind mcp start` as the recommended MCP stdio client command because pnpm script preambles can pollute stdout. For source-based MCP stdio usage, use `node packages/cli/dist/index.js mcp start ...` until an installed package bin is available. This ADR does not publish packages to npm, add write-capable MCP tools, or change the graph schema version.

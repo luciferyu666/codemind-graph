@@ -1,12 +1,37 @@
 {
   "name": "@codemind/adapter-typescript",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.2",
+  "description": "TypeScript Compiler API adapter for CodeMind Graph symbol, dependency, call, and reference extraction.",
   "type": "module",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luciferyu666/codemind-graph.git",
+    "directory": "packages/adapter-typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/luciferyu666/codemind-graph/issues"
+  },
+  "homepage": "https://github.com/luciferyu666/codemind-graph#readme",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false"

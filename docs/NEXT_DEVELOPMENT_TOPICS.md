@@ -39,11 +39,13 @@ Implemented:
 - MCP client usage docs at `docs/MCP_CLIENT_USAGE.md`.
 - Context Pack MVP with bounded Markdown output for agent-ready symbol or file context.
 - Read-only MCP `get_context_pack` for the same bounded context packet.
+- npm package / bin readiness for runtime packages and source-based `pnpm codemind` CLI trials.
 
 Not yet implemented:
 
 - visualization UI
-- packaged npm release
+- published npm release
+- install-from-tarball smoke coverage
 - SQLite storage
 - context ranking
 - full TypeChecker-backed `REFERENCES` edge extraction
@@ -397,6 +399,37 @@ Deliverables:
 - dependency audit gate
 - pull request template
 - issue templates for graph bugs and adapter bugs
+
+### 12. Package and Release Readiness
+
+Priority: P1
+
+Status: npm pack readiness complete; npm publish not started.
+
+Goal:
+
+Make external developer trials easier while preserving a deliberate publish boundary.
+
+Implemented:
+
+- runtime packages carry npm-ready metadata
+- `@codemind/cli` exposes `bin.codemind`
+- root `pnpm codemind` exposes the source-built CLI for human commands
+- `pnpm pack:packages` produces tarballs under `.codemind/npm-pack/`
+- package-readiness tests verify metadata, bin access, dist-only tarballs, and semver-packed internal dependencies
+
+Recommended next package slice:
+
+- install `@codemind/cli` from locally generated tarballs into a temporary fixture
+- run `codemind --help`
+- run `codemind index` / `find` against a copied fixture
+- verify source-based MCP stdio docs still use direct `node` until installed package bin usage is tested
+
+Do not do yet:
+
+- publish to npm without explicit owner approval
+- rename packages without checking namespace availability
+- change MCP safety boundaries to make package demos easier
 
 ### 12. Multi-Agent Architecture
 

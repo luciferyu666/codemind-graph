@@ -76,6 +76,9 @@ Last updated: 2026-06-02
 - Slice Q0b consolidated check: passed with `pnpm check`, 35 focused `node:test` tests, and the Next.js production build.
 - Slice Q1 focused REFERENCES verification: passed with `pnpm build:packages`, `node --test test/typescript-adapter.test.mjs`, `node --test test/core.test.mjs`, `node --test test/cli-index.test.mjs`, `node --test test/mcp-server.test.mjs`, and `node --test test/mcp-protocol.test.mjs`.
 - Slice Q1 consolidated check: passed with `pnpm check`, 35 focused `node:test` tests, and the Next.js production build.
+- Slice Q2 package/bin readiness verification: passed with `pnpm build:packages`, `pnpm codemind --help`, `pnpm pack:packages`, and `node --test test/package-readiness.test.mjs`.
+- Slice Q2 consolidated check: passed with `pnpm check`, 38 focused `node:test` tests, and the Next.js production build.
+- Slice Q2 frozen install check: passed with `pnpm install --frozen-lockfile`.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -149,6 +152,19 @@ Result:
 - `health` reports fresh graph status, index metadata, adapter metadata, language, and capabilities.
 - `doctor` reports Node.js runtime, repository root, TypeScript config, graph index, graph freshness, graph capabilities, and read-only MCP tools.
 - Manual Slice Q1 smoke confirmed `trace`, `explain`, `context`, and `doctor` expose `references` capability plus `References Out`, `Referenced By`, `imported-symbol-member`, and `re-export-symbol` output.
+
+## Package readiness verification
+
+Result:
+
+- Root `pnpm codemind --help` exposes the source-built CLI for human trial commands.
+- `@codemind/core`, `@codemind/adapter-typescript`, `@codemind/mcp-server`, and `@codemind/cli` are npm-pack-ready at version `0.1.2`.
+- `@codemind/cli` exposes `bin.codemind` as `./dist/index.js`.
+- Package metadata includes typed ESM exports, `main`, `types`, public publish access metadata, repository metadata, and Node.js `>=22.0.0` engine metadata.
+- `pnpm pack:packages` writes tarballs to `.codemind/npm-pack/`.
+- Packed tarballs contain only `dist` artifacts and `package.json`; `src`, `tsconfig.json`, and `.tsbuildinfo` are excluded.
+- Packed internal dependencies are converted from source `workspace:*` dependencies to semver `0.1.2`.
+- Runtime packages are not published to npm yet.
 
 ## Trace verification
 

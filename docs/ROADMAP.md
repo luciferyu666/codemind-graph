@@ -40,6 +40,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [x] Generate `CODEMIND.md` repository map.
 - [x] Add Public MVP Hardening Pack with `codemind health`, `codemind doctor`, README install polish, CI badge, richer public fixture, sanitized public demo `CODEMIND.md`, and MCP client usage docs.
 - [x] Add Context Pack MVP with `codemind context <symbol-or-path>` for bounded agent-ready Markdown packets.
+- [x] Add npm package / bin readiness for runtime packages and source-based `pnpm codemind` CLI trials.
 - [x] Add graph index metadata versioning with indexer, adapter, language, and capabilities.
 - [x] Add GitHub Actions CI for `pnpm check`.
 
@@ -84,6 +85,7 @@ See `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`.
 - [x] Prepare v0.1 README demo and release tag.
 - [x] Prepare v0.1.1 README demo refresh and release notes draft.
 - [x] Prepare Public MVP Hardening Pack for external developer trial.
+- [x] Prepare npm package / bin readiness before any npm publish decision.
 - [ ] Validate first paid onboarding customer.
 
 ## 90-Day Strategic Focus
@@ -127,6 +129,8 @@ Day 61-90:
 - MCP `get_context_pack` now exposes the same bounded context packet through the read-only MCP server.
 - `examples/ts-agent-workspace/CODEMIND.md` provides the first committed sanitized public demo map.
 - `docs/MCP_CLIENT_USAGE.md` documents read-only MCP client setup and tool usage.
+- Runtime packages are npm-pack-ready at `0.1.2`, and root `pnpm codemind` supports source-based human CLI trials.
+- Before any npm publish decision, add install-from-tarball smoke coverage or explicitly approve publishing policy.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.
 
 Day 90+:

@@ -1,12 +1,37 @@
 {
   "name": "@codemind/mcp-server",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.2",
+  "description": "Read-only MCP server for querying CodeMind Graph indexes.",
   "type": "module",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luciferyu666/codemind-graph.git",
+    "directory": "packages/mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/luciferyu666/codemind-graph/issues"
+  },
+  "homepage": "https://github.com/luciferyu666/codemind-graph#readme",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false"

@@ -64,6 +64,7 @@ Current `main` also includes the post-v0.1.1 Public MVP Hardening Pack:
 - `codemind context <symbol-or-path>` for deterministic agent-ready Markdown context packets.
 - read-only MCP `get_context_pack` for the same bounded context packet.
 - conservative deterministic `REFERENCES` edges for project-local impact analysis.
+- npm package / bin readiness for source-based CLI trials.
 - CI badge and install-from-source quickstart polish.
 - richer public demo fixture in `examples/ts-agent-workspace`.
 - sanitized committed demo map at `examples/ts-agent-workspace/CODEMIND.md`.
@@ -125,19 +126,46 @@ Build the CLI packages:
 pnpm build:packages
 ```
 
+Run the CLI from the workspace root:
+
+```powershell
+pnpm codemind --help
+```
+
+`pnpm codemind` is intended for human CLI use from source. For MCP stdio clients, use the direct `node packages/cli/dist/index.js mcp start ...` form shown below so package-manager output cannot pollute the protocol stream.
+
+## Package / Bin Readiness
+
+Current `main` prepares the runtime packages for npm packing, but the packages have not been published to npm yet.
+
+Runtime packages:
+
+- `@codemind/core`
+- `@codemind/adapter-typescript`
+- `@codemind/mcp-server`
+- `@codemind/cli`
+
+Pack the runtime packages locally:
+
+```powershell
+pnpm pack:packages
+```
+
+This writes tarballs under `.codemind/npm-pack/`. The tarballs contain only `dist` artifacts and package metadata; source files, TypeScript config, and `.tsbuildinfo` files are excluded.
+
 ## Quickstart Demo
 
 Index the richer public demo repository:
 
 ```powershell
-node packages/cli/dist/index.js index examples/ts-agent-workspace
+pnpm codemind index examples/ts-agent-workspace
 ```
 
 Check graph readiness:
 
 ```powershell
-node packages/cli/dist/index.js health --root examples/ts-agent-workspace
-node packages/cli/dist/index.js doctor --root examples/ts-agent-workspace
+pnpm codemind health --root examples/ts-agent-workspace
+pnpm codemind doctor --root examples/ts-agent-workspace
 ```
 
 The index writes:
@@ -149,13 +177,13 @@ The index writes:
 Find a symbol:
 
 ```powershell
-node packages/cli/dist/index.js find ContextPackBuilder --root examples/ts-agent-workspace
+pnpm codemind find ContextPackBuilder --root examples/ts-agent-workspace
 ```
 
 Trace symbol context:
 
 ```powershell
-node packages/cli/dist/index.js trace buildDemoContext --root examples/ts-agent-workspace
+pnpm codemind trace buildDemoContext --root examples/ts-agent-workspace
 ```
 
 Trace output includes symbol location, imports, exports, related modules, indexed call context through `Calls Out` / `Called By`, and reference context through `References Out` / `Referenced By`.
@@ -163,7 +191,7 @@ Trace output includes symbol location, imports, exports, related modules, indexe
 Explain one indexed file:
 
 ```powershell
-node packages/cli/dist/index.js explain src/context-pack.ts --root examples/ts-agent-workspace
+pnpm codemind explain src/context-pack.ts --root examples/ts-agent-workspace
 ```
 
 Explain output includes file symbols, imports, exports, outgoing calls, external callers, outgoing references, external references, related modules, diagnostics, and freshness status.
@@ -171,7 +199,7 @@ Explain output includes file symbols, imports, exports, outgoing calls, external
 Build an agent-ready context packet:
 
 ```powershell
-node packages/cli/dist/index.js context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 80
+pnpm codemind context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 80
 ```
 
 Context output includes graph overview, freshness, target context, selected symbol traces, selected file explanations, call/reference tables, row-limited tables, and a bounded repo map excerpt.
@@ -179,7 +207,7 @@ Context output includes graph overview, freshness, target context, selected symb
 Generate the repo map:
 
 ```powershell
-node packages/cli/dist/index.js map --root examples/ts-agent-workspace --format markdown
+pnpm codemind map --root examples/ts-agent-workspace --format markdown
 ```
 
 Repo map output includes files, symbols, imports, exports, diagnostics, graph index metadata, freshness status, deterministic calls overview for indexed `CALLS` edges, and deterministic references overview for indexed `REFERENCES` edges.
@@ -231,9 +259,6 @@ Read-only MCP tools available in v0.1.1:
 - `get_repo_map`
 - `trace_symbol`
 - `explain_file`
-
-Current `main` also adds:
-
 - `get_context_pack`
 
 MCP client setup notes: [`docs/MCP_CLIENT_USAGE.md`](docs/MCP_CLIENT_USAGE.md)

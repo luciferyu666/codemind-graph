@@ -340,9 +340,9 @@ test("renderMarkdownContextPack composes trace explain and repo map context", ()
     diagnostics: [],
     metadata: {
       indexer: "codemind-cli",
-      indexerVersion: "0.1.0",
+      indexerVersion: "0.1.2",
       adapter: "@codemind/adapter-typescript",
-      adapterVersion: "0.1.0",
+      adapterVersion: "0.1.2",
       language: "typescript",
       capabilities: ["symbols", "imports", "exports", "calls", "references"],
     },
