@@ -122,6 +122,28 @@ Expected output:
 - diagnostics
 - freshness status
 
+### `get_context_pack`
+
+Return the same bounded Markdown context packet as `codemind context`.
+
+```json
+{
+  "target": "buildDemoContext",
+  "limit": 2,
+  "repoMapLines": 80
+}
+```
+
+Expected output:
+
+- overview
+- freshness
+- target context
+- selected symbol traces
+- selected file explanations
+- row-limited tables
+- bounded repo map excerpt
+
 ## Optional Root And Graph Inputs
 
 Each tool accepts optional `root` and `graph` values:
@@ -144,7 +166,7 @@ Both paths are constrained to the MCP server root. Path escape attempts are reje
 
 ## Read-only Safety Boundary
 
-The v0.1.1 MCP server does not expose:
+The MCP server does not expose:
 
 - write tools
 - shell execution

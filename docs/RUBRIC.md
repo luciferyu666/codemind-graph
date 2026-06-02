@@ -28,11 +28,12 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `packages/mcp-server` exposes read-only `find_symbol` and `get_repo_map` tools.
 - [x] `packages/mcp-server` exposes read-only `trace_symbol` over the same core trace helper used by CLI.
 - [x] `packages/mcp-server` exposes read-only `explain_file` over the same core file explain helper used by CLI.
+- [x] `packages/mcp-server` exposes read-only `get_context_pack` over the same core context pack helper used by CLI.
 - [x] MCP `get_repo_map` returns the same call-aware `CODEMIND.md` map as CLI.
 - [x] `trace_symbol` includes the same `Calls Out` and `Called By` context as CLI trace output.
 - [x] MCP `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file` responses include graph freshness status.
 - [x] `codemind mcp start` exposes read-only tools.
-- [x] MCP stdio protocol smoke coverage verifies initialize, `tools/list`, and `tools/call` for `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
+- [x] MCP stdio protocol smoke coverage verifies initialize, `tools/list`, and `tools/call` for `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
 - [x] MCP stdio protocol negative/error coverage verifies missing graph, path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and no engineering memory leakage.
 - [x] No write-capable MCP tools exist.
 - [x] GitHub Actions runs `pnpm check` on push and pull request.

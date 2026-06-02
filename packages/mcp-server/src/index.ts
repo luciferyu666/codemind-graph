@@ -4,10 +4,12 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+  createContextPack,
   evaluateGraphFreshness,
   findSymbols,
   formatNodeLocation,
   isGraphIndexFile,
+  renderMarkdownContextPack,
   renderMarkdownFreshnessSection,
   renderMarkdownFileExplain,
   renderMarkdownRepoMap,
@@ -47,6 +49,14 @@ export interface ExplainFileInput {
   readonly graph?: string | undefined;
 }
 
+export interface GetContextPackInput {
+  readonly target: string;
+  readonly root?: string | undefined;
+  readonly graph?: string | undefined;
+  readonly limit?: number | undefined;
+  readonly repoMapLines?: number | undefined;
+}
+
 interface GraphReadOptions {
   readonly baseRootDir: string;
   readonly root?: string | undefined;
@@ -76,10 +86,19 @@ const explainFileInputSchema = {
   graph: z.string().min(1).optional(),
 };
 
+const getContextPackInputSchema = {
+  target: z.string().min(1),
+  root: z.string().min(1).optional(),
+  graph: z.string().min(1).optional(),
+  limit: z.number().int().positive().optional(),
+  repoMapLines: z.number().int().positive().optional(),
+};
+
 const findSymbolInputParser = z.object(findSymbolInputSchema);
 const getRepoMapInputParser = z.object(getRepoMapInputSchema);
 const traceSymbolInputParser = z.object(traceSymbolInputSchema);
 const explainFileInputParser = z.object(explainFileInputSchema);
+const getContextPackInputParser = z.object(getContextPackInputSchema);
 
 export function createCodeMindMcpServer(options: CodeMindMcpOptions = {}): McpServer {
   const baseRootDir = path.resolve(options.rootDir ?? process.cwd());
@@ -150,6 +169,22 @@ export function createCodeMindMcpServer(options: CodeMindMcpOptions = {}): McpSe
       },
     },
     async (input) => explainFile(input, { rootDir: baseRootDir }),
+  );
+
+  server.registerTool(
+    "get_context_pack",
+    {
+      title: "Get context pack",
+      description: "Return a deterministic bounded Markdown context packet for a symbol or indexed file. Read-only.",
+      inputSchema: getContextPackInputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async (input) => getContextPack(input, { rootDir: baseRootDir }),
   );
 
   return server;
@@ -233,6 +268,25 @@ export async function explainFile(input: ExplainFileInput, options: CodeMindMcpO
   const freshness = await evaluateGraphFreshness(indexFile);
 
   return textResult(renderMarkdownFileExplain(indexFile, parsedInput.path, freshness));
+}
+
+export async function getContextPack(
+  input: GetContextPackInput,
+  options: CodeMindMcpOptions = {},
+): Promise<CallToolResult> {
+  const parsedInput = getContextPackInputParser.parse(input);
+  const { indexFile } = await readGraphIndex({
+    baseRootDir: path.resolve(options.rootDir ?? process.cwd()),
+    root: parsedInput.root,
+    graph: parsedInput.graph,
+  });
+  const freshness = await evaluateGraphFreshness(indexFile);
+  const contextPack = createContextPack(indexFile, parsedInput.target, {
+    ...(parsedInput.limit === undefined ? {} : { limit: parsedInput.limit }),
+    ...(parsedInput.repoMapLines === undefined ? {} : { repoMapLineLimit: parsedInput.repoMapLines }),
+  });
+
+  return textResult(renderMarkdownContextPack(indexFile, contextPack, freshness));
 }
 
 async function readGraphIndex(options: GraphReadOptions): Promise<{

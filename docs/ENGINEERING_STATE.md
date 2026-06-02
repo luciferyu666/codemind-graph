@@ -72,6 +72,8 @@ Last updated: 2026-06-02
 - Slice P0 consolidated check: passed with `pnpm check`, 30 focused `node:test` tests, and the Next.js production build.
 - Slice Q0 focused context verification: passed with `pnpm build:packages` and `node --test test/core.test.mjs test/cli-index.test.mjs`.
 - Slice Q0 consolidated check: passed with `pnpm check`, 34 focused `node:test` tests, and the Next.js production build.
+- Slice Q0b focused MCP context verification: passed with `pnpm build:packages` and `node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs`.
+- Slice Q0b consolidated check: passed with `pnpm check`, 35 focused `node:test` tests, and the Next.js production build.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -187,9 +189,10 @@ Result:
 - `get_repo_map` returns graph index metadata through the shared repo map renderer.
 - `trace_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol trace output.
 - `explain_file` reads `.codemind/graph.json` and returns deterministic Markdown file explain output.
+- `get_context_pack` reads `.codemind/graph.json` and returns deterministic bounded Markdown context packet output.
 - `codemind mcp start --root <path>` delegates to the read-only MCP stdio server without writing stdout before transport startup.
 - MCP protocol smoke coverage starts `node packages/cli/dist/index.js mcp start --root examples/ts-basic` through SDK stdio transport and verifies initialize, `tools/list`, and `tools/call`.
-- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns graph index metadata and call-aware Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context; protocol-level `explain_file` returns file explain context.
+- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns graph index metadata and call-aware Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context; protocol-level `explain_file` returns file explain context; protocol-level `get_context_pack` returns bounded context packet output.
 - MCP tool responses include graph freshness status.
 - Protocol-level negative/error coverage verifies missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Protocol-level tool metadata verifies read-only, non-destructive, and non-open-world annotations.
@@ -549,3 +552,21 @@ node --test test/core.test.mjs test/cli-index.test.mjs
 node packages/cli/dist/index.js context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 40
 node packages/cli/dist/index.js context src/context-pack.ts --root examples/ts-agent-workspace --limit 2 --repo-map-lines 40
 ```
+
+## Latest Slice Q0b MCP get_context_pack update
+
+Result:
+
+- Added read-only MCP `get_context_pack` in `packages/mcp-server`.
+- `get_context_pack` reuses `createContextPack` and `renderMarkdownContextPack` from `packages/core`.
+- Input schema accepts `target`, optional `root`, optional `graph`, optional `limit`, and optional `repoMapLines`.
+- Direct MCP tests verify bounded context packet output, freshness, repo map excerpt truncation, and no engineering memory leakage.
+- Protocol tests verify `tools/list`, read-only annotations, `tools/call`, invalid input handling, and no engineering memory leakage.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs
+```
+
+- Full `pnpm check` passed for this checkpoint with 35 `node:test` tests and the Next.js production build.

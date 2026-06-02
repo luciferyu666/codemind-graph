@@ -33,6 +33,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
   - [x] `get_repo_map`
   - [x] `trace_symbol`
   - [x] `explain_file`
+  - [x] `get_context_pack`
 - [x] Wire MCP server through `codemind mcp start`.
 - [x] Add MCP stdio protocol smoke coverage for `find_symbol` and `get_repo_map`.
 - [x] Add MCP stdio protocol negative/error coverage for missing graph, invalid input, path escape, legacy freshness, and stale freshness.
@@ -122,6 +123,7 @@ Day 61-90:
 - `.codemind/graph.json` now records indexer, adapter, adapter version, language, and graph capabilities.
 - `codemind health` and `codemind doctor` now provide public-MVP readiness checks.
 - `codemind context` now composes selected trace, explain, and repo map context into a bounded Markdown packet.
+- MCP `get_context_pack` now exposes the same bounded context packet through the read-only MCP server.
 - `examples/ts-agent-workspace/CODEMIND.md` provides the first committed sanitized public demo map.
 - `docs/MCP_CLIENT_USAGE.md` documents read-only MCP client setup and tool usage.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.

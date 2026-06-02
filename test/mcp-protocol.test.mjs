@@ -48,7 +48,7 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     const tools = toolsResult.tools;
     const toolNames = tools.map((tool) => tool.name).sort();
 
-    assert.deepEqual(toolNames, ["explain_file", "find_symbol", "get_repo_map", "trace_symbol"]);
+    assert.deepEqual(toolNames, ["explain_file", "find_symbol", "get_context_pack", "get_repo_map", "trace_symbol"]);
     for (const tool of tools) {
       assert.equal(tool.annotations?.readOnlyHint, true, `${tool.name} must be read-only`);
       assert.equal(tool.annotations?.destructiveHint, false, `${tool.name} must be non-destructive`);
@@ -123,7 +123,28 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     assert.match(explainText, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
     assert.match(explainText, /^## Called By/m);
 
-    const combinedOutput = `${JSON.stringify(toolsResult)}\n${findText}\n${repoMapText}\n${traceText}\n${explainText}`;
+    const contextResult = await client.callTool({
+      name: "get_context_pack",
+      arguments: {
+        target: "greet",
+        limit: 1,
+        repoMapLines: 20,
+      },
+    });
+    const contextText = readTextToolResult(contextResult);
+
+    assert.match(contextText, /^# Context Pack/m);
+    assert.match(contextText, /- Target: `greet`/);
+    assert.match(contextText, /- Target kind: `symbol`/);
+    assert.match(contextText, /^## Freshness/m);
+    assert.match(contextText, /- Status: `fresh`/);
+    assert.match(contextText, /^## Symbol Trace/m);
+    assert.match(contextText, /### Trace 1: `function greet`/);
+    assert.match(contextText, /^## File Explain/m);
+    assert.match(contextText, /^## Repo Map Excerpt/m);
+    assert.match(contextText, /Repo map excerpt truncated at 20/);
+
+    const combinedOutput = `${JSON.stringify(toolsResult)}\n${findText}\n${repoMapText}\n${traceText}\n${explainText}\n${contextText}`;
     assert.doesNotMatch(combinedOutput, /SESSION_STATE|CURRENT_STATE|ENGINEERING_STATE|SECRET_SESSION_NOTE/);
     assert.equal(stderr, "");
   } finally {
@@ -205,6 +226,14 @@ test("MCP stdio protocol handles negative and freshness edge cases", { timeout: 
     );
     assert.match(invalidExplainInputError, /path|invalid|expected|required/i);
 
+    const invalidContextInputError = await readRejectedMessage(() =>
+      client.callTool({
+        name: "get_context_pack",
+        arguments: {},
+      })
+    );
+    assert.match(invalidContextInputError, /target|invalid|expected|required/i);
+
     await indexExampleProject(rootDir);
     const graphPath = path.join(rootDir, "examples", "ts-basic", ".codemind", "graph.json");
     const legacyGraph = JSON.parse(await readFile(graphPath, "utf8"));
@@ -253,6 +282,7 @@ test("MCP stdio protocol handles negative and freshness edge cases", { timeout: 
       graphEscapeError,
       invalidInputError,
       invalidExplainInputError,
+      invalidContextInputError,
       legacyMapText,
       staleFindText,
     ].join("\n");

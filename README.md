@@ -59,6 +59,7 @@ Current `main` also includes the post-v0.1.1 Public MVP Hardening Pack:
 
 - `codemind health` and `codemind doctor` readiness checks.
 - `codemind context <symbol-or-path>` for deterministic agent-ready Markdown context packets.
+- read-only MCP `get_context_pack` for the same bounded context packet.
 - CI badge and install-from-source quickstart polish.
 - richer public demo fixture in `examples/ts-agent-workspace`.
 - sanitized committed demo map at `examples/ts-agent-workspace/CODEMIND.md`.
@@ -225,6 +226,10 @@ Read-only MCP tools available in v0.1.1:
 - `get_repo_map`
 - `trace_symbol`
 - `explain_file`
+
+Current `main` also adds:
+
+- `get_context_pack`
 
 MCP client setup notes: [`docs/MCP_CLIENT_USAGE.md`](docs/MCP_CLIENT_USAGE.md)
 

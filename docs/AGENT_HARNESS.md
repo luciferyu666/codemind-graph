@@ -46,7 +46,7 @@ The v0.1 product surface is:
 - `codemind health`
 - `codemind doctor`
 - `codemind mcp start`
-- read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`
+- read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`
 - `CODEMIND.md` repo map output
 - `examples/ts-agent-workspace/CODEMIND.md` sanitized public demo output
 
@@ -67,6 +67,7 @@ Day 1-30:
 - Complete `codemind index`, `codemind find`, and `codemind map`.
 - Add public readiness checks with `codemind health` and `codemind doctor`.
 - Add bounded agent-ready context packets with `codemind context`.
+- Expose bounded context packets through read-only MCP `get_context_pack`.
 - Generate `CODEMIND.md`.
 
 Day 31-60:

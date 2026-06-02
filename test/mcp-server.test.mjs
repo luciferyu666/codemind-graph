@@ -4,7 +4,14 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { runCli } from "../packages/cli/dist/index.js";
-import { createCodeMindMcpServer, explainFile, findSymbol, getRepoMap, traceSymbol } from "../packages/mcp-server/dist/index.js";
+import {
+  createCodeMindMcpServer,
+  explainFile,
+  findSymbol,
+  getContextPack,
+  getRepoMap,
+  traceSymbol,
+} from "../packages/mcp-server/dist/index.js";
 
 test("MCP server factory creates a connectable read-only server", () => {
   const server = createCodeMindMcpServer({ rootDir: process.cwd() });
@@ -152,6 +159,44 @@ test("explainFile reads graph.json and returns markdown file context", async () 
     assert.match(text, /^## Calls Out/m);
     assert.match(text, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
     assert.match(text, /^## Called By/m);
+    assert.doesNotMatch(text, /SESSION_STATE/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("getContextPack reads graph.json and returns bounded markdown context", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-mcp-context-"));
+
+  try {
+    await writeSampleProject(rootDir);
+    await indexSampleProject(rootDir);
+
+    const result = await getContextPack(
+      {
+        target: "greet",
+        root: "sample",
+        limit: 1,
+        repoMapLines: 20,
+      },
+      { rootDir },
+    );
+    const text = readTextResult(result);
+
+    assert.match(text, /^# Context Pack/m);
+    assert.match(text, /- Target: `greet`/);
+    assert.match(text, /- Target kind: `symbol`/);
+    assert.match(text, /- Match limit: 1/);
+    assert.match(text, /^## Freshness/m);
+    assert.match(text, /- Status: `fresh`/);
+    assert.match(text, /^## Symbol Trace/m);
+    assert.match(text, /### Trace 1: `function greet`/);
+    assert.match(text, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(text, /^## File Explain/m);
+    assert.match(text, /### File 1: `src\/index\.ts`/);
+    assert.match(text, /^## Repo Map Excerpt/m);
+    assert.match(text, /^# CODEMIND/m);
+    assert.match(text, /Repo map excerpt truncated at 20/);
     assert.doesNotMatch(text, /SESSION_STATE/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });

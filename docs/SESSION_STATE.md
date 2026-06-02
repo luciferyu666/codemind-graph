@@ -40,7 +40,7 @@ Implemented in this session:
 - `packages/cli` graph index metadata output with indexer, indexer version, adapter, adapter version, language, and capabilities.
 - `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, graph edges, symbol trace rendering, file explain rendering, and repo map call overview rendering.
 - `packages/core` reusable context pack helpers that compose selected trace, explain, and repo map context into bounded Markdown.
-- `packages/mcp-server` read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
+- `packages/mcp-server` read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
 - `docs/MCP_CLIENT_USAGE.md` with read-only MCP stdio client setup, tool usage, graph path options, safety boundary, and troubleshooting.
 - `examples/ts-agent-workspace` richer public demo fixture plus sanitized committed `CODEMIND.md`.
 - GitHub Actions CI workflow that runs `pnpm install --frozen-lockfile` and `pnpm check`.
@@ -113,9 +113,9 @@ Current design baseline:
 
 ## Next steps
 
-1. Run full `pnpm check` for Slice Q0 Context Pack MVP.
-2. Commit and push the Slice Q0 checkpoint to `origin/main`.
-3. Confirm GitHub Actions CI passes on `main`.
+1. Commit and push the Slice Q0b checkpoint to `origin/main`.
+2. Confirm GitHub Actions CI passes on `main`.
+3. Start Slice Q1 `REFERENCES` edge MVP when the next engineering task begins.
 4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
@@ -260,6 +260,22 @@ node --test test/core.test.mjs test/cli-index.test.mjs
 node packages/cli/dist/index.js context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 40
 node packages/cli/dist/index.js context src/context-pack.ts --root examples/ts-agent-workspace --limit 2 --repo-map-lines 40
 ```
+
+Latest Slice Q0b MCP get_context_pack update:
+
+- Implemented read-only MCP `get_context_pack`.
+- `get_context_pack` accepts `target`, optional `root`, optional `graph`, optional `limit`, and optional `repoMapLines`.
+- The tool reuses `createContextPack` and `renderMarkdownContextPack`, so CLI and MCP context packet output stay aligned.
+- Direct MCP tests verify bounded context output and no engineering memory leakage.
+- MCP protocol tests verify `tools/list`, read-only annotations, `tools/call` success, invalid input handling, and no engineering memory leakage.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs
+```
+
+- Full `pnpm check` passed for the Slice Q0b checkpoint with 35 `node:test` tests and the Next.js production build.
 
 ## Resume workflow
 

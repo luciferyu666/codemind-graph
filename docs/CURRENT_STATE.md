@@ -45,7 +45,7 @@ Last updated: 2026-06-02
 - `packages/cli` supports `mcp start --root <path>` and delegates to the read-only MCP server.
 - `packages/core` exposes reusable graph query helpers used by CLI commands, including `CALLS` edge trace, file explain context, and repo map call overview.
 - `packages/core` exposes reusable context pack helpers that compose selected trace, explain, and repo map context.
-- `packages/mcp-server` exposes read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
+- `packages/mcp-server` exposes read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
 - `packages/mcp-server` reports graph freshness status in `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file` responses.
 - GitHub Actions CI is configured in `.github/workflows/ci.yml` for push and pull request.
 - README includes the GitHub Actions CI badge and install-from-source quickstart.
@@ -77,7 +77,8 @@ Last updated: 2026-06-02
 - Focused CLI tests cover `codemind health` fresh/stale behavior and `codemind doctor` readiness output.
 - Focused CLI tests cover MCP startup delegation and invalid MCP startup options.
 - Focused MCP tests cover symbol lookup, call-aware markdown repo map retrieval with graph index metadata, symbol trace retrieval with `CALLS` edge context, file explain retrieval with `CALLS` edge context, freshness status, stale source fingerprints, and graph path containment.
-- MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, graph index metadata, freshness status, call-aware repo map output, `CALLS` trace context, and file explain context for `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
+- Focused MCP tests cover context pack retrieval with bounded Markdown output.
+- MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, graph index metadata, freshness status, call-aware repo map output, `CALLS` trace context, file explain context, and context pack output for `find_symbol`, `get_repo_map`, `trace_symbol`, `explain_file`, and `get_context_pack`.
 - MCP protocol negative/error coverage verifies missing graph, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and no engineering memory leakage.
 - `docs/NEXT_DEVELOPMENT_TOPICS.md` defines the next AI-native graph platform development topics and slice plan.
 - README now documents the v0.1 quickstart demo, v0.1.1 highlights, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
@@ -124,6 +125,8 @@ Slice P0 Public MVP Hardening Pack is implemented with `codemind health`, `codem
 
 Slice Q0 Context Pack MVP is implemented with `codemind context <symbol-or-path>` and focused tests.
 
-Immediate target: commit Slice Q0, push to `origin/main`, and let GitHub Actions verify the checkpoint.
+Slice Q0b MCP `get_context_pack` is implemented with focused direct MCP and MCP protocol tests.
+
+Immediate target: after the Slice Q0b checkpoint is pushed and CI is verified, start Slice Q1 `REFERENCES` edge MVP.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

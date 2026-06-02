@@ -37,6 +37,7 @@ Implemented:
 - sanitized public demo map at `examples/ts-agent-workspace/CODEMIND.md`.
 - MCP client usage docs at `docs/MCP_CLIENT_USAGE.md`.
 - Context Pack MVP with bounded Markdown output for agent-ready symbol or file context.
+- Read-only MCP `get_context_pack` for the same bounded context packet.
 
 Not yet implemented:
 
@@ -646,31 +647,31 @@ pnpm test:e2e
 
 ## Recommended Next Task
 
-After Slice Q0, the next task should be:
-
-```text
-Slice Q0b: MCP get_context_pack read-only tool
-```
-
-Reason:
-
-The deterministic CLI loop now includes `codemind context`. The next highest-leverage step is exposing the same bounded packet through MCP so AI clients can request focused context without manually combining `find_symbol`, `trace_symbol`, `explain_file`, and `get_repo_map`.
-
-Recommended scope:
-
-- MCP tool name: `get_context_pack`.
-- Inputs: `target`, optional `root`, optional `graph`, optional `limit`, optional `repoMapLines`.
-- Output: same Markdown as `codemind context`.
-- Keep read-only annotations and path containment.
-- Add direct MCP and MCP protocol smoke coverage.
-
-Alternative near-term task:
+After Slice Q0b, the next task should be:
 
 ```text
 Slice Q1: REFERENCES edge MVP
 ```
 
-This would improve impact analysis by indexing simple identifier references, but it is larger and riskier than context pack composition.
+Reason:
+
+The deterministic CLI and MCP context loop now includes bounded context packets. The next highest-leverage graph-quality step is indexing simple identifier references so impact analysis can answer more than call relationships.
+
+Recommended scope:
+
+- same-file identifier references
+- imported symbol references
+- exported symbol references
+- conservative, deterministic `REFERENCES` edges only
+- no TypeChecker-backed full semantic usage graph yet
+
+Alternative near-term task:
+
+```text
+Slice Q2: npm package / bin readiness
+```
+
+This would make external trial easier, but graph quality should come first if the goal remains Agent context value.
 
 Business note:
 
