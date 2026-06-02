@@ -17,7 +17,7 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `codemind index examples/ts-basic` writes graph data under `.codemind/`.
 - [x] `codemind find <symbol>` returns a deterministic result.
 - [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, call, and related module context.
-- [x] `codemind explain <path>` returns deterministic file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
+- [x] `codemind explain <path>` returns deterministic file overview, symbols, imports, exports, calls out, called-by context, related modules, diagnostics, and freshness status.
 - [x] `codemind map --format markdown` generates `CODEMIND.md`.
 - [x] `.codemind/graph.json` includes freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - [x] `codemind find`, `codemind trace`, and `codemind map` report stale or unknown graph freshness without crashing on legacy graph files.

@@ -118,6 +118,8 @@ Explain one indexed file:
 node packages/cli/dist/index.js explain src/index.ts --root examples/ts-basic
 ```
 
+Explain output includes file symbols, imports, exports, outgoing calls, external callers, related modules, diagnostics, and freshness status.
+
 Generate the repo map:
 
 ```powershell

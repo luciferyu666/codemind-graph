@@ -36,11 +36,11 @@ Last updated: 2026-06-02
 - `packages/cli` supports `index` and writes `.codemind/graph.json`.
 - `packages/cli` supports `find` and reads `.codemind/graph.json` for symbol lookup.
 - `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency and call context.
-- `packages/cli` supports `explain` and reads `.codemind/graph.json` for deterministic file-level context.
+- `packages/cli` supports `explain` and reads `.codemind/graph.json` for deterministic file-level context, including outgoing calls and external callers.
 - `packages/cli` supports `map` and writes `CODEMIND.md`.
 - `packages/cli` writes graph freshness metadata during `index` and reports stale or unknown freshness during `find`, `trace`, and `map`.
 - `packages/cli` supports `mcp start --root <path>` and delegates to the read-only MCP server.
-- `packages/core` exposes reusable graph query helpers used by CLI commands, including `CALLS` edge trace context.
+- `packages/core` exposes reusable graph query helpers used by CLI commands, including `CALLS` edge trace and file explain context.
 - `packages/mcp-server` exposes a read-only MCP skeleton with `find_symbol`, `get_repo_map`, and `trace_symbol`.
 - `packages/mcp-server` reports graph freshness status in `find_symbol`, `get_repo_map`, and `trace_symbol` responses.
 - GitHub Actions CI is configured in `.github/workflows/ci.yml` for push and pull request.
@@ -63,7 +63,7 @@ Last updated: 2026-06-02
 - Focused tests cover graph builder determinism and TypeScript extraction.
 - TypeScript adapter fixtures now cover richer imports, re-exports, classes, methods, and basic `CALLS` edge extraction for future trace work.
 - Focused CLI tests cover symbol trace success, no-match behavior, and rendered `CALLS` edge context.
-- Focused CLI tests cover file explain success and no-match behavior.
+- Focused CLI tests cover file explain success, no-match behavior, and rendered file-level `CALLS` context.
 - Focused CLI tests cover stale source fingerprints and legacy graph files without freshness metadata.
 - Focused CLI tests cover MCP startup delegation and invalid MCP startup options.
 - Focused MCP tests cover symbol lookup, markdown repo map retrieval, symbol trace retrieval with `CALLS` edge context, freshness status, stale source fingerprints, and graph path containment.
@@ -97,6 +97,8 @@ Slice K TypeScript `CALLS` edge MVP is implemented and verified with focused ada
 
 `CALLS` edges are now exposed through `codemind trace` and MCP `trace_symbol` as `Calls Out` and `Called By`.
 
-Immediate target: decide whether the next slice should add call-aware `explain` output or richer call resolution.
+Slice L call-aware `codemind explain <path>` is implemented and verified with focused tests and full `pnpm check`.
+
+Immediate target: decide whether the next slice should add MCP `explain_file` or richer call resolution.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

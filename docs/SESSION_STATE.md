@@ -32,7 +32,7 @@ Implemented in this session:
 - `packages/cli` `codemind index <path>` command that writes `<path>/.codemind/graph.json`.
 - `packages/cli` `codemind find <symbol>` command that reads `.codemind/graph.json` and returns deterministic symbol matches.
 - `packages/cli` `codemind trace <symbol>` command that reads `.codemind/graph.json` and reports symbol file imports, exports, calls out, called-by context, and related modules.
-- `packages/cli` `codemind explain <path>` command that reads `.codemind/graph.json` and reports file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
+- `packages/cli` `codemind explain <path>` command that reads `.codemind/graph.json` and reports file overview, symbols, imports, exports, calls out, external callers, related modules, diagnostics, and freshness status.
 - `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes `CODEMIND.md`.
 - `packages/cli` `codemind mcp start --root <path>` command that starts the read-only MCP stdio server.
 - `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, graph edges, and symbol trace rendering.
@@ -57,7 +57,7 @@ Implemented in this session:
 - Browser automation environment diagnostics captured in `docs/BROWSER_QA_WORKFLOW.md`.
 - Focused `node:test` coverage for graph builder behavior and TypeScript adapter extraction.
 - Rich TypeScript adapter fixture coverage for side-effect imports, default/named imports, type imports, namespace imports, external imports, named re-exports, type re-exports, export-all re-exports, classes, and methods.
-- Focused CLI test coverage for graph file generation, symbol lookup, symbol trace with `CALLS` context, file explain, and markdown repo map generation.
+- Focused CLI test coverage for graph file generation, symbol lookup, symbol trace with `CALLS` context, file explain with `CALLS` context, and markdown repo map generation.
 - Focused CLI test coverage for MCP startup delegation and invalid MCP startup options.
 - Focused MCP test coverage for symbol lookup, repo map retrieval, no-match behavior, `CALLS` trace context, and graph path containment.
 - MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `trace_symbol` with `CALLS` context.
@@ -105,7 +105,7 @@ Current design baseline:
 
 ## Next steps
 
-1. Run full `pnpm check` after `CALLS` trace/MCP integration, then decide whether the next slice should add call-aware `explain` output or richer call resolution.
+1. Run full `pnpm check` after Slice L call-aware explain, then decide whether the next slice should add MCP `explain_file` or richer call resolution.
 2. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
 3. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
@@ -165,6 +165,14 @@ Latest call-context trace update:
 - `renderMarkdownSymbolTrace` now emits `Calls Out` and `Called By` sections.
 - CLI `codemind trace` and MCP `trace_symbol` automatically return the same call context through the shared core renderer.
 - Focused verification passed with `pnpm build:packages; node --test test/core.test.mjs test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs`.
+- Full verification passed with `pnpm check` and 25 focused `node:test` tests.
+
+Latest Slice L call-aware explain update:
+
+- `packages/core` file explanations now include file-level `callsOut` and `calledBy` from indexed `CALLS` edges.
+- `renderMarkdownFileExplain` now emits `Calls Out` and `Called By` sections.
+- CLI `codemind explain <path>` returns outgoing calls from symbols defined in the file and external callers of symbols defined in the file.
+- Focused verification passed with `pnpm build:packages; node --test test/core.test.mjs test/cli-index.test.mjs`.
 - Full verification passed with `pnpm check` and 25 focused `node:test` tests.
 
 ## Resume workflow

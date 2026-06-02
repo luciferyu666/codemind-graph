@@ -63,7 +63,7 @@ Last updated: 2026-06-02
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
 - Tests: passed with `pnpm test` using 25 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-06-02 after trace/MCP `CALLS` context integration.
+- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice L call-aware explain integration.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -144,7 +144,7 @@ Result:
 
 - `packages/core` exposes `explainFile` and `renderMarkdownFileExplain`.
 - `codemind explain <path>` reads `.codemind/graph.json` and emits deterministic Markdown.
-- Explain output includes file overview, symbols, imports, exports, related modules, diagnostics, and graph freshness status.
+- Explain output includes file overview, symbols, imports, exports, `Calls Out`, `Called By`, related modules, diagnostics, and graph freshness status.
 - No-match explain returns exit code `2` with deterministic Markdown output.
 
 ## MCP verification
@@ -367,6 +367,27 @@ Result:
 ```powershell
 pnpm build:packages
 node --test test/core.test.mjs test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs
+```
+
+- Full verification passed:
+
+```powershell
+pnpm check
+```
+
+## Latest Slice L call-aware explain update
+
+Result:
+
+- `packages/core` file explanations now include outgoing `CALLS` edges for symbols defined in the explained file.
+- File explanations also include incoming `CALLS` edges from external symbols into symbols defined in the explained file.
+- `renderMarkdownFileExplain` now renders `Calls Out` and `Called By` sections.
+- CLI `codemind explain <path>` exposes this context without adding a new command.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/core.test.mjs test/cli-index.test.mjs
 ```
 
 - Full verification passed:

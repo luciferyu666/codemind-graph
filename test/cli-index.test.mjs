@@ -447,6 +447,17 @@ test("codemind trace reads .codemind/graph.json and reports symbol context", asy
         "",
       ].join("\n"),
     );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "caller.ts"),
+      [
+        'import { greet } from "./index.js";',
+        "",
+        "export function run(): string {",
+        '  return greet("Ada");',
+        "}",
+        "",
+      ].join("\n"),
+    );
 
     await runCli(["index", "sample"], {
       cwd: rootDir,
@@ -486,7 +497,7 @@ test("codemind trace reads .codemind/graph.json and reports symbol context", asy
     assert.match(stdout, /^### Calls Out/m);
     assert.match(stdout, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
     assert.match(stdout, /^### Called By/m);
-    assert.match(stdout, /No incoming calls found\./);
+    assert.match(stdout, /\| function:run \| function:greet \| greet \| imported-function \|/);
     assert.match(stdout, /^### Related Modules/m);
     assert.match(stdout, /\| src\/helper\.ts \| project \| \.\/helper\.js \|/);
   } finally {
@@ -530,6 +541,17 @@ test("codemind explain reads .codemind/graph.json and reports file context", asy
         "",
       ].join("\n"),
     );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "caller.ts"),
+      [
+        'import { greet } from "./index.js";',
+        "",
+        "export function run(): string {",
+        '  return greet("Ada");',
+        "}",
+        "",
+      ].join("\n"),
+    );
 
     await runCli(["index", "sample"], {
       cwd: rootDir,
@@ -564,12 +586,18 @@ test("codemind explain reads .codemind/graph.json and reports file context", asy
     assert.match(stdout, /- Symbols: 1/);
     assert.match(stdout, /- Imports: 1/);
     assert.match(stdout, /- Exports: 1/);
+    assert.match(stdout, /- Calls out: 1/);
+    assert.match(stdout, /- Called by: 1/);
     assert.match(stdout, /^## Symbols/m);
     assert.match(stdout, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
     assert.match(stdout, /^## Imports/m);
     assert.match(stdout, /\| src\/index\.ts \| module:src\/helper\.ts \| \.\/helper\.js \| named \|/);
     assert.match(stdout, /^## Exports/m);
     assert.match(stdout, /\| src\/index\.ts \| function:greet \|  \| named \|/);
+    assert.match(stdout, /^## Calls Out/m);
+    assert.match(stdout, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(stdout, /^## Called By/m);
+    assert.match(stdout, /\| function:run \| function:greet \| greet \| imported-function \|/);
     assert.match(stdout, /^## Related Modules/m);
     assert.match(stdout, /\| src\/helper\.ts \| project \| \.\/helper\.js \|/);
     assert.match(stdout, /^## Diagnostics/m);

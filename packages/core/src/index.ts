@@ -137,6 +137,8 @@ export interface FileExplanation {
   readonly symbols: readonly GraphNode[];
   readonly imports: readonly GraphEdge[];
   readonly exports: readonly GraphEdge[];
+  readonly callsOut: readonly GraphEdge[];
+  readonly calledBy: readonly GraphEdge[];
   readonly relatedModules: readonly GraphNode[];
 }
 
@@ -276,6 +278,9 @@ export function explainFile(
   );
   const imports = listImports(graph).filter((edge) => edge.fromId === file.id);
   const exports = listExports(graph).filter((edge) => edge.fromId === file.id);
+  const symbolIds = new Set(symbols.map((node) => node.id));
+  const callsOut = listCalls(graph).filter((edge) => symbolIds.has(edge.fromId));
+  const calledBy = listCalls(graph).filter((edge) => symbolIds.has(edge.toId) && !symbolIds.has(edge.fromId));
   const relatedModules = uniqueSortedNodes([
     ...imports.map((edge) => getNodeById(graph, edge.toId)),
     ...exports.map((edge) => getNodeById(graph, edge.toId)).filter((node) => node?.kind === "module"),
@@ -286,6 +291,8 @@ export function explainFile(
     symbols,
     imports,
     exports,
+    callsOut,
+    calledBy,
     relatedModules,
   };
 }
@@ -639,6 +646,8 @@ export function renderMarkdownFileExplain(
     `- Symbols: ${explanation.symbols.length}`,
     `- Imports: ${explanation.imports.length}`,
     `- Exports: ${explanation.exports.length}`,
+    `- Calls out: ${explanation.callsOut.length}`,
+    `- Called by: ${explanation.calledBy.length}`,
     `- Related modules: ${explanation.relatedModules.length}`,
     "",
     "## Symbols",
@@ -652,6 +661,14 @@ export function renderMarkdownFileExplain(
     "## Exports",
     "",
     ...renderTraceEdgeTable(indexFile.graph, explanation.exports, "Export"),
+    "",
+    "## Calls Out",
+    "",
+    ...renderCallEdgeTable(indexFile.graph, explanation.callsOut, "No outgoing calls found."),
+    "",
+    "## Called By",
+    "",
+    ...renderCallEdgeTable(indexFile.graph, explanation.calledBy, "No incoming calls found."),
     "",
     "## Related Modules",
     "",
