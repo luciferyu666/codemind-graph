@@ -76,6 +76,7 @@ See `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`.
 - [x] Finish Slice H Graph freshness before public v0.1 commercial validation.
 - [x] Prepare Legacy Repo Onboarding Pack one-pager.
 - [x] Prepare v0.1 README demo and release tag.
+- [x] Prepare v0.1.1 README demo refresh and release notes draft.
 - [ ] Validate first paid onboarding customer.
 
 ## 90-Day Strategic Focus

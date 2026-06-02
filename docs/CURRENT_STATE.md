@@ -72,7 +72,8 @@ Last updated: 2026-06-02
 - MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, graph index metadata, freshness status, call-aware repo map output, `CALLS` trace context, and file explain context for `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - MCP protocol negative/error coverage verifies missing graph, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and no engineering memory leakage.
 - `docs/NEXT_DEVELOPMENT_TOPICS.md` defines the next AI-native graph platform development topics and slice plan.
-- README now documents the v0.1 quickstart demo, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
+- README now documents the v0.1 quickstart demo, v0.1.1 release candidate highlights, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
+- `docs/RELEASE_NOTES_v0.1.1.md` is prepared as the draft release notes for the next checkpoint.
 - `docs/LEGACY_REPO_ONBOARDING_PACK.md` documents the first paid service wedge.
 
 ## Known gaps
@@ -109,6 +110,8 @@ Slice N call-aware `CODEMIND.md` repo map output is implemented and verified wit
 
 Slice O Graph Index Metadata Versioning is implemented and verified with focused CLI, direct MCP, MCP protocol, adapter tests, and full `pnpm check`.
 
-Immediate target: commit the Slice O checkpoint, then consider the next v0.1.1 follow-up slice.
+README v0.1.1 Demo Refresh and `docs/RELEASE_NOTES_v0.1.1.md` are prepared as a release-readiness documentation checkpoint.
+
+Immediate target: push the release-readiness docs, confirm GitHub Actions CI passes on `main`, then decide whether to create the `v0.1.1` tag.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

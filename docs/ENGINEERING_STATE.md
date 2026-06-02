@@ -463,3 +463,13 @@ node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.t
 ```powershell
 pnpm check
 ```
+
+## Latest v0.1.1 release-readiness documentation update
+
+Result:
+
+- README now includes v0.1.1 release candidate highlights.
+- README quickstart now documents graph index metadata, freshness metadata, call-aware `CODEMIND.md` sections, and read-only MCP tools.
+- Added `docs/RELEASE_NOTES_v0.1.1.md` as the draft release notes for the next release checkpoint.
+- No TypeScript source files were changed for this documentation checkpoint.
+- `pnpm check` was not rerun for this docs-only update; the latest full pass remains the Slice O verification.

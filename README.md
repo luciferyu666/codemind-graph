@@ -37,6 +37,18 @@ Included in v0.1:
 - Read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - Deterministic `CODEMIND.md` repo map output with call edge summary, top callers, top callees, and call edge tables.
 
+## v0.1.1 Release Candidate Highlights
+
+The current `main` branch is prepared as the v0.1.1 release candidate. Compared with the `v0.1.0` checkpoint, it adds:
+
+- richer conservative TypeScript `CALLS` extraction for namespace calls, constructors, same-file static methods, and simple chained class methods.
+- call-aware `codemind trace`, `codemind explain`, `codemind map`, MCP `trace_symbol`, MCP `explain_file`, and MCP `get_repo_map` output.
+- read-only MCP `explain_file` for deterministic file-level context.
+- protocol-level MCP negative/error coverage for invalid inputs, graph path containment, stale indexes, legacy graph files, and engineering memory leakage checks.
+- graph index metadata with indexer, adapter, adapter version, language, and capabilities.
+
+Release notes draft: [`docs/RELEASE_NOTES_v0.1.1.md`](docs/RELEASE_NOTES_v0.1.1.md)
+
 Non-goals for v0.1:
 
 - No write-capable MCP tools.
@@ -99,6 +111,12 @@ Index the example repository:
 node packages/cli/dist/index.js index examples/ts-basic
 ```
 
+The index writes:
+
+- `.codemind/graph.json`
+- graph index metadata: indexer, adapter, language, capabilities
+- graph freshness metadata: indexed time, root, source file count, source fingerprint
+
 Find a symbol:
 
 ```powershell
@@ -127,7 +145,20 @@ Generate the repo map:
 node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
 ```
 
-Repo map output includes files, symbols, imports, exports, diagnostics, and a deterministic calls overview for indexed `CALLS` edges.
+Repo map output includes files, symbols, imports, exports, diagnostics, graph index metadata, freshness status, and a deterministic calls overview for indexed `CALLS` edges.
+
+Expected map sections:
+
+```text
+## Overview
+## Freshness
+## Files
+## Symbols
+## Imports
+## Exports
+## Calls
+## Diagnostics
+```
 
 The generated files are:
 
@@ -141,6 +172,13 @@ node packages/cli/dist/index.js mcp start --root examples/ts-basic
 ```
 
 `mcp start` intentionally writes no human-readable preamble to stdout because stdout is the MCP protocol stream.
+
+Read-only MCP tools available in the v0.1.1 release candidate:
+
+- `find_symbol`
+- `get_repo_map`
+- `trace_symbol`
+- `explain_file`
 
 ## Freshness Warnings
 

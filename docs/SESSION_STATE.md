@@ -67,8 +67,9 @@ Implemented in this session:
 - Slice H Graph Freshness is implemented: `codemind index` writes `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint` metadata.
 - CLI `find`, `trace`, and `map` now report stale or unknown graph freshness, including legacy graph files without metadata.
 - MCP `find_symbol`, `get_repo_map`, and `trace_symbol` now return graph freshness status while staying read-only.
-- README now documents the v0.1 quickstart demo, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
+- README now documents the v0.1 quickstart demo, v0.1.1 release candidate highlights, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
 - `docs/LEGACY_REPO_ONBOARDING_PACK.md` defines the first service-oriented commercial wedge.
+- `docs/RELEASE_NOTES_v0.1.1.md` is prepared as a draft for the next release checkpoint.
 
 The 2026-05-28 ChatGPT export has been imported into `Documentations/ChatGPT-專案排序與建議 (4).md`. Its engineering corrections have been distilled into `docs/RUBRIC.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, and `AGENTS.md`.
 
@@ -107,9 +108,11 @@ Current design baseline:
 
 ## Next steps
 
-1. Commit the Slice O Graph Index Metadata Versioning checkpoint.
-2. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
-3. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
+1. Push the v0.1.1 release-readiness documentation checkpoint.
+2. Confirm GitHub Actions CI passes on `main`.
+3. Decide whether to create and push the `v0.1.1` tag.
+4. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
+5. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
 
@@ -203,6 +206,14 @@ Latest Slice O graph index metadata update:
 - CLI, direct MCP, and MCP protocol tests verify metadata visibility through `codemind map` and `get_repo_map`.
 - Focused verification passed with `pnpm build:packages; node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs test/typescript-adapter.test.mjs`.
 - Full verification passed with `pnpm check` and 26 focused `node:test` tests.
+
+Latest v0.1.1 release-readiness documentation update:
+
+- README now includes v0.1.1 release candidate highlights.
+- README quickstart now calls out graph index metadata, freshness metadata, call-aware repo map sections, and read-only MCP tools.
+- `docs/RELEASE_NOTES_v0.1.1.md` is added as a draft for the future GitHub Release.
+- No TypeScript source files changed in this documentation checkpoint.
+- `pnpm check` was not rerun for this docs-only update; the latest full pass remains the Slice O verification.
 
 ## Resume workflow
 
