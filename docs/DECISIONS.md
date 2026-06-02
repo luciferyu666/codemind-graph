@@ -131,3 +131,13 @@ Decision: GitHub Actions CI and Browser QA workflows use `windows-2025-vs2026`, 
 Reasoning: GitHub Actions emitted notices that JavaScript actions running on Node.js 20 are deprecated and that `windows-latest` / `windows-2025` are migrating to the Windows Server 2025 Visual Studio 2026 image in June 2026. Opting in explicitly makes the project test against the incoming default runtime before it becomes implicit.
 
 Guardrail: Keep the project runtime under test as Node.js `24.x` and pnpm `10.10.0`; this ADR changes the GitHub Actions JavaScript action runtime and runner image, not the product runtime contract.
+
+## ADR-0016: Keep TypeScript CALLS extraction conservative in Slice K
+
+Date: 2026-06-02
+
+Decision: Implement the first TypeScript `CALLS` edge extraction as a deterministic AST-based MVP. The adapter records same-file function calls, simple imported function calls, same-class `this.method()` calls, and simple imported class method calls without claiming full runtime dispatch resolution.
+
+Reasoning: CodeMind Graph needs call-edge data to make future `trace` and MCP context more useful, but v0.1 should avoid unstable or over-broad call graph claims. A conservative extractor is easier to test, keeps output deterministic, and preserves the local-first no-side-effect adapter boundary.
+
+Guardrail: Do not treat this as a complete TypeScript call graph. Dynamic dispatch, interface dispatch, higher-order calls, namespace calls, chained calls, and TypeChecker-backed cross-project call resolution remain future work.

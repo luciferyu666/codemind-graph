@@ -1,6 +1,6 @@
 # Engineering State
 
-Last updated: 2026-06-01
+Last updated: 2026-06-02
 
 ## Local tools
 
@@ -61,9 +61,9 @@ Last updated: 2026-06-01
 - Dependency install: passed with `pnpm install`.
 - Frozen dependency install: passed with `pnpm install --frozen-lockfile`.
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
-- Tests: passed with `pnpm test` using 22 focused `node:test` tests.
+- Tests: passed with `pnpm test` using 25 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-06-01 after Slice H graph freshness, README demo, and Legacy Repo Onboarding Pack updates.
+- Consolidated check: passed with `pnpm check` on 2026-06-02 after trace/MCP `CALLS` context integration.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -112,6 +112,7 @@ Command:
 node packages/cli/dist/index.js index examples/ts-basic
 node packages/cli/dist/index.js find greet --root examples/ts-basic
 node packages/cli/dist/index.js trace greet --root examples/ts-basic
+node packages/cli/dist/index.js explain src/index.ts --root examples/ts-basic
 node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
 ```
 
@@ -122,8 +123,9 @@ Result:
 - Graph index now includes `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - Found `function greet` in `src/index.ts`.
 - Traced `function greet` to its file-level imports, exports, and related modules.
+- Explained `src/index.ts` with file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
 - `find` returned no freshness warning for a fresh index.
-- `trace` and `map` include a `Freshness` section when run against a graph index.
+- `trace`, `explain`, and `map` include a `Freshness` section when run against a graph index.
 - Wrote `examples/ts-basic/CODEMIND.md` during map verification.
 
 ## Trace verification
@@ -132,9 +134,18 @@ Result:
 
 - `packages/core` exposes `traceSymbols` and `renderMarkdownSymbolTrace`.
 - `codemind trace <symbol>` reads `.codemind/graph.json` and emits deterministic Markdown.
-- Trace output includes symbol, location, file, imports, exports, and related module tables.
+- Trace output includes symbol, location, file, imports, exports, `Calls Out`, `Called By`, and related module tables.
 - Trace output includes graph freshness status.
 - No-match trace returns exit code `2` with deterministic Markdown output.
+
+## Explain verification
+
+Result:
+
+- `packages/core` exposes `explainFile` and `renderMarkdownFileExplain`.
+- `codemind explain <path>` reads `.codemind/graph.json` and emits deterministic Markdown.
+- Explain output includes file overview, symbols, imports, exports, related modules, diagnostics, and graph freshness status.
+- No-match explain returns exit code `2` with deterministic Markdown output.
 
 ## MCP verification
 
@@ -146,8 +157,9 @@ Result:
 - `trace_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol trace output.
 - `codemind mcp start --root <path>` delegates to the read-only MCP stdio server without writing stdout before transport startup.
 - MCP protocol smoke coverage starts `node packages/cli/dist/index.js mcp start --root examples/ts-basic` through SDK stdio transport and verifies initialize, `tools/list`, and `tools/call`.
-- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns Markdown repo map content; protocol-level `trace_symbol` returns symbol trace context.
+- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context.
 - MCP tool responses include graph freshness status.
+- Protocol-level negative/error coverage verifies missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Protocol-level tool metadata verifies read-only, non-destructive, and non-open-world annotations.
 - MCP graph paths are constrained to the selected root.
 - `packages/mcp-server/src` contains no file write APIs, shell execution APIs, engineering memory file exposure, or production `any` types.
@@ -159,6 +171,7 @@ Result:
 - Adapter fixture coverage verifies side-effect, default-and-named, type-only, namespace, and external imports.
 - Re-export fixture coverage verifies named re-exports, type re-exports, export-all re-exports, and deterministic `exportNames` metadata.
 - Class and method fixture coverage verifies exported classes and non-exported method symbols with `ClassName.methodName` names.
+- Slice K `CALLS` edge fixture coverage verifies same-file function calls, imported function calls, same-class `this.method()` calls, simple imported class method calls, and top-level variable initializer callers.
 
 ## Documentation imports
 
@@ -281,3 +294,83 @@ Result:
 - Upgraded GitHub Actions steps to Node.js 24 runtime majors: `actions/checkout@v6`, `actions/setup-node@v6`, `pnpm/action-setup@v6`, and `actions/upload-artifact@v6`.
 - Rationale is based on GitHub Actions deprecation notices for Node.js 20 action runtime and the Windows Server 2025 / Visual Studio 2026 image migration.
 - Local `pnpm check` passed after the workflow and documentation updates.
+
+## Latest Slice I explain update
+
+Result:
+
+- Implemented `codemind explain <path>` in `packages/cli`.
+- Added reusable file explain helpers in `packages/core`.
+- Explain output remains read-only and only reads `.codemind/graph.json`.
+- Added focused CLI tests for explain success and missing indexed file behavior.
+- `pnpm test` passed with 24 `node:test` tests.
+- `pnpm check` passed.
+- Manual CLI verification passed:
+
+```powershell
+node packages/cli/dist/index.js index examples/ts-basic
+node packages/cli/dist/index.js find greet --root examples/ts-basic
+node packages/cli/dist/index.js trace greet --root examples/ts-basic
+node packages/cli/dist/index.js explain src/index.ts --root examples/ts-basic
+node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
+```
+
+## Latest Slice J MCP protocol update
+
+Result:
+
+- Added MCP stdio protocol negative/error coverage in `test/mcp-protocol.test.mjs`.
+- Covered missing `.codemind/graph.json`.
+- Covered root escape attempts and graph path escape attempts.
+- Covered invalid tool input through the MCP client.
+- Covered legacy graph indexes without freshness metadata.
+- Covered stale graph freshness status after source changes.
+- Verified negative/error outputs do not leak `SESSION_STATE`, `CURRENT_STATE`, `ENGINEERING_STATE`, or `SECRET_SESSION_NOTE`.
+- Focused protocol verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/mcp-protocol.test.mjs
+```
+- Full `pnpm check` passed with 25 `node:test` tests.
+
+## Latest Slice K TypeScript CALLS update
+
+Result:
+
+- Implemented conservative TypeScript `CALLS` edge extraction in `packages/adapter-typescript`.
+- Covered same-file function calls, imported function calls, same-class `this.method()` calls, and simple imported class method calls.
+- Kept local variable initializer calls inside methods/functions attributed to the enclosing method/function.
+- Kept dynamic dispatch, namespace calls, chained calls, higher-order calls, interface dispatch, and full TypeChecker-backed call resolution out of scope.
+- Focused adapter verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/typescript-adapter.test.mjs
+```
+
+- Full verification passed:
+
+```powershell
+pnpm check
+```
+
+## Latest CALLS trace/MCP context update
+
+Result:
+
+- `packages/core` trace helpers now include outgoing and incoming `CALLS` edges as `callsOut` and `calledBy`.
+- `renderMarkdownSymbolTrace` now renders `Calls Out` and `Called By` sections.
+- CLI `codemind trace` and MCP `trace_symbol` use the same renderer, so both surfaces expose call context without separate implementations.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/core.test.mjs test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs
+```
+
+- Full verification passed:
+
+```powershell
+pnpm check
+```

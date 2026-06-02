@@ -69,7 +69,7 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     assert.match(findText, /Matches: 1/);
     assert.match(findText, /^## Freshness/m);
     assert.match(findText, /- Status: `fresh`/);
-    assert.match(findText, /\| function \| greet \| src\/index\.ts:1:1 \| yes \|/);
+    assert.match(findText, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
 
     const repoMapResult = await client.callTool({
       name: "get_repo_map",
@@ -82,7 +82,7 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     assert.match(repoMapText, /^## Freshness/m);
     assert.match(repoMapText, /- Status: `fresh`/);
     assert.match(repoMapText, /^## Symbols/m);
-    assert.match(repoMapText, /\| function \| greet \| src\/index\.ts:1:1 \| yes \|/);
+    assert.match(repoMapText, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
 
     const traceResult = await client.callTool({
       name: "trace_symbol",
@@ -98,8 +98,132 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     assert.match(traceText, /- Status: `fresh`/);
     assert.match(traceText, /- Symbol: `function greet`/);
     assert.match(traceText, /- File: `src\/index\.ts`/);
+    assert.match(traceText, /^### Calls Out/m);
+    assert.match(traceText, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(traceText, /^### Called By/m);
 
     const combinedOutput = `${JSON.stringify(toolsResult)}\n${findText}\n${repoMapText}\n${traceText}`;
+    assert.doesNotMatch(combinedOutput, /SESSION_STATE|CURRENT_STATE|ENGINEERING_STATE|SECRET_SESSION_NOTE/);
+    assert.equal(stderr, "");
+  } finally {
+    await client?.close();
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("MCP stdio protocol handles negative and freshness edge cases", { timeout: 20_000 }, async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-mcp-protocol-negative-"));
+  let client;
+  let stderr = "";
+
+  try {
+    await writeExampleProject(rootDir);
+
+    const { Client, StdioClientTransport } = await importMcpClientSdk();
+    const transport = new StdioClientTransport({
+      command: process.execPath,
+      args: [cliEntryPath, "mcp", "start", "--root", "."],
+      cwd: rootDir,
+      stderr: "pipe",
+    });
+    transport.stderr?.on("data", (chunk) => {
+      stderr += String(chunk);
+    });
+
+    client = new Client({
+      name: "codemind-protocol-negative-test",
+      version: "0.1.0",
+    });
+    await client.connect(transport);
+
+    const missingGraphError = await readRejectedMessage(() =>
+      client.callTool({
+        name: "get_repo_map",
+        arguments: {
+          root: "examples/ts-basic",
+        },
+      })
+    );
+    assert.match(missingGraphError, /graph\.json|ENOENT|no such file/i);
+
+    const rootEscapeError = await readRejectedMessage(() =>
+      client.callTool({
+        name: "get_repo_map",
+        arguments: {
+          root: "..",
+        },
+      })
+    );
+    assert.match(rootEscapeError, /MCP root path must stay inside/);
+
+    const graphEscapeError = await readRejectedMessage(() =>
+      client.callTool({
+        name: "find_symbol",
+        arguments: {
+          query: "greet",
+          root: "examples/ts-basic",
+          graph: "../outside/graph.json",
+        },
+      })
+    );
+    assert.match(graphEscapeError, /MCP graph path must stay inside/);
+
+    const invalidInputError = await readRejectedMessage(() =>
+      client.callTool({
+        name: "find_symbol",
+        arguments: {},
+      })
+    );
+    assert.match(invalidInputError, /query|invalid|expected|required/i);
+
+    await indexExampleProject(rootDir);
+    const graphPath = path.join(rootDir, "examples", "ts-basic", ".codemind", "graph.json");
+    const legacyGraph = JSON.parse(await readFile(graphPath, "utf8"));
+    delete legacyGraph.freshness;
+    await writeFile(graphPath, `${JSON.stringify(legacyGraph, null, 2)}\n`, "utf8");
+
+    const legacyMapResult = await client.callTool({
+      name: "get_repo_map",
+      arguments: {
+        root: "examples/ts-basic",
+      },
+    });
+    const legacyMapText = readTextToolResult(legacyMapResult);
+
+    assert.match(legacyMapText, /^# CODEMIND/m);
+    assert.match(legacyMapText, /^## Freshness/m);
+    assert.match(legacyMapText, /- Status: `unknown`/);
+    assert.match(legacyMapText, /graph index does not include freshness metadata/);
+
+    await indexExampleProject(rootDir);
+    await writeFile(
+      path.join(rootDir, "examples", "ts-basic", "src", "index.ts"),
+      ["export function greet(name: string): string {", "  return `Hi, ${name}`;", "}", ""].join("\n"),
+      "utf8",
+    );
+    const staleFindResult = await client.callTool({
+      name: "find_symbol",
+      arguments: {
+        query: "greet",
+        root: "examples/ts-basic",
+      },
+    });
+    const staleFindText = readTextToolResult(staleFindResult);
+
+    assert.match(staleFindText, /^# find_symbol/m);
+    assert.match(staleFindText, /Matches: 1/);
+    assert.match(staleFindText, /^## Freshness/m);
+    assert.match(staleFindText, /- Status: `stale`/);
+    assert.match(staleFindText, /source fingerprint changed/);
+
+    const combinedOutput = [
+      missingGraphError,
+      rootEscapeError,
+      graphEscapeError,
+      invalidInputError,
+      legacyMapText,
+      staleFindText,
+    ].join("\n");
     assert.doesNotMatch(combinedOutput, /SESSION_STATE|CURRENT_STATE|ENGINEERING_STATE|SECRET_SESSION_NOTE/);
     assert.equal(stderr, "");
   } finally {
@@ -144,8 +268,20 @@ async function writeExampleProject(rootDir) {
     "utf8",
   );
   await writeFile(
+    path.join(rootDir, "examples", "ts-basic", "src", "helper.ts"),
+    ["export function formatName(name: string): string {", "  return name.trim();", "}", ""].join("\n"),
+    "utf8",
+  );
+  await writeFile(
     path.join(rootDir, "examples", "ts-basic", "src", "index.ts"),
-    ["export function greet(name: string): string {", "  return `Hello, ${name}`;", "}", ""].join("\n"),
+    [
+      'import { formatName } from "./helper.js";',
+      "",
+      "export function greet(name: string): string {",
+      "  return `Hello, ${formatName(name)}`;",
+      "}",
+      "",
+    ].join("\n"),
     "utf8",
   );
 }
@@ -167,6 +303,15 @@ async function indexExampleProject(rootDir) {
 
   const graphPath = path.join(rootDir, "examples", "ts-basic", ".codemind", "graph.json");
   await readFile(graphPath, "utf8");
+}
+
+async function readRejectedMessage(action) {
+  try {
+    const result = await action();
+    assert.fail(`Expected MCP call to fail, but received: ${JSON.stringify(result)}`);
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
 }
 
 function readTextToolResult(result) {

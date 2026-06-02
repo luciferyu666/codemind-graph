@@ -10,6 +10,7 @@ import {
   getOutgoingEdges,
   listExports,
   listFiles,
+  listCalls,
   listSymbols,
   normalizeGraphPath,
   renderMarkdownSymbolTrace,
@@ -89,6 +90,7 @@ test("traceSymbols returns symbol file imports exports and related modules", () 
   const fileId = createNodeId("file", ["src/index.ts"]);
   const moduleId = createNodeId("module", ["project", "src/helper.ts"]);
   const symbolId = createNodeId("function", ["src/index.ts", "run", "3:1"]);
+  const helperSymbolId = createNodeId("function", ["src/helper.ts", "formatName", "1:1"]);
 
   builder.addNode({
     id: repositoryId,
@@ -124,6 +126,16 @@ test("traceSymbols returns symbol file imports exports and related modules", () 
       exported: true,
     },
   });
+  builder.addNode({
+    id: helperSymbolId,
+    kind: "function",
+    name: "formatName",
+    source: "project",
+    filePath: "src/helper.ts",
+    metadata: {
+      exported: true,
+    },
+  });
   builder.addEdge({
     id: createEdgeId("CONTAINS", repositoryId, fileId),
     kind: "CONTAINS",
@@ -149,19 +161,36 @@ test("traceSymbols returns symbol file imports exports and related modules", () 
       exportKind: "named",
     },
   });
+  builder.addEdge({
+    id: createEdgeId("CALLS", symbolId, helperSymbolId, "formatName"),
+    kind: "CALLS",
+    fromId: symbolId,
+    toId: helperSymbolId,
+    metadata: {
+      callee: "formatName",
+      resolution: "imported-function",
+    },
+  });
 
   const graph = builder.toGraph("F:/repo");
   const traces = traceSymbols(graph, "run");
   const markdown = renderMarkdownSymbolTrace(graph, "run");
 
+  assert.equal(listCalls(graph).length, 1);
   assert.equal(traces.length, 1);
   assert.equal(traces[0]?.symbol.name, "run");
   assert.equal(traces[0]?.file?.filePath, "src/index.ts");
   assert.equal(traces[0]?.imports.length, 1);
   assert.equal(traces[0]?.exports.length, 1);
+  assert.equal(traces[0]?.callsOut.length, 1);
+  assert.equal(traces[0]?.calledBy.length, 0);
   assert.deepEqual(traces[0]?.relatedModules.map((node) => node.name), ["src/helper.ts"]);
   assert.match(markdown, /^# Trace/m);
   assert.match(markdown, /Query: `run`/);
   assert.match(markdown, /\| src\/index\.ts \| module:src\/helper\.ts \| \.\/helper\.js \| named \|/);
   assert.match(markdown, /\| src\/index\.ts \| function:run \|  \| named \|/);
+  assert.match(markdown, /^### Calls Out/m);
+  assert.match(markdown, /\| function:run \| function:formatName \| formatName \| imported-function \|/);
+  assert.match(markdown, /^### Called By/m);
+  assert.match(markdown, /No incoming calls found\./);
 });

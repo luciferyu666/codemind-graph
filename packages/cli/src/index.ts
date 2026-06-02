@@ -7,10 +7,12 @@ import { extractTypeScriptGraph, type TypeScriptExtractionResult } from "@codemi
 import {
   createGraphFreshnessMetadata,
   evaluateGraphFreshness,
+  explainFile,
   findSymbols,
   formatNodeLocation,
   isGraphIndexFile,
   renderFreshnessWarning,
+  renderMarkdownFileExplain,
   renderMarkdownRepoMap,
   renderMarkdownSymbolTrace,
   traceSymbols,
@@ -56,6 +58,12 @@ interface TraceArgs {
   readonly graphPath?: string;
 }
 
+interface ExplainArgs {
+  readonly filePath: string;
+  readonly rootPath?: string;
+  readonly graphPath?: string;
+}
+
 interface MapArgs {
   readonly rootPath?: string;
   readonly graphPath?: string;
@@ -78,6 +86,7 @@ Usage:
   codemind index <path> [--out <file>]
   codemind find <symbol> [--root <path>] [--graph <file>]
   codemind trace <symbol> [--root <path>] [--graph <file>]
+  codemind explain <path> [--root <path>] [--graph <file>]
   codemind map [--root <path>] [--graph <file>] [--format markdown] [--out <file>]
   codemind mcp start [--root <path>]
 
@@ -85,6 +94,7 @@ Commands:
   index   Build a TypeScript graph and write .codemind/graph.json
   find    Find symbols in .codemind/graph.json
   trace   Trace a symbol to its file imports, exports, and related modules
+  explain Explain an indexed file from .codemind/graph.json
   map     Generate CODEMIND.md from .codemind/graph.json
   mcp     Start the read-only MCP server
 `;
@@ -123,6 +133,12 @@ export async function runCli(argv = process.argv.slice(2), options: CliOptions =
     if (command === "trace") {
       const traceArgs = parseTraceArgs(args);
       const found = await runTraceCommand(traceArgs, resolvedOptions);
+      return found ? 0 : 2;
+    }
+
+    if (command === "explain") {
+      const explainArgs = parseExplainArgs(args);
+      const found = await runExplainCommand(explainArgs, resolvedOptions);
       return found ? 0 : 2;
     }
 
@@ -279,6 +295,56 @@ function parseTraceArgs(args: readonly string[]): TraceArgs {
 
   return {
     symbol,
+    ...(rootPath === undefined ? {} : { rootPath }),
+    ...(graphPath === undefined ? {} : { graphPath }),
+  };
+}
+
+function parseExplainArgs(args: readonly string[]): ExplainArgs {
+  let filePath: string | undefined;
+  let rootPath: string | undefined;
+  let graphPath: string | undefined;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--root") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --root");
+      }
+      rootPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--graph") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --graph");
+      }
+      graphPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg?.startsWith("-")) {
+      throw new Error(`Unknown option for explain: ${arg}`);
+    }
+
+    if (filePath !== undefined) {
+      throw new Error(`Unexpected extra argument for explain: ${arg}`);
+    }
+
+    filePath = arg;
+  }
+
+  if (filePath === undefined) {
+    throw new Error("Usage: codemind explain <path> [--root <path>] [--graph <file>]");
+  }
+
+  return {
+    filePath,
     ...(rootPath === undefined ? {} : { rootPath }),
     ...(graphPath === undefined ? {} : { graphPath }),
   };
@@ -445,6 +511,17 @@ async function runTraceCommand(args: TraceArgs, options: ResolvedCliOptions): Pr
 
   options.stdout.write(markdown);
   return traces.length > 0;
+}
+
+async function runExplainCommand(args: ExplainArgs, options: ResolvedCliOptions): Promise<boolean> {
+  const graphPath = resolveGraphPath(args, options.cwd);
+  const indexFile = await readGraphIndexFile(graphPath);
+  const freshness = await evaluateGraphFreshness(indexFile);
+  const explanation = explainFile(indexFile.graph, args.filePath);
+  const markdown = renderMarkdownFileExplain(indexFile, args.filePath, freshness);
+
+  options.stdout.write(markdown);
+  return explanation !== undefined;
 }
 
 async function runMapCommand(args: MapArgs, options: ResolvedCliOptions): Promise<void> {

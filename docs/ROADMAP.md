@@ -13,11 +13,13 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [x] Implement graph schema in `packages/core`.
 - [x] Implement TypeScript Compiler API import and symbol extraction in `packages/adapter-typescript`.
 - [x] Add TypeScript adapter fixture coverage for imports, re-exports, classes, and methods.
-- [ ] Implement CLI commands:
+- [x] Add TypeScript `CALLS` edge MVP for same-file function calls, imported function calls, same-class method calls, and simple imported class method calls.
+- [x] Expose `CALLS` edges in `codemind trace` and MCP `trace_symbol` output.
+- [x] Implement CLI commands:
   - [x] `index`
   - [x] `find`
   - [x] `trace`
-  - [ ] `explain`
+  - [x] `explain`
   - [x] `map`
   - [x] `mcp start`
 - [x] Implement read-only MCP server tools:
@@ -26,6 +28,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
   - [x] `trace_symbol`
 - [x] Wire MCP server through `codemind mcp start`.
 - [x] Add MCP stdio protocol smoke coverage for `find_symbol` and `get_repo_map`.
+- [x] Add MCP stdio protocol negative/error coverage for missing graph, invalid input, path escape, legacy freshness, and stale freshness.
 - [x] Generate `CODEMIND.md` repository map.
 - [x] Add GitHub Actions CI for `pnpm check`.
 
@@ -65,9 +68,9 @@ See `docs/OFFICIAL_WEBSITE_PLAN.md`.
 See `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`.
 
 - [x] Capture initial business and monetization blueprint.
-- [ ] Finish Slice H Graph freshness before public v0.1 commercial validation.
-- [ ] Prepare Legacy Repo Onboarding Pack one-pager.
-- [ ] Prepare v0.1 README demo and release tag.
+- [x] Finish Slice H Graph freshness before public v0.1 commercial validation.
+- [x] Prepare Legacy Repo Onboarding Pack one-pager.
+- [x] Prepare v0.1 README demo and release tag.
 - [ ] Validate first paid onboarding customer.
 
 ## 90-Day Strategic Focus
@@ -77,6 +80,7 @@ Day 1-30:
 - Complete CodeMind Graph v0.1 deterministic graph query flow.
 - Finish `codemind index`, `codemind find`, and `codemind map`. Done.
 - Add `codemind trace`. Done.
+- Add `codemind explain`. Done.
 - Generate `CODEMIND.md`. Done.
 
 Day 31-60:
@@ -87,6 +91,7 @@ Day 31-60:
 - Add schema validation for MCP tool inputs. Done.
 - Wire MCP server through `codemind mcp start`. Done.
 - Add MCP protocol smoke coverage. Done.
+- Add MCP negative/error protocol coverage. Done.
 - Add GitHub Actions CI. Done.
 
 Day 61-90:
@@ -95,6 +100,9 @@ Day 61-90:
 - Use `docs/TASK_DECOMPOSITION_GUIDE.md` as the Slice H task contract.
 - Include freshness status in CLI and read-only MCP outputs.
 - Maintain the pushed `v0.1.0` release checkpoint and use follow-up slices for CI/runtime maintenance, example coverage, and MCP negative-path tests.
+- Slice I `codemind explain <path>` is implemented.
+- Slice K TypeScript `CALLS` edge MVP is implemented.
+- `codemind trace` and MCP `trace_symbol` now render `Calls Out` and `Called By` sections from indexed `CALLS` edges.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.
 
 Day 90+:

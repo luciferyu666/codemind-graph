@@ -483,8 +483,152 @@ test("codemind trace reads .codemind/graph.json and reports symbol context", asy
     assert.match(stdout, /\| src\/index\.ts \| module:src\/helper\.ts \| \.\/helper\.js \| named \|/);
     assert.match(stdout, /^### Exports/m);
     assert.match(stdout, /\| src\/index\.ts \| function:greet \|  \| named \|/);
+    assert.match(stdout, /^### Calls Out/m);
+    assert.match(stdout, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(stdout, /^### Called By/m);
+    assert.match(stdout, /No incoming calls found\./);
     assert.match(stdout, /^### Related Modules/m);
     assert.match(stdout, /\| src\/helper\.ts \| project \| \.\/helper\.js \|/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind explain reads .codemind/graph.json and reports file context", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-explain-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "helper.ts"),
+      ["export function formatName(name: string): string {", "  return name.trim();", "}", ""].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      [
+        'import { formatName } from "./helper.js";',
+        "",
+        "export function greet(name: string): string {",
+        "  return `Hello, ${formatName(name)}`;",
+        "}",
+        "",
+      ].join("\n"),
+    );
+
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["explain", "src/index.ts", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# File Explain/m);
+    assert.match(stdout, /File: `src\/index\.ts`/);
+    assert.match(stdout, /^## Freshness/m);
+    assert.match(stdout, /- Status: `fresh`/);
+    assert.match(stdout, /^## File Overview/m);
+    assert.match(stdout, /- Indexed path: `src\/index\.ts`/);
+    assert.match(stdout, /- Symbols: 1/);
+    assert.match(stdout, /- Imports: 1/);
+    assert.match(stdout, /- Exports: 1/);
+    assert.match(stdout, /^## Symbols/m);
+    assert.match(stdout, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
+    assert.match(stdout, /^## Imports/m);
+    assert.match(stdout, /\| src\/index\.ts \| module:src\/helper\.ts \| \.\/helper\.js \| named \|/);
+    assert.match(stdout, /^## Exports/m);
+    assert.match(stdout, /\| src\/index\.ts \| function:greet \|  \| named \|/);
+    assert.match(stdout, /^## Related Modules/m);
+    assert.match(stdout, /\| src\/helper\.ts \| project \| \.\/helper\.js \|/);
+    assert.match(stdout, /^## Diagnostics/m);
+    assert.match(stdout, /No diagnostics\./);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind explain returns 2 when the file is not indexed", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-explain-empty-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(path.join(rootDir, "sample", "src", "index.ts"), "export const answer = 42;\n");
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["explain", "src/missing.ts", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 2);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# File Explain/m);
+    assert.match(stdout, /File: `src\/missing\.ts`/);
+    assert.match(stdout, /^## Freshness/m);
+    assert.match(stdout, /No indexed file found\./);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
   }

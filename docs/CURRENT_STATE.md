@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-06-01
+Last updated: 2026-06-02
 
 ## Repository status
 
@@ -32,13 +32,15 @@ Last updated: 2026-06-01
 - v0.1 quality gate is now defined in `docs/RUBRIC.md`.
 - `packages/core` graph schema is implemented.
 - `packages/adapter-typescript` TypeScript Compiler API extraction is implemented.
+- `packages/adapter-typescript` now extracts basic static `CALLS` edges for same-file function calls, imported function calls, same-class methods, and simple imported class methods.
 - `packages/cli` supports `index` and writes `.codemind/graph.json`.
 - `packages/cli` supports `find` and reads `.codemind/graph.json` for symbol lookup.
-- `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency context.
+- `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency and call context.
+- `packages/cli` supports `explain` and reads `.codemind/graph.json` for deterministic file-level context.
 - `packages/cli` supports `map` and writes `CODEMIND.md`.
 - `packages/cli` writes graph freshness metadata during `index` and reports stale or unknown freshness during `find`, `trace`, and `map`.
 - `packages/cli` supports `mcp start --root <path>` and delegates to the read-only MCP server.
-- `packages/core` exposes reusable graph query helpers used by CLI commands.
+- `packages/core` exposes reusable graph query helpers used by CLI commands, including `CALLS` edge trace context.
 - `packages/mcp-server` exposes a read-only MCP skeleton with `find_symbol`, `get_repo_map`, and `trace_symbol`.
 - `packages/mcp-server` reports graph freshness status in `find_symbol`, `get_repo_map`, and `trace_symbol` responses.
 - GitHub Actions CI is configured in `.github/workflows/ci.yml` for push and pull request.
@@ -59,12 +61,14 @@ Last updated: 2026-06-01
 - GitHub repository is connected to the Vercel project under `vincent-lius-projects-de5eeb92`.
 - Vercel project Root Directory is configured as `apps/web`.
 - Focused tests cover graph builder determinism and TypeScript extraction.
-- TypeScript adapter fixtures now cover richer imports, re-exports, classes, and methods for future trace work.
-- Focused CLI tests cover symbol trace success and no-match behavior.
+- TypeScript adapter fixtures now cover richer imports, re-exports, classes, methods, and basic `CALLS` edge extraction for future trace work.
+- Focused CLI tests cover symbol trace success, no-match behavior, and rendered `CALLS` edge context.
+- Focused CLI tests cover file explain success and no-match behavior.
 - Focused CLI tests cover stale source fingerprints and legacy graph files without freshness metadata.
 - Focused CLI tests cover MCP startup delegation and invalid MCP startup options.
-- Focused MCP tests cover symbol lookup, markdown repo map retrieval, symbol trace retrieval, freshness status, stale source fingerprints, and graph path containment.
-- MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, and freshness status for `find_symbol`, `get_repo_map`, and `trace_symbol`.
+- Focused MCP tests cover symbol lookup, markdown repo map retrieval, symbol trace retrieval with `CALLS` edge context, freshness status, stale source fingerprints, and graph path containment.
+- MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, freshness status, and `CALLS` trace context for `find_symbol`, `get_repo_map`, and `trace_symbol`.
+- MCP protocol negative/error coverage verifies missing graph, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and no engineering memory leakage.
 - `docs/NEXT_DEVELOPMENT_TOPICS.md` defines the next AI-native graph platform development topics and slice plan.
 - README now documents the v0.1 quickstart demo, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
 - `docs/LEGACY_REPO_ONBOARDING_PACK.md` documents the first paid service wedge.
@@ -72,9 +76,10 @@ Last updated: 2026-06-01
 ## Known gaps
 
 - Runtime is Node.js `v22.22.3`; project blueprint mentions Node.js `v24.16.0` LTS.
-- CLI supports `index`, `find`, `trace`, `map`, and `mcp start`; `explain` is not implemented yet.
-- Phase 001 still has the optional `explain` CLI gap, but the minimum v0.1 graph, freshness, trace, map, read-only MCP flow, and richer TypeScript fixture coverage are implemented.
+- CLI supports `index`, `find`, `trace`, `explain`, `map`, and `mcp start`.
+- Phase 001 minimum graph, freshness, trace, explain, map, read-only MCP flow, and richer TypeScript fixture coverage are implemented.
 - SQLite storage is not implemented yet; the current index target is JSON under `.codemind/graph.json`.
+- Full TypeScript call graph resolution is not implemented yet; Slice K only covers conservative static function and method call edges.
 - MCP currently reads only `.codemind/graph.json`; live indexing from MCP is intentionally out of scope.
 - CI badge is not added yet; add it after the first GitHub Actions run is visible on `main`.
 - Custom domain setup is not implemented yet.
@@ -84,8 +89,14 @@ Last updated: 2026-06-01
 
 ## Immediate target
 
-Slice H, README demo readiness, Legacy Repo Onboarding Pack updates, and `v0.1.0` release tagging are implemented.
+Slice I `codemind explain <path>` is implemented and verified with `pnpm check` plus manual CLI verification.
 
-Immediate verification target: confirm the CI runtime update passes on GitHub Actions after pushing the workflow change.
+Slice J MCP negative/error protocol coverage is implemented and verified with `pnpm check`.
+
+Slice K TypeScript `CALLS` edge MVP is implemented and verified with focused adapter tests and full `pnpm check`.
+
+`CALLS` edges are now exposed through `codemind trace` and MCP `trace_symbol` as `Calls Out` and `Called By`.
+
+Immediate target: decide whether the next slice should add call-aware `explain` output or richer call resolution.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

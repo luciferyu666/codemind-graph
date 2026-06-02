@@ -127,6 +127,16 @@ export interface SymbolTrace {
   readonly file: GraphNode | undefined;
   readonly imports: readonly GraphEdge[];
   readonly exports: readonly GraphEdge[];
+  readonly callsOut: readonly GraphEdge[];
+  readonly calledBy: readonly GraphEdge[];
+  readonly relatedModules: readonly GraphNode[];
+}
+
+export interface FileExplanation {
+  readonly file: GraphNode;
+  readonly symbols: readonly GraphNode[];
+  readonly imports: readonly GraphEdge[];
+  readonly exports: readonly GraphEdge[];
   readonly relatedModules: readonly GraphNode[];
 }
 
@@ -228,6 +238,8 @@ export function traceSymbols(graph: CodeGraph, query: string): readonly SymbolTr
     const file = fileNodeForSymbol(graph, symbol);
     const imports = file === undefined ? [] : listImports(graph).filter((edge) => edge.fromId === file.id);
     const exports = file === undefined ? [] : listExports(graph).filter((edge) => edge.fromId === file.id);
+    const callsOut = listCalls(graph).filter((edge) => edge.fromId === symbol.id);
+    const calledBy = listCalls(graph).filter((edge) => edge.toId === symbol.id);
     const relatedModules = uniqueSortedNodes([
       ...imports.map((edge) => getNodeById(graph, edge.toId)),
       ...exports.map((edge) => getNodeById(graph, edge.toId)).filter((node) => node?.kind === "module"),
@@ -238,9 +250,44 @@ export function traceSymbols(graph: CodeGraph, query: string): readonly SymbolTr
       file,
       imports,
       exports,
+      callsOut,
+      calledBy,
       relatedModules,
     };
   });
+}
+
+export function explainFile(
+  graph: CodeGraph,
+  filePath: string,
+): FileExplanation | undefined {
+  const normalizedFilePath = normalizeLookupFilePath(filePath);
+  const file = listFiles(graph).find((node) =>
+    normalizeLookupFilePath(node.filePath ?? node.name) === normalizedFilePath
+  );
+
+  if (file === undefined) {
+    return undefined;
+  }
+
+  const fileNodePath = normalizeLookupFilePath(file.filePath ?? file.name);
+  const symbols = listSymbols(graph).filter((node) =>
+    normalizeLookupFilePath(node.filePath ?? node.location?.filePath ?? "") === fileNodePath
+  );
+  const imports = listImports(graph).filter((edge) => edge.fromId === file.id);
+  const exports = listExports(graph).filter((edge) => edge.fromId === file.id);
+  const relatedModules = uniqueSortedNodes([
+    ...imports.map((edge) => getNodeById(graph, edge.toId)),
+    ...exports.map((edge) => getNodeById(graph, edge.toId)).filter((node) => node?.kind === "module"),
+  ]);
+
+  return {
+    file,
+    symbols,
+    imports,
+    exports,
+    relatedModules,
+  };
 }
 
 export function listImports(graph: CodeGraph): readonly GraphEdge[] {
@@ -249,6 +296,10 @@ export function listImports(graph: CodeGraph): readonly GraphEdge[] {
 
 export function listExports(graph: CodeGraph): readonly GraphEdge[] {
   return graph.edges.filter((edge) => edge.kind === "EXPORTS").sort(compareGraphEdges);
+}
+
+export function listCalls(graph: CodeGraph): readonly GraphEdge[] {
+  return graph.edges.filter((edge) => edge.kind === "CALLS").sort(compareGraphEdges);
 }
 
 export function getOutgoingEdges(graph: CodeGraph, nodeId: GraphNodeId): readonly GraphEdge[] {
@@ -533,12 +584,84 @@ export function renderMarkdownSymbolTrace(
       "",
       ...renderTraceEdgeTable(graph, trace.exports, "Export"),
       "",
+      "### Calls Out",
+      "",
+      ...renderCallEdgeTable(graph, trace.callsOut, "No outgoing calls found."),
+      "",
+      "### Called By",
+      "",
+      ...renderCallEdgeTable(graph, trace.calledBy, "No incoming calls found."),
+      "",
       "### Related Modules",
       "",
       ...renderRelatedModulesTable(trace.relatedModules),
       "",
     );
   }
+
+  return `${lines.join("\n")}\n`;
+}
+
+export function renderMarkdownFileExplain(
+  indexFile: GraphIndexFile,
+  filePath: string,
+  freshness?: GraphFreshnessReport,
+): string {
+  const normalizedFilePath = normalizeLookupFilePath(filePath);
+  const explanation = explainFile(indexFile.graph, normalizedFilePath);
+  const lines: string[] = [
+    "# File Explain",
+    "",
+    `File: \`${cell(normalizedFilePath)}\``,
+    "",
+  ];
+
+  if (freshness !== undefined) {
+    lines.push(...renderMarkdownFreshnessSection(freshness), "");
+  }
+
+  if (explanation === undefined) {
+    lines.push("No indexed file found.", "");
+    return `${lines.join("\n")}\n`;
+  }
+
+  const indexedFilePath = explanation.file.filePath ?? explanation.file.name;
+  const fileDiagnostics = diagnosticsForFile(
+    indexFile.diagnostics,
+    indexedFilePath,
+  );
+
+  lines.push(
+    "## File Overview",
+    "",
+    `- Indexed path: \`${cell(indexedFilePath)}\``,
+    `- Source: \`${explanation.file.source}\``,
+    `- Symbols: ${explanation.symbols.length}`,
+    `- Imports: ${explanation.imports.length}`,
+    `- Exports: ${explanation.exports.length}`,
+    `- Related modules: ${explanation.relatedModules.length}`,
+    "",
+    "## Symbols",
+    "",
+    ...renderFileSymbolsTable(explanation.symbols),
+    "",
+    "## Imports",
+    "",
+    ...renderTraceEdgeTable(indexFile.graph, explanation.imports, "Import"),
+    "",
+    "## Exports",
+    "",
+    ...renderTraceEdgeTable(indexFile.graph, explanation.exports, "Export"),
+    "",
+    "## Related Modules",
+    "",
+    ...renderRelatedModulesTable(explanation.relatedModules),
+    "",
+    "## Diagnostics",
+    "",
+    ...renderDiagnostics(fileDiagnostics),
+    "",
+  );
 
   return `${lines.join("\n")}\n`;
 }
@@ -644,6 +767,21 @@ function renderSymbolsTable(graph: CodeGraph): readonly string[] {
   ];
 }
 
+function renderFileSymbolsTable(symbols: readonly GraphNode[]): readonly string[] {
+  if (symbols.length === 0) {
+    return ["No symbols defined in this file."];
+  }
+
+  return [
+    "| Kind | Name | Location | Exported |",
+    "| --- | --- | --- | --- |",
+    ...symbols.map((node) => {
+      const exported = node.metadata?.exported === true ? "yes" : "no";
+      return `| ${cell(node.kind)} | ${cell(node.name)} | ${cell(formatNodeLocation(node))} | ${exported} |`;
+    }),
+  ];
+}
+
 function renderEdgeTable(graph: CodeGraph, edges: readonly GraphEdge[], label: string): readonly string[] {
   if (edges.length === 0) {
     return [`No ${label.toLocaleLowerCase()} edges indexed.`];
@@ -699,6 +837,27 @@ function renderTraceEdgeTable(graph: CodeGraph, edges: readonly GraphEdge[], lab
         formatEdgeNode(toNode),
         String(specifier),
         String(kind),
+      ].map(cell).join(" | ").replace(/^/, "| ").replace(/$/, " |");
+    }),
+  ];
+}
+
+function renderCallEdgeTable(graph: CodeGraph, edges: readonly GraphEdge[], emptyMessage: string): readonly string[] {
+  if (edges.length === 0) {
+    return [emptyMessage];
+  }
+
+  return [
+    "| Caller | Callee | Expression | Resolution |",
+    "| --- | --- | --- | --- |",
+    ...edges.map((edge) => {
+      const fromNode = getNodeById(graph, edge.fromId);
+      const toNode = getNodeById(graph, edge.toId);
+      return [
+        formatEdgeNode(fromNode),
+        formatEdgeNode(toNode),
+        String(edge.metadata?.callee ?? ""),
+        String(edge.metadata?.resolution ?? ""),
       ].map(cell).join(" | ").replace(/^/, "| ").replace(/$/, " |");
     }),
   ];
@@ -823,6 +982,20 @@ function isTypeScriptSourcePath(fileName: string): boolean {
 
 function formatUnknownError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function normalizeLookupFilePath(filePath: string): string {
+  return normalizeGraphPath(filePath).replace(/^\.\//, "");
+}
+
+function diagnosticsForFile(
+  diagnostics: readonly string[],
+  filePath: string,
+): readonly string[] {
+  const normalizedFilePath = normalizeLookupFilePath(filePath);
+  return diagnostics.filter((diagnostic) =>
+    normalizeGraphPath(diagnostic).includes(normalizedFilePath)
+  );
 }
 
 function cell(value: string): string {

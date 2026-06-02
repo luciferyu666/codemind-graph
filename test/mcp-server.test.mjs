@@ -28,7 +28,7 @@ test("findSymbol reads graph.json and returns matching symbols", async () => {
     assert.match(text, /Matches: 1/);
     assert.match(text, /^## Freshness/m);
     assert.match(text, /- Status: `fresh`/);
-    assert.match(text, /\| function \| greet \| src\/index\.ts:1:1 \| yes \|/);
+    assert.match(text, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
     assert.doesNotMatch(text, /SESSION_STATE/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
@@ -93,7 +93,7 @@ test("getRepoMap reads graph.json and returns markdown repo map", async () => {
     assert.match(text, /^## Freshness/m);
     assert.match(text, /- Status: `fresh`/);
     assert.match(text, /^## Symbols/m);
-    assert.match(text, /\| function \| greet \| src\/index\.ts:1:1 \| yes \|/);
+    assert.match(text, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
     assert.doesNotMatch(text, /SESSION_STATE/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
@@ -119,6 +119,9 @@ test("traceSymbol reads graph.json and returns markdown symbol trace", async () 
     assert.match(text, /- File: `src\/index\.ts`/);
     assert.match(text, /^### Imports/m);
     assert.match(text, /^### Exports/m);
+    assert.match(text, /^### Calls Out/m);
+    assert.match(text, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(text, /^### Called By/m);
     assert.doesNotMatch(text, /SESSION_STATE/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
@@ -160,8 +163,19 @@ async function writeSampleProject(rootDir) {
     ),
   );
   await writeFile(
+    path.join(rootDir, "sample", "src", "helper.ts"),
+    ["export function formatName(name: string): string {", "  return name.trim();", "}", ""].join("\n"),
+  );
+  await writeFile(
     path.join(rootDir, "sample", "src", "index.ts"),
-    ["export function greet(name: string): string {", "  return `Hello, ${name}`;", "}", ""].join("\n"),
+    [
+      'import { formatName } from "./helper.js";',
+      "",
+      "export function greet(name: string): string {",
+      "  return `Hello, ${formatName(name)}`;",
+      "}",
+      "",
+    ].join("\n"),
   );
 }
 

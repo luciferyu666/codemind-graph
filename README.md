@@ -2,7 +2,7 @@
 
 CodeMind Graph is a local-first code knowledge graph and read-only MCP server for AI coding agents.
 
-It turns a TypeScript repository into a deterministic symbol graph, dependency graph, queryable CLI surface, and Markdown repo map that humans and agents can both read.
+It turns a TypeScript repository into a deterministic symbol graph, dependency graph, basic static call graph, queryable CLI surface, and Markdown repo map that humans and agents can both read.
 
 > Stop feeding agents raw files. Give them a code graph.
 
@@ -16,6 +16,7 @@ CodeMind Graph focuses on a smaller deterministic loop:
 
 - Build a local graph from repository source files.
 - Query symbols and dependency context from the graph.
+- Capture conservative `CALLS` edges for static function and method calls.
 - Generate `CODEMIND.md` as a repo map.
 - Expose the same graph through read-only MCP tools.
 - Warn when `.codemind/graph.json` is stale or missing freshness metadata.
@@ -26,10 +27,12 @@ Included in v0.1:
 
 - TypeScript-first repository scanner.
 - TypeScript Compiler API extraction for files, imports, exports, functions, classes, interfaces, type aliases, enums, variables, and methods.
+- Basic static `CALLS` edge extraction for same-file function calls, imported function calls, same-class `this.method()` calls, and simple imported class method calls.
+- `trace` / `trace_symbol` output includes `Calls Out` and `Called By` sections when `CALLS` edges are indexed.
 - Deterministic graph schema with stable node and edge IDs.
 - Local `.codemind/graph.json` graph index.
 - Graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
-- CLI commands: `index`, `find`, `trace`, `map`, and `mcp start`.
+- CLI commands: `index`, `find`, `trace`, `explain`, `map`, and `mcp start`.
 - Read-only MCP tools: `find_symbol`, `get_repo_map`, and `trace_symbol`.
 - Deterministic `CODEMIND.md` repo map output.
 
@@ -42,6 +45,7 @@ Non-goals for v0.1:
 - No web dashboard product.
 - No deep Python support.
 - No security scanner.
+- No complete dynamic dispatch or runtime call graph.
 
 ## Workspace
 
@@ -106,6 +110,14 @@ Trace symbol context:
 node packages/cli/dist/index.js trace greet --root examples/ts-basic
 ```
 
+Trace output includes symbol location, imports, exports, related modules, and indexed call context through `Calls Out` / `Called By`.
+
+Explain one indexed file:
+
+```powershell
+node packages/cli/dist/index.js explain src/index.ts --root examples/ts-basic
+```
+
 Generate the repo map:
 
 ```powershell
@@ -134,7 +146,7 @@ node packages/cli/dist/index.js mcp start --root examples/ts-basic
 - `sourceFileCount`
 - `sourceFingerprint`
 
-`codemind find`, `codemind trace`, `codemind map`, and MCP tools compare the current source fingerprint against the indexed fingerprint. If the index is stale or was created before freshness metadata existed, the output includes a deterministic warning/status instead of crashing.
+`codemind find`, `codemind trace`, `codemind explain`, `codemind map`, and MCP tools compare the current source fingerprint against the indexed fingerprint. If the index is stale or was created before freshness metadata existed, the output includes a deterministic warning/status instead of crashing.
 
 Example stale warning:
 

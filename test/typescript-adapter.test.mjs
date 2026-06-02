@@ -142,6 +142,10 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
         "  return left + right;",
         "}",
         "",
+        "export function doubleSum(left: number, right: number): number {",
+        "  return sum(left, right) * 2;",
+        "}",
+        "",
         "export interface NumericValue {",
         "  value: number;",
         "}",
@@ -213,6 +217,7 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
 
     assertSymbol(graph, "function", "calculate", { exported: true, filePath: "src/math.ts" });
     assertSymbol(graph, "function", "sum", { exported: true, filePath: "src/math.ts" });
+    assertSymbol(graph, "function", "doubleSum", { exported: true, filePath: "src/math.ts" });
     assertSymbol(graph, "interface", "NumericValue", { exported: true, filePath: "src/math.ts" });
     assertSymbol(graph, "class", "Calculator", { exported: true, filePath: "src/math.ts" });
     assertSymbol(graph, "method", "Calculator.multiply", { exported: false, filePath: "src/math.ts" });
@@ -264,6 +269,27 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
       exportNames: ["*"],
       targetName: "src/models.ts",
     });
+
+    assertCallEdge(graph, "function", "doubleSum", "function", "sum", {
+      callee: "sum",
+      resolution: "same-file-function",
+    });
+    assertCallEdge(graph, "method", "ReportService.build", "function", "calculate", {
+      callee: "calculate",
+      resolution: "imported-function",
+    });
+    assertCallEdge(graph, "method", "ReportService.build", "function", "sum", {
+      callee: "add",
+      resolution: "imported-function",
+    });
+    assertCallEdge(graph, "method", "ReportService.build", "method", "ReportService.normalize", {
+      callee: "this.normalize",
+      resolution: "same-class-method",
+    });
+    assertCallEdge(graph, "variable", "calculator", "method", "Calculator.create", {
+      callee: "Calculator.create",
+      resolution: "imported-method",
+    });
   } finally {
     await rm(rootDir, { recursive: true, force: true });
   }
@@ -312,6 +338,24 @@ function assertExportEdge(graph, filePath, specifier, expected) {
   assert.equal(edge.metadata?.exportKind, expected.exportKind);
   assert.deepEqual(edge.metadata?.exportNames, expected.exportNames);
   assert.equal(targetNode.name, expected.targetName);
+}
+
+function assertCallEdge(graph, fromKind, fromName, toKind, toName, expected) {
+  const fromNode = graph.nodes.find((node) => node.kind === fromKind && node.name === fromName);
+  const toNode = graph.nodes.find((node) => node.kind === toKind && node.name === toName);
+
+  assert.ok(fromNode, `Expected caller ${fromKind}:${fromName}`);
+  assert.ok(toNode, `Expected callee ${toKind}:${toName}`);
+
+  const edge = graph.edges.find((candidate) => (
+    candidate.kind === "CALLS"
+    && candidate.fromId === fromNode.id
+    && candidate.toId === toNode.id
+    && candidate.metadata?.callee === expected.callee
+    && candidate.metadata?.resolution === expected.resolution
+  ));
+
+  assert.ok(edge, `Expected CALLS edge ${fromKind}:${fromName} -> ${toKind}:${toName}`);
 }
 
 function findFileEdge(graph, kind, filePath, specifier, edgeKind) {

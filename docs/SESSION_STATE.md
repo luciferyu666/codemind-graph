@@ -1,6 +1,6 @@
 # Session State
 
-Last updated: 2026-06-01
+Last updated: 2026-06-02
 
 ## Active session
 
@@ -28,12 +28,14 @@ Implemented in this session:
 
 - `packages/core` graph schema with node kinds, edge kinds, source locations, metadata, deterministic IDs, and `GraphBuilder`.
 - `packages/adapter-typescript` TypeScript Compiler API extraction for source files, imports, exports, functions, classes, interfaces, type aliases, enums, variables, and methods.
+- `packages/adapter-typescript` TypeScript `CALLS` edge MVP for same-file function calls, imported function calls, same-class methods, and simple imported class methods.
 - `packages/cli` `codemind index <path>` command that writes `<path>/.codemind/graph.json`.
 - `packages/cli` `codemind find <symbol>` command that reads `.codemind/graph.json` and returns deterministic symbol matches.
-- `packages/cli` `codemind trace <symbol>` command that reads `.codemind/graph.json` and reports symbol file imports, exports, and related modules.
+- `packages/cli` `codemind trace <symbol>` command that reads `.codemind/graph.json` and reports symbol file imports, exports, calls out, called-by context, and related modules.
+- `packages/cli` `codemind explain <path>` command that reads `.codemind/graph.json` and reports file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
 - `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes `CODEMIND.md`.
 - `packages/cli` `codemind mcp start --root <path>` command that starts the read-only MCP stdio server.
-- `packages/core` reusable graph query helpers for files, symbols, imports, exports, graph edges, and symbol trace rendering.
+- `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, graph edges, and symbol trace rendering.
 - `packages/mcp-server` read-only MCP skeleton with `find_symbol`, `get_repo_map`, and `trace_symbol`.
 - GitHub Actions CI workflow that runs `pnpm install --frozen-lockfile` and `pnpm check`.
 - Temporary official website and Vercel deployment track captured in `docs/OFFICIAL_WEBSITE_PLAN.md`.
@@ -55,10 +57,11 @@ Implemented in this session:
 - Browser automation environment diagnostics captured in `docs/BROWSER_QA_WORKFLOW.md`.
 - Focused `node:test` coverage for graph builder behavior and TypeScript adapter extraction.
 - Rich TypeScript adapter fixture coverage for side-effect imports, default/named imports, type imports, namespace imports, external imports, named re-exports, type re-exports, export-all re-exports, classes, and methods.
-- Focused CLI test coverage for graph file generation, symbol lookup, symbol trace, and markdown repo map generation.
+- Focused CLI test coverage for graph file generation, symbol lookup, symbol trace with `CALLS` context, file explain, and markdown repo map generation.
 - Focused CLI test coverage for MCP startup delegation and invalid MCP startup options.
-- Focused MCP test coverage for symbol lookup, repo map retrieval, no-match behavior, and graph path containment.
-- MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `trace_symbol`.
+- Focused MCP test coverage for symbol lookup, repo map retrieval, no-match behavior, `CALLS` trace context, and graph path containment.
+- MCP protocol-level smoke coverage through SDK client stdio transport for initialize, `tools/list`, and `tools/call`, including `trace_symbol` with `CALLS` context.
+- MCP protocol-level negative/error coverage for missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Slice H Graph Freshness is implemented: `codemind index` writes `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint` metadata.
 - CLI `find`, `trace`, and `map` now report stale or unknown graph freshness, including legacy graph files without metadata.
 - MCP `find_symbol`, `get_repo_map`, and `trace_symbol` now return graph freshness status while staying read-only.
@@ -97,15 +100,14 @@ Current design baseline:
 - Public-facing docs must distinguish pushed public repo state from local uncommitted workspace state.
 - Public-facing strategy docs should describe MCP as an important open integration protocol rather than the only universal channel.
 - Public-facing security narratives must not collapse the GitHub VS Code extension incident and Mini Shai-Hulud / Shai-Hulud package campaigns into a single uncited event.
-- Engineering standard docs must mark SQLite, Tree-sitter, Python support, full call graph extraction, MCP audit logs, and DevSec integration as planned until implemented.
+- Engineering standard docs must mark SQLite, Tree-sitter, Python support, full call graph extraction, MCP audit logs, and DevSec integration as planned until implemented; Slice K implements only a conservative static `CALLS` edge MVP.
 - Slice-level implementation should use the Human SOP -> Skill -> Task Contract -> Agentic Workflow model from `docs/TASK_DECOMPOSITION_GUIDE.md`.
 
 ## Next steps
 
-1. Verify the CI runtime update on GitHub Actions after pushing the workflow change.
-2. Improve example project coverage beyond a single exported function if trace needs additional fixtures.
-3. Add MCP protocol smoke coverage for negative/error tool calls if needed.
-4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
+1. Run full `pnpm check` after `CALLS` trace/MCP integration, then decide whether the next slice should add call-aware `explain` output or richer call resolution.
+2. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
+3. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
 
@@ -133,6 +135,37 @@ Latest implementation update:
 - Legacy Repo Onboarding Pack one-page service plan is added.
 - v0.1.0 release tag is pushed.
 - CI runtime settings are being updated for GitHub's Node.js 24 JavaScript action runtime, Node.js 24 action majors, and Windows 2025 VS 2026 runner image.
+
+Latest CLI update:
+
+- Slice I `codemind explain <path>` is implemented.
+- `explain` output is deterministic Markdown with file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
+- `pnpm test` passed with 24 `node:test` tests after the explain implementation.
+- `pnpm check` and manual CLI verification passed.
+
+Latest MCP protocol update:
+
+- Slice J MCP negative/error protocol coverage is implemented.
+- Protocol tests cover missing `graph.json`, root escape, graph path escape, invalid input, legacy graph freshness metadata, stale graph freshness status, and engineering memory leakage checks.
+- Focused `node --test test/mcp-protocol.test.mjs` passed.
+- Full `pnpm check` passed with 25 `node:test` tests.
+
+Latest TypeScript adapter update:
+
+- Slice K TypeScript `CALLS` edge MVP is implemented.
+- The adapter now emits deterministic `CALLS` edges for same-file function calls, simple imported function calls, same-class `this.method()` calls, and simple imported class method calls.
+- Local variable initializer calls inside functions/methods remain attributed to the enclosing function/method; top-level variable initializers may be represented as variable callers.
+- Dynamic dispatch, namespace calls, chained calls, higher-order calls, interface dispatch, and TypeChecker-backed full call graph resolution remain out of scope.
+- Focused adapter verification passed with `pnpm build:packages; node --test test/typescript-adapter.test.mjs`.
+- Full verification passed with `pnpm check` and 25 focused `node:test` tests.
+
+Latest call-context trace update:
+
+- `packages/core` trace results now include `callsOut` and `calledBy` from indexed `CALLS` edges.
+- `renderMarkdownSymbolTrace` now emits `Calls Out` and `Called By` sections.
+- CLI `codemind trace` and MCP `trace_symbol` automatically return the same call context through the shared core renderer.
+- Focused verification passed with `pnpm build:packages; node --test test/core.test.mjs test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs`.
+- Full verification passed with `pnpm check` and 25 focused `node:test` tests.
 
 ## Resume workflow
 
