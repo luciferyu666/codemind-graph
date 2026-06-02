@@ -83,6 +83,9 @@ test("MCP stdio protocol exposes read-only graph tools", { timeout: 20_000 }, as
     assert.match(repoMapText, /- Status: `fresh`/);
     assert.match(repoMapText, /^## Symbols/m);
     assert.match(repoMapText, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
+    assert.match(repoMapText, /^## Calls/m);
+    assert.match(repoMapText, /- Call edges: 1/);
+    assert.match(repoMapText, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
 
     const traceResult = await client.callTool({
       name: "trace_symbol",

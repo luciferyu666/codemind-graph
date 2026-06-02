@@ -18,12 +18,13 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `codemind find <symbol>` returns a deterministic result.
 - [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, call, and related module context.
 - [x] `codemind explain <path>` returns deterministic file overview, symbols, imports, exports, calls out, called-by context, related modules, diagnostics, and freshness status.
-- [x] `codemind map --format markdown` generates `CODEMIND.md`.
+- [x] `codemind map --format markdown` generates call-aware `CODEMIND.md` output with calls summary, top callers, top callees, and call edge tables.
 - [x] `.codemind/graph.json` includes freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - [x] `codemind find`, `codemind trace`, and `codemind map` report stale or unknown graph freshness without crashing on legacy graph files.
 - [x] `packages/mcp-server` exposes read-only `find_symbol` and `get_repo_map` tools.
 - [x] `packages/mcp-server` exposes read-only `trace_symbol` over the same core trace helper used by CLI.
 - [x] `packages/mcp-server` exposes read-only `explain_file` over the same core file explain helper used by CLI.
+- [x] MCP `get_repo_map` returns the same call-aware `CODEMIND.md` map as CLI.
 - [x] `trace_symbol` includes the same `Calls Out` and `Called By` context as CLI trace output.
 - [x] MCP `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file` responses include graph freshness status.
 - [x] `codemind mcp start` exposes read-only tools.

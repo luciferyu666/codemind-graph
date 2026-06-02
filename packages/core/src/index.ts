@@ -495,6 +495,7 @@ export function renderMarkdownRepoMap(
   freshness?: GraphFreshnessReport,
 ): string {
   const graph = indexFile.graph;
+  const calls = listCalls(graph);
   const lines: string[] = [
     "# CODEMIND",
     "",
@@ -507,6 +508,7 @@ export function renderMarkdownRepoMap(
     `- Source files: ${indexFile.sourceFiles.length}`,
     `- Nodes: ${graph.nodes.length}`,
     `- Edges: ${graph.edges.length}`,
+    `- Calls: ${calls.length}`,
     `- Diagnostics: ${indexFile.diagnostics.length}`,
   ];
 
@@ -531,6 +533,10 @@ export function renderMarkdownRepoMap(
     "## Exports",
     "",
     ...renderEdgeTable(graph, listExports(graph), "Export"),
+    "",
+    "## Calls",
+    "",
+    ...renderCallsOverview(graph, calls),
     "",
     "## Diagnostics",
     "",
@@ -877,6 +883,72 @@ function renderCallEdgeTable(graph: CodeGraph, edges: readonly GraphEdge[], empt
         String(edge.metadata?.resolution ?? ""),
       ].map(cell).join(" | ").replace(/^/, "| ").replace(/$/, " |");
     }),
+  ];
+}
+
+function renderCallsOverview(graph: CodeGraph, calls: readonly GraphEdge[]): readonly string[] {
+  const callerIds = new Set(calls.map((edge) => edge.fromId));
+  const calleeIds = new Set(calls.map((edge) => edge.toId));
+
+  return [
+    "### Summary",
+    "",
+    `- Call edges: ${calls.length}`,
+    `- Unique callers: ${callerIds.size}`,
+    `- Unique callees: ${calleeIds.size}`,
+    "",
+    "### Top Callers",
+    "",
+    ...renderCallRankTable(graph, rankCallNodes(calls, "caller"), "No callers indexed."),
+    "",
+    "### Top Callees",
+    "",
+    ...renderCallRankTable(graph, rankCallNodes(calls, "callee"), "No callees indexed."),
+    "",
+    "### Call Edges",
+    "",
+    ...renderCallEdgeTable(graph, calls, "No call edges indexed."),
+  ];
+}
+
+function rankCallNodes(
+  calls: readonly GraphEdge[],
+  direction: "caller" | "callee",
+): readonly { readonly nodeId: GraphNodeId; readonly count: number }[] {
+  const counts = new Map<GraphNodeId, number>();
+
+  for (const edge of calls) {
+    const nodeId = direction === "caller" ? edge.fromId : edge.toId;
+    counts.set(nodeId, (counts.get(nodeId) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .map(([nodeId, count]) => ({ nodeId, count }))
+    .sort((left, right) => {
+      if (left.count !== right.count) {
+        return right.count - left.count;
+      }
+
+      return left.nodeId.localeCompare(right.nodeId);
+    })
+    .slice(0, 10);
+}
+
+function renderCallRankTable(
+  graph: CodeGraph,
+  rankedNodes: readonly { readonly nodeId: GraphNodeId; readonly count: number }[],
+  emptyMessage: string,
+): readonly string[] {
+  if (rankedNodes.length === 0) {
+    return [emptyMessage];
+  }
+
+  return [
+    "| Symbol | Calls |",
+    "| --- | ---: |",
+    ...rankedNodes.map((rankedNode) =>
+      `| ${cell(formatEdgeNode(getNodeById(graph, rankedNode.nodeId)))} | ${rankedNode.count} |`
+    ),
   ];
 }
 

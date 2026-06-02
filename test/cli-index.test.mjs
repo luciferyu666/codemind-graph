@@ -401,10 +401,18 @@ test("codemind map writes deterministic CODEMIND.md", async () => {
     assert.match(markdown, /^## Symbols/m);
     assert.match(markdown, /^## Imports/m);
     assert.match(markdown, /^## Exports/m);
+    assert.match(markdown, /^## Calls/m);
     assert.match(markdown, /^## Diagnostics/m);
+    assert.match(markdown, /- Calls: 1/);
+    assert.match(markdown, /- Call edges: 1/);
+    assert.match(markdown, /- Unique callers: 1/);
+    assert.match(markdown, /- Unique callees: 1/);
     assert.match(markdown, /\| src\/index\.ts \| 1 \| 1 \| 1 \|/);
     assert.match(markdown, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
     assert.match(markdown, /\| src\/index\.ts \| module:src\/helper\.ts \| \.\/helper\.js \|/);
+    assert.match(markdown, /\| function:greet \| 1 \|/);
+    assert.match(markdown, /\| function:formatName \| 1 \|/);
+    assert.match(markdown, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
     assert.match(markdown, /No diagnostics\./);
   } finally {
     await rm(rootDir, { recursive: true, force: true });

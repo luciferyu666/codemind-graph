@@ -61,9 +61,9 @@ Last updated: 2026-06-02
 - Dependency install: passed with `pnpm install`.
 - Frozen dependency install: passed with `pnpm install --frozen-lockfile`.
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
-- Tests: passed with `pnpm test` using 25 focused `node:test` tests.
+- Tests: passed with `pnpm test` using 26 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice M richer TypeScript `CALLS` resolution.
+- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice N call-aware repo map output.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -126,7 +126,7 @@ Result:
 - Explained `src/index.ts` with file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
 - `find` returned no freshness warning for a fresh index.
 - `trace`, `explain`, and `map` include a `Freshness` section when run against a graph index.
-- Wrote `examples/ts-basic/CODEMIND.md` during map verification.
+- Wrote call-aware `examples/ts-basic/CODEMIND.md` during map verification.
 
 ## Trace verification
 
@@ -153,12 +153,12 @@ Result:
 
 - `packages/mcp-server` creates a stdio-capable MCP server with read-only tool annotations.
 - `find_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol rows.
-- `get_repo_map` reads `.codemind/graph.json` and returns deterministic `CODEMIND.md` Markdown.
+- `get_repo_map` reads `.codemind/graph.json` and returns deterministic call-aware `CODEMIND.md` Markdown.
 - `trace_symbol` reads `.codemind/graph.json` and returns deterministic Markdown symbol trace output.
 - `explain_file` reads `.codemind/graph.json` and returns deterministic Markdown file explain output.
 - `codemind mcp start --root <path>` delegates to the read-only MCP stdio server without writing stdout before transport startup.
 - MCP protocol smoke coverage starts `node packages/cli/dist/index.js mcp start --root examples/ts-basic` through SDK stdio transport and verifies initialize, `tools/list`, and `tools/call`.
-- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context; protocol-level `explain_file` returns file explain context.
+- Protocol-level `find_symbol` finds `greet`; protocol-level `get_repo_map` returns call-aware Markdown repo map content; protocol-level `trace_symbol` returns symbol trace and `CALLS` context; protocol-level `explain_file` returns file explain context.
 - MCP tool responses include graph freshness status.
 - Protocol-level negative/error coverage verifies missing graph files, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and engineering memory leakage checks.
 - Protocol-level tool metadata verifies read-only, non-destructive, and non-open-world annotations.
@@ -412,6 +412,26 @@ Result:
 ```powershell
 pnpm build:packages
 node --test test/mcp-server.test.mjs test/mcp-protocol.test.mjs
+```
+
+- Full verification passed:
+
+```powershell
+pnpm check
+```
+
+## Latest Slice N call-aware repo map update
+
+Result:
+
+- `renderMarkdownRepoMap` now includes a `Calls` section.
+- Repo map output includes call edge count, unique callers, unique callees, top callers, top callees, and deterministic call edge rows.
+- CLI `codemind map` and MCP `get_repo_map` share the same renderer, so both surfaces expose the same call-aware `CODEMIND.md` output.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs
 ```
 
 - Full verification passed:

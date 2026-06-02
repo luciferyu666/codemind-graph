@@ -17,6 +17,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [x] Expand TypeScript `CALLS` edge resolution for namespace calls, constructors, same-file static methods, and simple chained class methods.
 - [x] Expose `CALLS` edges in `codemind trace` and MCP `trace_symbol` output.
 - [x] Expose file-level `CALLS` context in `codemind explain`.
+- [x] Expose `CALLS` overview in `codemind map` / `CODEMIND.md` and MCP `get_repo_map`.
 - [x] Implement CLI commands:
   - [x] `index`
   - [x] `find`
@@ -109,6 +110,7 @@ Day 61-90:
 - Slice M richer TypeScript `CALLS` resolution is implemented.
 - `codemind trace` and MCP `trace_symbol` now render `Calls Out` and `Called By` sections from indexed `CALLS` edges.
 - `codemind explain` now renders file-level `Calls Out` and `Called By` sections from indexed `CALLS` edges.
+- `codemind map` and MCP `get_repo_map` now render a call-aware `CODEMIND.md` overview with call counts, top callers, top callees, and call edge tables.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.
 
 Day 90+:

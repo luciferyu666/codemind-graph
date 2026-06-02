@@ -17,7 +17,7 @@ CodeMind Graph focuses on a smaller deterministic loop:
 - Build a local graph from repository source files.
 - Query symbols and dependency context from the graph.
 - Capture conservative `CALLS` edges for static function and method calls.
-- Generate `CODEMIND.md` as a repo map.
+- Generate `CODEMIND.md` as a call-aware repo map.
 - Expose the same graph through read-only MCP tools.
 - Warn when `.codemind/graph.json` is stale or missing freshness metadata.
 
@@ -34,7 +34,7 @@ Included in v0.1:
 - Graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - CLI commands: `index`, `find`, `trace`, `explain`, `map`, and `mcp start`.
 - Read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
-- Deterministic `CODEMIND.md` repo map output.
+- Deterministic `CODEMIND.md` repo map output with call edge summary, top callers, top callees, and call edge tables.
 
 Non-goals for v0.1:
 
@@ -125,6 +125,8 @@ Generate the repo map:
 ```powershell
 node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
 ```
+
+Repo map output includes files, symbols, imports, exports, diagnostics, and a deterministic calls overview for indexed `CALLS` edges.
 
 The generated files are:
 

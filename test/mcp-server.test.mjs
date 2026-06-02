@@ -94,6 +94,9 @@ test("getRepoMap reads graph.json and returns markdown repo map", async () => {
     assert.match(text, /- Status: `fresh`/);
     assert.match(text, /^## Symbols/m);
     assert.match(text, /\| function \| greet \| src\/index\.ts:3:1 \| yes \|/);
+    assert.match(text, /^## Calls/m);
+    assert.match(text, /- Call edges: 1/);
+    assert.match(text, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
     assert.doesNotMatch(text, /SESSION_STATE/);
   } finally {
     await rm(rootDir, { recursive: true, force: true });
