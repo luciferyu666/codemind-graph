@@ -19,17 +19,32 @@ Implemented:
   - `codemind index <path>`
   - `codemind find <symbol>`
   - `codemind trace <symbol>`
+  - `codemind explain <path>`
   - `codemind map --format markdown`
+  - `codemind health`
+  - `codemind doctor`
+  - `codemind mcp start`
 - `.codemind/graph.json` JSON graph index.
+- graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint`.
+- graph index metadata with indexer, adapter, language, and capabilities.
+- conservative TypeScript `CALLS` edges for functions, methods, namespace calls, constructors, static methods, and simple chained class methods.
 - `CODEMIND.md` markdown repo map output.
-- Focused tests for core, TypeScript adapter, and CLI index/find.
+- read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
+- official website on Vercel at `https://codemind-graph.vercel.app`.
+- focused tests for core, TypeScript adapter, CLI, MCP server, and MCP protocol coverage.
+- richer public demo fixture in `examples/ts-agent-workspace`.
+- sanitized public demo map at `examples/ts-agent-workspace/CODEMIND.md`.
+- MCP client usage docs at `docs/MCP_CLIENT_USAGE.md`.
 
 Not yet implemented:
 
-- `codemind explain`
-- broader real-world TypeScript repository fixtures
 - visualization UI
-- Vercel deployment pipeline
+- packaged npm release
+- SQLite storage
+- context ranking
+- `REFERENCES` edge extraction
+- full TypeChecker-backed call graph resolution
+- SaaS product surface
 
 ## Product Direction
 
@@ -280,7 +295,7 @@ Avoid early:
 
 Priority: P3
 
-Status: official website plan captured; implementation not started.
+Status: official website deployed to production.
 
 Goal:
 
@@ -490,9 +505,9 @@ Completed tasks:
 - Runs `pnpm check`.
 - Uses `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
 
-Remaining:
+Follow-up:
 
-- Add README status badge after the first workflow run is visible on GitHub.
+- CI badge is now present in README.
 
 Verification:
 
@@ -629,21 +644,30 @@ pnpm test:e2e
 
 ## Recommended Next Task
 
-The next task should be:
+After Slice P0, the next task should be:
 
 ```text
-Add Graph freshness / stale index warning metadata.
+Slice Q0: Context Pack MVP
 ```
 
 Reason:
 
-The CLI and MCP deterministic query loop now includes find, map, and trace. The next best reliability step is making graph freshness explicit so agents know when `.codemind/graph.json` may be stale. Export 6 recommends using source fingerprints rather than relying on mtime alone.
+The deterministic public-MVP loop now includes index, find, trace, explain, map, health, doctor, and read-only MCP. The next highest-leverage feature is an agent-ready context packet that composes existing graph outputs into a bounded Markdown artifact without adding natural-language QA or write capabilities.
 
-Export 7 reinforces this priority and recommends keeping the 90-day roadmap focused on CodeMind Graph reliability before expanding into DevSec Sentinel, MCP ToolHub, or QuantAgent Lab.
+Recommended scope:
 
-Export 8 reinforces the same priority and adds a task-contract frame for Slice H: define inputs, outputs, success criteria, failure handling, human review gates, and docs update rules before implementing freshness metadata.
+- `codemind context <symbol|path>` using existing `traceSymbols`, `explainFile`, and repo map helpers.
+- deterministic Markdown output only.
+- token-budget-like limits through static row limits, not LLM calls.
+- read-only MCP follow-up only after CLI output stabilizes.
 
-Export 9 adds enterprise workflow refinements to the same task-contract model: use hybrid rules + agents + approvals + audit logs, encode safety boundaries deterministically, use structured artifacts, capture eval logs, treat HITL as workflow gates, and avoid over-decomposition.
+Alternative near-term task:
+
+```text
+Slice Q1: REFERENCES edge MVP
+```
+
+This would improve impact analysis by indexing simple identifier references, but it is larger and riskier than context pack composition.
 
 Business note:
 

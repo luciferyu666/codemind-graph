@@ -1,5 +1,7 @@
 # CodeMind Graph
 
+[![CI](https://github.com/luciferyu666/codemind-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/luciferyu666/codemind-graph/actions/workflows/ci.yml)
+
 CodeMind Graph is a local-first code knowledge graph and read-only MCP server for AI coding agents.
 
 It turns a TypeScript repository into a deterministic symbol graph, dependency graph, basic static call graph, queryable CLI surface, and Markdown repo map that humans and agents can both read.
@@ -20,6 +22,7 @@ CodeMind Graph focuses on a smaller deterministic loop:
 - Generate `CODEMIND.md` as a call-aware repo map.
 - Expose the same graph through read-only MCP tools.
 - Warn when `.codemind/graph.json` is stale or missing freshness metadata.
+- Check local graph readiness with `codemind health` and `codemind doctor`.
 
 ## v0.1 Scope
 
@@ -33,13 +36,13 @@ Included in v0.1:
 - Local `.codemind/graph.json` graph index.
 - Graph index metadata with indexer, adapter, adapter version, language, and capabilities.
 - Graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
-- CLI commands: `index`, `find`, `trace`, `explain`, `map`, and `mcp start`.
+- CLI commands: `index`, `find`, `trace`, `explain`, `map`, `health`, `doctor`, and `mcp start`.
 - Read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - Deterministic `CODEMIND.md` repo map output with call edge summary, top callers, top callees, and call edge tables.
 
-## v0.1.1 Release Candidate Highlights
+## v0.1.1 Highlights
 
-The current `main` branch is prepared as the v0.1.1 release candidate. Compared with the `v0.1.0` checkpoint, it adds:
+The current public release is `v0.1.1`. Compared with the `v0.1.0` checkpoint, it adds:
 
 - richer conservative TypeScript `CALLS` extraction for namespace calls, constructors, same-file static methods, and simple chained class methods.
 - call-aware `codemind trace`, `codemind explain`, `codemind map`, MCP `trace_symbol`, MCP `explain_file`, and MCP `get_repo_map` output.
@@ -47,7 +50,17 @@ The current `main` branch is prepared as the v0.1.1 release candidate. Compared 
 - protocol-level MCP negative/error coverage for invalid inputs, graph path containment, stale indexes, legacy graph files, and engineering memory leakage checks.
 - graph index metadata with indexer, adapter, adapter version, language, and capabilities.
 
-Release notes draft: [`docs/RELEASE_NOTES_v0.1.1.md`](docs/RELEASE_NOTES_v0.1.1.md)
+Release notes: [`docs/RELEASE_NOTES_v0.1.1.md`](docs/RELEASE_NOTES_v0.1.1.md)
+
+## Current Main Public MVP Hardening
+
+Current `main` also includes the post-v0.1.1 Public MVP Hardening Pack:
+
+- `codemind health` and `codemind doctor` readiness checks.
+- CI badge and install-from-source quickstart polish.
+- richer public demo fixture in `examples/ts-agent-workspace`.
+- sanitized committed demo map at `examples/ts-agent-workspace/CODEMIND.md`.
+- read-only MCP client usage docs in `docs/MCP_CLIENT_USAGE.md`.
 
 Non-goals for v0.1:
 
@@ -80,7 +93,9 @@ Resume the engineering session:
 codex resume "Inspect codemind-graph repo" -C "F:\Codex Projects\codemind-graph"
 ```
 
-## Development
+## Try From Source
+
+CodeMind Graph is currently used from source. A packaged npm release is not published yet.
 
 Install dependencies:
 
@@ -97,18 +112,25 @@ pnpm build
 pnpm check
 ```
 
-## Quickstart Demo
-
-Build the packages first so the CLI entrypoint exists:
+Build the CLI packages:
 
 ```powershell
 pnpm build:packages
 ```
 
-Index the example repository:
+## Quickstart Demo
+
+Index the richer public demo repository:
 
 ```powershell
-node packages/cli/dist/index.js index examples/ts-basic
+node packages/cli/dist/index.js index examples/ts-agent-workspace
+```
+
+Check graph readiness:
+
+```powershell
+node packages/cli/dist/index.js health --root examples/ts-agent-workspace
+node packages/cli/dist/index.js doctor --root examples/ts-agent-workspace
 ```
 
 The index writes:
@@ -120,13 +142,13 @@ The index writes:
 Find a symbol:
 
 ```powershell
-node packages/cli/dist/index.js find greet --root examples/ts-basic
+node packages/cli/dist/index.js find ContextPackBuilder --root examples/ts-agent-workspace
 ```
 
 Trace symbol context:
 
 ```powershell
-node packages/cli/dist/index.js trace greet --root examples/ts-basic
+node packages/cli/dist/index.js trace buildDemoContext --root examples/ts-agent-workspace
 ```
 
 Trace output includes symbol location, imports, exports, related modules, and indexed call context through `Calls Out` / `Called By`.
@@ -134,7 +156,7 @@ Trace output includes symbol location, imports, exports, related modules, and in
 Explain one indexed file:
 
 ```powershell
-node packages/cli/dist/index.js explain src/index.ts --root examples/ts-basic
+node packages/cli/dist/index.js explain src/context-pack.ts --root examples/ts-agent-workspace
 ```
 
 Explain output includes file symbols, imports, exports, outgoing calls, external callers, related modules, diagnostics, and freshness status.
@@ -142,7 +164,7 @@ Explain output includes file symbols, imports, exports, outgoing calls, external
 Generate the repo map:
 
 ```powershell
-node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
+node packages/cli/dist/index.js map --root examples/ts-agent-workspace --format markdown
 ```
 
 Repo map output includes files, symbols, imports, exports, diagnostics, graph index metadata, freshness status, and a deterministic calls overview for indexed `CALLS` edges.
@@ -162,23 +184,27 @@ Expected map sections:
 
 The generated files are:
 
-- `examples/ts-basic/.codemind/graph.json`
-- `examples/ts-basic/CODEMIND.md`
+- `examples/ts-agent-workspace/.codemind/graph.json`
+- `examples/ts-agent-workspace/CODEMIND.md`
+
+A sanitized committed demo map is available at [`examples/ts-agent-workspace/CODEMIND.md`](examples/ts-agent-workspace/CODEMIND.md).
 
 Start the read-only MCP server over stdio:
 
 ```powershell
-node packages/cli/dist/index.js mcp start --root examples/ts-basic
+node packages/cli/dist/index.js mcp start --root examples/ts-agent-workspace
 ```
 
 `mcp start` intentionally writes no human-readable preamble to stdout because stdout is the MCP protocol stream.
 
-Read-only MCP tools available in the v0.1.1 release candidate:
+Read-only MCP tools available in v0.1.1:
 
 - `find_symbol`
 - `get_repo_map`
 - `trace_symbol`
 - `explain_file`
+
+MCP client setup notes: [`docs/MCP_CLIENT_USAGE.md`](docs/MCP_CLIENT_USAGE.md)
 
 ## Freshness Warnings
 

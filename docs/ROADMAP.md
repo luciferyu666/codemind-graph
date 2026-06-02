@@ -24,6 +24,8 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
   - [x] `trace`
   - [x] `explain`
   - [x] `map`
+  - [x] `health`
+  - [x] `doctor`
   - [x] `mcp start`
 - [x] Implement read-only MCP server tools:
   - [x] `find_symbol`
@@ -34,6 +36,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [x] Add MCP stdio protocol smoke coverage for `find_symbol` and `get_repo_map`.
 - [x] Add MCP stdio protocol negative/error coverage for missing graph, invalid input, path escape, legacy freshness, and stale freshness.
 - [x] Generate `CODEMIND.md` repository map.
+- [x] Add Public MVP Hardening Pack with `codemind health`, `codemind doctor`, README install polish, CI badge, richer public fixture, sanitized public demo `CODEMIND.md`, and MCP client usage docs.
 - [x] Add graph index metadata versioning with indexer, adapter, language, and capabilities.
 - [x] Add GitHub Actions CI for `pnpm check`.
 
@@ -77,6 +80,7 @@ See `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`.
 - [x] Prepare Legacy Repo Onboarding Pack one-pager.
 - [x] Prepare v0.1 README demo and release tag.
 - [x] Prepare v0.1.1 README demo refresh and release notes draft.
+- [x] Prepare Public MVP Hardening Pack for external developer trial.
 - [ ] Validate first paid onboarding customer.
 
 ## 90-Day Strategic Focus
@@ -103,7 +107,7 @@ Day 31-60:
 
 Day 61-90:
 
-- Add Graph freshness / stale index warning metadata.
+- Graph freshness / stale index warning metadata is implemented.
 - Use `docs/TASK_DECOMPOSITION_GUIDE.md` as the Slice H task contract.
 - Include freshness status in CLI and read-only MCP outputs.
 - Maintain the pushed `v0.1.0` release checkpoint and use follow-up slices for CI/runtime maintenance, example coverage, and MCP negative-path tests.
@@ -114,6 +118,9 @@ Day 61-90:
 - `codemind explain` now renders file-level `Calls Out` and `Called By` sections from indexed `CALLS` edges.
 - `codemind map` and MCP `get_repo_map` now render a call-aware `CODEMIND.md` overview with call counts, top callers, top callees, and call edge tables.
 - `.codemind/graph.json` now records indexer, adapter, adapter version, language, and graph capabilities.
+- `codemind health` and `codemind doctor` now provide public-MVP readiness checks.
+- `examples/ts-agent-workspace/CODEMIND.md` provides the first committed sanitized public demo map.
+- `docs/MCP_CLIENT_USAGE.md` documents read-only MCP client setup and tool usage.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.
 
 Day 90+:

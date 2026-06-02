@@ -19,6 +19,8 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, call, and related module context.
 - [x] `codemind explain <path>` returns deterministic file overview, symbols, imports, exports, calls out, called-by context, related modules, diagnostics, and freshness status.
 - [x] `codemind map --format markdown` generates call-aware `CODEMIND.md` output with calls summary, top callers, top callees, and call edge tables.
+- [x] `codemind health` reports graph freshness, index metadata, source counts, node counts, edge counts, and capabilities.
+- [x] `codemind doctor` reports local runtime, repository root, TypeScript config, graph index, graph freshness, capabilities, and read-only MCP readiness.
 - [x] `.codemind/graph.json` includes graph index metadata with indexer, indexer version, adapter, adapter version, language, and capabilities.
 - [x] `.codemind/graph.json` includes freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
 - [x] `codemind find`, `codemind trace`, and `codemind map` report stale or unknown graph freshness without crashing on legacy graph files that lack freshness or index metadata.
@@ -33,7 +35,9 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] MCP stdio protocol negative/error coverage verifies missing graph, path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and no engineering memory leakage.
 - [x] No write-capable MCP tools exist.
 - [x] GitHub Actions runs `pnpm check` on push and pull request.
-- [x] README documents the v0.1 quickstart demo, read-only MCP boundary, and v0.1 non-goals.
+- [x] README documents install-from-source, CI status, the v0.1.1 quickstart demo, health/doctor checks, read-only MCP boundary, and v0.1 non-goals.
+- [x] `examples/ts-agent-workspace` provides a richer public TypeScript fixture with classes, methods, imports, re-exports, constructors, namespace calls, and a sanitized committed `CODEMIND.md`.
+- [x] `docs/MCP_CLIENT_USAGE.md` documents read-only MCP client startup, available tools, root/graph options, path containment, and troubleshooting.
 - [x] Legacy Repo Onboarding Pack is documented as the first service-oriented wedge.
 - [x] `docs/SESSION_STATE.md` and `docs/DECISIONS.md` are updated.
 

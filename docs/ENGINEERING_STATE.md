@@ -38,6 +38,9 @@ Last updated: 2026-06-02
 - Release checkpoint `60092e5` (`feat: prepare v0.1 release checkpoint`) pushed to `origin/main`.
 - Release tag `v0.1.0` points to `60092e5`.
 - GitHub Actions CI run `26744683567` passed `pnpm check` on `main`.
+- Release tag `v0.1.1` points to `7d5649073e5afa1c0813acb067ad3a2f5114573e`.
+- GitHub Release `v0.1.1` is published at `https://github.com/luciferyu666/codemind-graph/releases/tag/v0.1.1`.
+- GitHub Actions tag CI run `26797709350` passed for `v0.1.1`.
 
 ## Vercel status
 
@@ -64,6 +67,9 @@ Last updated: 2026-06-02
 - Tests: passed with `pnpm test` using 26 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
 - Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice O Graph Index Metadata Versioning.
+- Slice P0 focused CLI verification: passed with `pnpm build:packages` and `node --test test/cli-index.test.mjs`.
+- Slice P0 focused TypeScript adapter fixture verification: passed with `pnpm build:packages` and `node --test test/typescript-adapter.test.mjs`.
+- Slice P0 consolidated check: passed with `pnpm check`, 30 focused `node:test` tests, and the Next.js production build.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -114,6 +120,9 @@ node packages/cli/dist/index.js find greet --root examples/ts-basic
 node packages/cli/dist/index.js trace greet --root examples/ts-basic
 node packages/cli/dist/index.js explain src/index.ts --root examples/ts-basic
 node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
+node packages/cli/dist/index.js index examples/ts-agent-workspace
+node packages/cli/dist/index.js health --root examples/ts-agent-workspace
+node packages/cli/dist/index.js doctor --root examples/ts-agent-workspace
 ```
 
 Result:
@@ -128,6 +137,9 @@ Result:
 - `find` returned no freshness warning for a fresh index.
 - `trace`, `explain`, and `map` include a `Freshness` section when run against a graph index.
 - Wrote call-aware `examples/ts-basic/CODEMIND.md` during map verification with graph index metadata rendered in the Overview section.
+- Indexed 4 TypeScript source files in `examples/ts-agent-workspace`.
+- `health` reports fresh graph status, index metadata, adapter metadata, language, and capabilities.
+- `doctor` reports Node.js runtime, repository root, TypeScript config, graph index, graph freshness, graph capabilities, and read-only MCP tools.
 
 ## Trace verification
 
@@ -232,7 +244,7 @@ Result:
 - The raw export was archived under `Documentations/`.
 - The summary emphasizes enterprise Agentic Workflow refinements: hybrid rules + agents + approvals + audit logs, deterministic safety boundaries, structured artifacts, eval logs, HITL workflow gates, and avoiding over-decomposition.
 - The export prompt requested monetization analysis, but the response did not complete a business blueprint.
-- The recommended engineering priority remains Slice H: Graph freshness / stale index warning metadata.
+- At the time of import, the recommended engineering priority was Slice H: Graph freshness / stale index warning metadata; this is now implemented.
 - No TypeScript source files were changed for this import.
 - `pnpm check` was not rerun because the update is documentation-only.
 
@@ -464,12 +476,35 @@ node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.t
 pnpm check
 ```
 
-## Latest v0.1.1 release-readiness documentation update
+## Latest v0.1.1 release update
 
 Result:
 
-- README now includes v0.1.1 release candidate highlights.
+- README now includes v0.1.1 highlights.
 - README quickstart now documents graph index metadata, freshness metadata, call-aware `CODEMIND.md` sections, and read-only MCP tools.
-- Added `docs/RELEASE_NOTES_v0.1.1.md` as the draft release notes for the next release checkpoint.
+- Published `docs/RELEASE_NOTES_v0.1.1.md` as the GitHub Release notes.
+- GitHub Release `v0.1.1` is published at `https://github.com/luciferyu666/codemind-graph/releases/tag/v0.1.1`.
 - No TypeScript source files were changed for this documentation checkpoint.
 - `pnpm check` was not rerun for this docs-only update; the latest full pass remains the Slice O verification.
+
+## Latest Slice P0 Public MVP Hardening update
+
+Result:
+
+- Added `codemind health` for deterministic graph freshness, index metadata, graph size, and capability reporting.
+- Added `codemind doctor` for local runtime, root, TypeScript config, graph, freshness, capability, and read-only MCP readiness checks.
+- Added focused CLI tests for fresh health, stale health, and doctor output.
+- Added `examples/ts-agent-workspace` as the richer public demo fixture.
+- Generated and sanitized `examples/ts-agent-workspace/CODEMIND.md` as the first committed public demo map.
+- Added `docs/MCP_CLIENT_USAGE.md` for read-only MCP client startup and tool usage.
+- README now includes CI badge, install-from-source polish, health/doctor commands, public demo map link, and MCP client docs link.
+- Manual public demo smoke passed with `node packages/cli/dist/index.js index examples/ts-agent-workspace`, `health --root examples/ts-agent-workspace`, and `doctor --root examples/ts-agent-workspace`.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/cli-index.test.mjs
+node --test test/typescript-adapter.test.mjs
+```
+
+- Full `pnpm check` passed for this checkpoint with 30 `node:test` tests and the Next.js production build.

@@ -25,6 +25,8 @@ Build only:
   - `codemind trace <symbol>`
   - `codemind explain <path>`
   - `codemind map --format markdown`
+  - `codemind health`
+  - `codemind doctor`
   - `codemind mcp start`
 - Read-only MCP server
 - `CODEMIND.md` repo map output
@@ -49,6 +51,7 @@ Use a pnpm TypeScript monorepo:
 - `packages/cli`: command line interface
 - `packages/mcp-server`: read-only MCP tools
 - `examples/ts-basic`: small test repository
+- `examples/ts-agent-workspace`: richer public demo repository
 - `apps/web`: official website package
 
 ## Development Commands

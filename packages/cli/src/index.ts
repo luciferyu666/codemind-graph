@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -19,6 +19,7 @@ import {
   formatNodeLocation,
   GRAPH_INDEX_SCHEMA_VERSION,
   isGraphIndexFile,
+  renderMarkdownFreshnessSection,
   renderFreshnessWarning,
   renderMarkdownFileExplain,
   renderMarkdownRepoMap,
@@ -99,6 +100,8 @@ Usage:
   codemind trace <symbol> [--root <path>] [--graph <file>]
   codemind explain <path> [--root <path>] [--graph <file>]
   codemind map [--root <path>] [--graph <file>] [--format markdown] [--out <file>]
+  codemind health [--root <path>] [--graph <file>]
+  codemind doctor [--root <path>] [--graph <file>]
   codemind mcp start [--root <path>]
 
 Commands:
@@ -107,6 +110,8 @@ Commands:
   trace   Trace a symbol to its file imports, exports, and related modules
   explain Explain an indexed file from .codemind/graph.json
   map     Generate CODEMIND.md from .codemind/graph.json
+  health  Report graph index freshness and capabilities
+  doctor  Check local runtime, TypeScript config, graph, freshness, and MCP readiness
   mcp     Start the read-only MCP server
 `;
 
@@ -157,6 +162,18 @@ export async function runCli(argv = process.argv.slice(2), options: CliOptions =
       const mapArgs = parseMapArgs(args);
       await runMapCommand(mapArgs, resolvedOptions);
       return 0;
+    }
+
+    if (command === "health") {
+      const healthArgs = parseHealthArgs(args);
+      const healthy = await runHealthCommand(healthArgs, resolvedOptions);
+      return healthy ? 0 : 2;
+    }
+
+    if (command === "doctor") {
+      const doctorArgs = parseDoctorArgs(args);
+      const passed = await runDoctorCommand(doctorArgs, resolvedOptions);
+      return passed ? 0 : 2;
     }
 
     if (command === "mcp") {
@@ -464,6 +481,54 @@ function parseMcpArgs(args: readonly string[]): McpArgs {
   return rootPath === undefined ? {} : { rootPath };
 }
 
+function parseHealthArgs(args: readonly string[]): GraphPathArgs {
+  return parseGraphPathArgs(args, "health");
+}
+
+function parseDoctorArgs(args: readonly string[]): GraphPathArgs {
+  return parseGraphPathArgs(args, "doctor");
+}
+
+function parseGraphPathArgs(args: readonly string[], commandName: string): GraphPathArgs {
+  let rootPath: string | undefined;
+  let graphPath: string | undefined;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--root") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --root");
+      }
+      rootPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--graph") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --graph");
+      }
+      graphPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg?.startsWith("-")) {
+      throw new Error(`Unknown option for ${commandName}: ${arg}`);
+    }
+
+    throw new Error(`Unexpected argument for ${commandName}: ${arg}`);
+  }
+
+  return {
+    ...(rootPath === undefined ? {} : { rootPath }),
+    ...(graphPath === undefined ? {} : { graphPath }),
+  };
+}
+
 async function runIndexCommand(args: IndexArgs, options: ResolvedCliOptions): Promise<void> {
   const rootDir = path.resolve(options.cwd, args.targetPath);
   const extraction = await extractTypeScriptGraph({ rootDir });
@@ -550,6 +615,73 @@ async function runMapCommand(args: MapArgs, options: ResolvedCliOptions): Promis
   options.stdout.write(`Wrote ${path.relative(options.cwd, outputPath).replaceAll("\\", "/")}\n`);
 }
 
+async function runHealthCommand(args: GraphPathArgs, options: ResolvedCliOptions): Promise<boolean> {
+  const graphPath = resolveGraphPath(args, options.cwd);
+  const indexFile = await readGraphIndexFile(graphPath);
+  const freshness = await evaluateGraphFreshness(indexFile);
+
+  options.stdout.write(renderMarkdownHealth(indexFile, graphPath, options.cwd, freshness));
+  return freshness.status === "fresh";
+}
+
+async function runDoctorCommand(args: GraphPathArgs, options: ResolvedCliOptions): Promise<boolean> {
+  const rootDir = args.rootPath === undefined ? options.cwd : path.resolve(options.cwd, args.rootPath);
+  const graphPath = resolveGraphPath(args, options.cwd);
+  const checks: DoctorCheck[] = [];
+
+  checks.push({
+    name: "Node.js runtime",
+    status: nodeRuntimeStatus(process.version),
+    detail: process.version,
+  });
+  checks.push({
+    name: "Repository root",
+    status: await pathExists(rootDir) ? "pass" : "fail",
+    detail: formatOutputPath(rootDir),
+  });
+  checks.push({
+    name: "TypeScript config",
+    status: await pathExists(path.join(rootDir, "tsconfig.json")) ? "pass" : "warn",
+    detail: await pathExists(path.join(rootDir, "tsconfig.json")) ? "tsconfig.json found" : "tsconfig.json not found",
+  });
+
+  const graphRead = await tryReadGraphIndexFile(graphPath);
+  if (graphRead.ok) {
+    const indexFile = graphRead.indexFile;
+    const freshness = await evaluateGraphFreshness(indexFile);
+    checks.push({
+      name: "Graph index",
+      status: "pass",
+      detail: formatOutputPath(path.relative(options.cwd, graphPath)),
+    });
+    checks.push({
+      name: "Graph freshness",
+      status: freshness.status === "fresh" ? "pass" : "warn",
+      detail: `${freshness.status}: ${freshness.reason}`,
+    });
+    checks.push({
+      name: "Graph capabilities",
+      status: hasRequiredCapabilities(indexFile) ? "pass" : "warn",
+      detail: formatCapabilities(indexFile),
+    });
+  } else {
+    checks.push({
+      name: "Graph index",
+      status: "warn",
+      detail: graphRead.reason,
+    });
+  }
+
+  checks.push({
+    name: "Read-only MCP tools",
+    status: "pass",
+    detail: "find_symbol, get_repo_map, trace_symbol, explain_file",
+  });
+
+  options.stdout.write(renderMarkdownDoctor(rootDir, graphPath, checks));
+  return checks.every((check) => check.status !== "fail");
+}
+
 async function runMcpCommand(args: McpArgs, options: ResolvedCliOptions): Promise<void> {
   const rootDir = args.rootPath === undefined ? options.cwd : path.resolve(options.cwd, args.rootPath);
   await options.startMcpServer({ rootDir });
@@ -592,6 +724,23 @@ async function readGraphIndexFile(graphPath: string): Promise<GraphIndexFile> {
   return parsed;
 }
 
+async function tryReadGraphIndexFile(graphPath: string): Promise<
+  | { readonly ok: true; readonly indexFile: GraphIndexFile }
+  | { readonly ok: false; readonly reason: string }
+> {
+  try {
+    return {
+      ok: true,
+      indexFile: await readGraphIndexFile(graphPath),
+    };
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 async function createGraphIndexFile(extraction: TypeScriptExtractionResult): Promise<GraphIndexFile> {
   const freshness = await createGraphFreshnessMetadata(
     extraction.rootDir,
@@ -616,6 +765,79 @@ async function createGraphIndexFile(extraction: TypeScriptExtractionResult): Pro
   };
 }
 
+interface DoctorCheck {
+  readonly name: string;
+  readonly status: "pass" | "warn" | "fail";
+  readonly detail: string;
+}
+
+function renderMarkdownHealth(
+  indexFile: GraphIndexFile,
+  graphPath: string,
+  cwd: string,
+  freshness: Awaited<ReturnType<typeof evaluateGraphFreshness>>,
+): string {
+  const metadata = indexFile.metadata;
+  const lines = [
+    "# Health",
+    "",
+    `- Graph: \`${formatOutputPath(path.relative(cwd, graphPath))}\``,
+    `- Status: \`${freshness.status}\``,
+    `- Reason: ${freshness.reason}`,
+    "",
+    "## Index",
+    "",
+    `- Schema version: \`${indexFile.schemaVersion}\``,
+    `- Root: \`${indexFile.rootDir}\``,
+    `- Source files: ${indexFile.sourceFiles.length}`,
+    `- Nodes: ${indexFile.graph.nodes.length}`,
+    `- Edges: ${indexFile.graph.edges.length}`,
+    `- Indexer: \`${metadata === undefined ? "unknown" : `${metadata.indexer}@${metadata.indexerVersion}`}\``,
+    `- Adapter: \`${metadata === undefined ? "unknown" : `${metadata.adapter}@${metadata.adapterVersion}`}\``,
+    `- Language: \`${metadata?.language ?? "unknown"}\``,
+    `- Capabilities: \`${metadata === undefined ? "unknown" : metadata.capabilities.join(", ")}\``,
+    "",
+    ...renderMarkdownFreshnessSection(freshness),
+    "",
+  ];
+
+  return `${lines.join("\n")}\n`;
+}
+
+function renderMarkdownDoctor(rootDir: string, graphPath: string, checks: readonly DoctorCheck[]): string {
+  const lines = [
+    "# Doctor",
+    "",
+    `- Root: \`${formatOutputPath(rootDir)}\``,
+    `- Graph: \`${formatOutputPath(graphPath)}\``,
+    "",
+    "## Checks",
+    "",
+    "| Check | Status | Detail |",
+    "| --- | --- | --- |",
+    ...checks.map((check) => `| ${cell(check.name)} | ${check.status} | ${cell(check.detail)} |`),
+    "",
+  ];
+
+  return `${lines.join("\n")}\n`;
+}
+
+function hasRequiredCapabilities(indexFile: GraphIndexFile): boolean {
+  const capabilities = indexFile.metadata?.capabilities ?? [];
+  const requiredCapabilities = ["symbols", "imports", "exports", "calls"] as const;
+  return requiredCapabilities.every((capability) => capabilities.includes(capability));
+}
+
+function formatCapabilities(indexFile: GraphIndexFile): string {
+  const capabilities = indexFile.metadata?.capabilities;
+  return capabilities === undefined ? "missing graph index metadata" : capabilities.join(", ");
+}
+
+function nodeRuntimeStatus(version: string): DoctorCheck["status"] {
+  const major = Number(version.replace(/^v/, "").split(".")[0]);
+  return Number.isFinite(major) && major >= 22 ? "pass" : "warn";
+}
+
 function writeFreshnessWarning(
   freshness: Awaited<ReturnType<typeof evaluateGraphFreshness>>,
   stdout: WritableLike,
@@ -624,6 +846,23 @@ function writeFreshnessWarning(
   if (warning !== undefined) {
     stdout.write(`${warning}\n`);
   }
+}
+
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function formatOutputPath(value: string): string {
+  return value.replaceAll("\\", "/");
+}
+
+function cell(value: string): string {
+  return value.replaceAll("|", "\\|").replaceAll("\n", " ");
 }
 
 function isDirectCliExecution(): boolean {

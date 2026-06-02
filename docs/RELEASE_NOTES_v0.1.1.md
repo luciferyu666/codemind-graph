@@ -1,6 +1,6 @@
-# Release Notes Draft: v0.1.1
+# Release Notes: v0.1.1
 
-Status: draft
+Status: published
 
 Target tag: `v0.1.1`
 
@@ -85,7 +85,7 @@ Still out of scope:
 
 ## MCP Changes
 
-Read-only MCP tools in this release candidate:
+Read-only MCP tools in this release:
 
 - `find_symbol`
 - `get_repo_map`
@@ -165,18 +165,13 @@ Focused coverage includes:
 ## Release Checklist
 
 - [x] README v0.1.1 demo refresh prepared.
-- [x] Release notes draft prepared.
+- [x] Release notes prepared.
 - [x] `pnpm check` passed after Slice O.
-- [ ] Push release-readiness docs.
-- [ ] Confirm GitHub Actions CI passes on `main`.
-- [ ] Create and push `v0.1.1` tag.
-- [ ] Publish GitHub Release using this draft.
+- [x] Push release-readiness docs.
+- [x] Confirm GitHub Actions CI passes on `main`.
+- [x] Create and push `v0.1.1` tag.
+- [x] Publish GitHub Release using these notes.
 
-## Suggested Tag Command
+## Release Tag
 
-Run only after `main` is pushed and CI passes:
-
-```powershell
-git tag v0.1.1
-git push origin v0.1.1
-```
+`v0.1.1` has been pushed and published as a GitHub Release.

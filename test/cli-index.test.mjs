@@ -203,6 +203,188 @@ test("codemind find warns but does not crash for legacy graph files without fres
   }
 });
 
+test("codemind health reports graph metadata and fresh status", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-health-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      "export function greet(name: string): string {\n  return `Hello, ${name}`;\n}\n",
+    );
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["health", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# Health/m);
+    assert.match(stdout, /- Status: `fresh`/);
+    assert.match(stdout, /- Schema version: `0\.1\.0`/);
+    assert.match(stdout, /- Adapter: `@codemind\/adapter-typescript@0\.1\.0`/);
+    assert.match(stdout, /- Capabilities: `symbols, imports, exports, calls`/);
+    assert.match(stdout, /^## Freshness/m);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind health returns 2 when graph freshness is stale", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-health-stale-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      "export function greet(name: string): string {\n  return `Hello, ${name}`;\n}\n",
+    );
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      "export function greet(name: string): string {\n  return `Hi, ${name}`;\n}\n",
+    );
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["health", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 2);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# Health/m);
+    assert.match(stdout, /- Status: `stale`/);
+    assert.match(stdout, /source fingerprint changed/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind doctor reports runtime graph and MCP readiness", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-doctor-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      "export const answer = 42;\n",
+    );
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["doctor", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# Doctor/m);
+    assert.match(stdout, /\| Node\.js runtime \| pass \| v/);
+    assert.match(stdout, /\| TypeScript config \| pass \| tsconfig\.json found \|/);
+    assert.match(stdout, /\| Graph index \| pass \| sample\/\.codemind\/graph\.json \|/);
+    assert.match(stdout, /\| Graph freshness \| pass \| fresh: source files match the indexed fingerprint \|/);
+    assert.match(stdout, /\| Graph capabilities \| pass \| symbols, imports, exports, calls \|/);
+    assert.match(stdout, /\| Read-only MCP tools \| pass \| find_symbol, get_repo_map, trace_symbol, explain_file \|/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
 test("codemind find reads .codemind/graph.json and finds symbols", async () => {
   const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-find-"));
 

@@ -40,10 +40,14 @@ The v0.1 product surface is:
 - `codemind index`
 - `codemind find`
 - `codemind trace`
+- `codemind explain`
 - `codemind map`
+- `codemind health`
+- `codemind doctor`
 - `codemind mcp start`
-- read-only MCP tools such as `find_symbol`, `get_repo_map`, and `trace_symbol`
+- read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`
 - `CODEMIND.md` repo map output
+- `examples/ts-agent-workspace/CODEMIND.md` sanitized public demo output
 
 The MCP server must expose repository graph context only. It must not expose engineering session notes, private planning notes, or Codex handoff state by default.
 
@@ -60,6 +64,7 @@ Day 1-30:
 
 - Finish CodeMind Graph v0.1 CLI and deterministic graph query flow.
 - Complete `codemind index`, `codemind find`, and `codemind map`.
+- Add public readiness checks with `codemind health` and `codemind doctor`.
 - Generate `CODEMIND.md`.
 
 Day 31-60:
@@ -72,7 +77,7 @@ Day 31-60:
 
 Day 61-90:
 
-- Add Graph freshness / stale index warning metadata.
+- Graph freshness / stale index warning metadata is implemented.
 - Include freshness status in CLI and read-only MCP outputs.
 - Use `docs/TASK_DECOMPOSITION_GUIDE.md` to define slice-level task contracts.
 

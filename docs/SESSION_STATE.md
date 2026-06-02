@@ -34,10 +34,13 @@ Implemented in this session:
 - `packages/cli` `codemind trace <symbol>` command that reads `.codemind/graph.json` and reports symbol file imports, exports, calls out, called-by context, and related modules.
 - `packages/cli` `codemind explain <path>` command that reads `.codemind/graph.json` and reports file overview, symbols, imports, exports, calls out, external callers, related modules, diagnostics, and freshness status.
 - `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes call-aware `CODEMIND.md`.
+- `packages/cli` `codemind health` and `codemind doctor` commands for public-MVP graph readiness checks.
 - `packages/cli` `codemind mcp start --root <path>` command that starts the read-only MCP stdio server.
 - `packages/cli` graph index metadata output with indexer, indexer version, adapter, adapter version, language, and capabilities.
 - `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, graph edges, symbol trace rendering, file explain rendering, and repo map call overview rendering.
 - `packages/mcp-server` read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
+- `docs/MCP_CLIENT_USAGE.md` with read-only MCP stdio client setup, tool usage, graph path options, safety boundary, and troubleshooting.
+- `examples/ts-agent-workspace` richer public demo fixture plus sanitized committed `CODEMIND.md`.
 - GitHub Actions CI workflow that runs `pnpm install --frozen-lockfile` and `pnpm check`.
 - Temporary official website and Vercel deployment track captured in `docs/OFFICIAL_WEBSITE_PLAN.md`.
 - `apps/web` official website skeleton with Next.js, React, TypeScript, Tailwind CSS, `/en`, and `/zh-TW`.
@@ -67,9 +70,9 @@ Implemented in this session:
 - Slice H Graph Freshness is implemented: `codemind index` writes `indexedAt`, `rootDir`, `sourceFileCount`, and content-based `sourceFingerprint` metadata.
 - CLI `find`, `trace`, and `map` now report stale or unknown graph freshness, including legacy graph files without metadata.
 - MCP `find_symbol`, `get_repo_map`, and `trace_symbol` now return graph freshness status while staying read-only.
-- README now documents the v0.1 quickstart demo, v0.1.1 release candidate highlights, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
+- README now documents the v0.1 quickstart demo, v0.1.1 highlights, install-from-source flow, CI badge, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
 - `docs/LEGACY_REPO_ONBOARDING_PACK.md` defines the first service-oriented commercial wedge.
-- `docs/RELEASE_NOTES_v0.1.1.md` is prepared as a draft for the next release checkpoint.
+- `docs/RELEASE_NOTES_v0.1.1.md` is published as the v0.1.1 release notes.
 
 The 2026-05-28 ChatGPT export has been imported into `Documentations/ChatGPT-專案排序與建議 (4).md`. Its engineering corrections have been distilled into `docs/RUBRIC.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, and `AGENTS.md`.
 
@@ -108,11 +111,10 @@ Current design baseline:
 
 ## Next steps
 
-1. Push the v0.1.1 release-readiness documentation checkpoint.
-2. Confirm GitHub Actions CI passes on `main`.
-3. Decide whether to create and push the `v0.1.1` tag.
-4. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
-5. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
+1. Run full `pnpm check` for Slice P0 Public MVP Hardening Pack.
+2. Commit and push the Slice P0 checkpoint to `origin/main`.
+3. Confirm GitHub Actions CI passes on `main`.
+4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
 Website track:
 
@@ -207,13 +209,33 @@ Latest Slice O graph index metadata update:
 - Focused verification passed with `pnpm build:packages; node --test test/cli-index.test.mjs test/mcp-server.test.mjs test/mcp-protocol.test.mjs test/typescript-adapter.test.mjs`.
 - Full verification passed with `pnpm check` and 26 focused `node:test` tests.
 
-Latest v0.1.1 release-readiness documentation update:
+Latest v0.1.1 release update:
 
-- README now includes v0.1.1 release candidate highlights.
+- README now includes v0.1.1 highlights.
 - README quickstart now calls out graph index metadata, freshness metadata, call-aware repo map sections, and read-only MCP tools.
-- `docs/RELEASE_NOTES_v0.1.1.md` is added as a draft for the future GitHub Release.
+- `docs/RELEASE_NOTES_v0.1.1.md` is published as the GitHub Release notes.
+- GitHub Release `v0.1.1` is published at `https://github.com/luciferyu666/codemind-graph/releases/tag/v0.1.1`.
 - No TypeScript source files changed in this documentation checkpoint.
 - `pnpm check` was not rerun for this docs-only update; the latest full pass remains the Slice O verification.
+
+Latest Slice P0 Public MVP Hardening update:
+
+- Implemented `codemind health` to report graph index metadata, freshness, source file count, node count, edge count, and capabilities.
+- Implemented `codemind doctor` to report Node.js runtime, repository root, TypeScript config, graph index, graph freshness, graph capabilities, and read-only MCP readiness.
+- Added CLI tests for `health` fresh/stale behavior and `doctor` readiness output.
+- Added `examples/ts-agent-workspace` as a richer public TypeScript fixture.
+- Added sanitized committed public demo map at `examples/ts-agent-workspace/CODEMIND.md`.
+- Added `docs/MCP_CLIENT_USAGE.md` for read-only MCP stdio client setup and usage.
+- README now includes CI badge, install-from-source polish, health/doctor quickstart, public demo map link, and MCP client docs link.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/cli-index.test.mjs
+node --test test/typescript-adapter.test.mjs
+```
+
+- Full `pnpm check` passed for the Slice P0 checkpoint with 30 `node:test` tests and the Next.js production build.
 
 ## Resume workflow
 

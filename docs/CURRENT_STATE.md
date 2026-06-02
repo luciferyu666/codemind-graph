@@ -38,6 +38,7 @@ Last updated: 2026-06-02
 - `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency and call context.
 - `packages/cli` supports `explain` and reads `.codemind/graph.json` for deterministic file-level context, including outgoing calls and external callers.
 - `packages/cli` supports `map` and writes call-aware `CODEMIND.md` output.
+- `packages/cli` supports `health` and `doctor` for public-MVP graph readiness checks.
 - `packages/cli` writes graph index metadata during `index`, including indexer, adapter, adapter version, language, and capabilities.
 - `packages/cli` writes graph freshness metadata during `index` and reports stale or unknown freshness during `find`, `trace`, and `map`.
 - `packages/cli` supports `mcp start --root <path>` and delegates to the read-only MCP server.
@@ -45,6 +46,7 @@ Last updated: 2026-06-02
 - `packages/mcp-server` exposes read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - `packages/mcp-server` reports graph freshness status in `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file` responses.
 - GitHub Actions CI is configured in `.github/workflows/ci.yml` for push and pull request.
+- README includes the GitHub Actions CI badge and install-from-source quickstart.
 - Release checkpoint `60092e5` has been pushed to GitHub `main`; GitHub Actions CI passed `pnpm check`.
 - Release tag `v0.1.0` has been pushed.
 - GitHub Actions CI and Browser QA workflows now target `windows-2025-vs2026`, opt into `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and use Node.js 24 action majors.
@@ -63,28 +65,31 @@ Last updated: 2026-06-02
 - Vercel project Root Directory is configured as `apps/web`.
 - Focused tests cover graph builder determinism and TypeScript extraction.
 - TypeScript adapter fixtures now cover richer imports, re-exports, classes, methods, namespace calls, constructors, same-file static methods, simple chained class methods, and basic `CALLS` edge extraction for future trace work.
+- `examples/ts-agent-workspace` provides a richer public TypeScript demo fixture with imports, re-exports, classes, methods, constructors, namespace calls, and simple call context.
+- `examples/ts-agent-workspace/CODEMIND.md` provides the first committed sanitized public demo repo map.
 - Focused CLI tests cover symbol trace success, no-match behavior, and rendered `CALLS` edge context.
 - Focused CLI tests cover file explain success, no-match behavior, and rendered file-level `CALLS` context.
 - Focused CLI tests cover stale source fingerprints and legacy graph files without freshness metadata.
 - Focused CLI tests cover graph index metadata and legacy graph files without index metadata.
+- Focused CLI tests cover `codemind health` fresh/stale behavior and `codemind doctor` readiness output.
 - Focused CLI tests cover MCP startup delegation and invalid MCP startup options.
 - Focused MCP tests cover symbol lookup, call-aware markdown repo map retrieval with graph index metadata, symbol trace retrieval with `CALLS` edge context, file explain retrieval with `CALLS` edge context, freshness status, stale source fingerprints, and graph path containment.
 - MCP protocol smoke test covers SDK client stdio initialization, `tools/list`, `tools/call`, read-only tool annotations, graph index metadata, freshness status, call-aware repo map output, `CALLS` trace context, and file explain context for `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - MCP protocol negative/error coverage verifies missing graph, root escape attempts, graph path escape attempts, invalid tool input, legacy freshness metadata, stale freshness status, and no engineering memory leakage.
 - `docs/NEXT_DEVELOPMENT_TOPICS.md` defines the next AI-native graph platform development topics and slice plan.
-- README now documents the v0.1 quickstart demo, v0.1.1 release candidate highlights, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
-- `docs/RELEASE_NOTES_v0.1.1.md` is prepared as the draft release notes for the next checkpoint.
+- README now documents the v0.1 quickstart demo, v0.1.1 highlights, read-only MCP safety boundary, freshness warnings, scope, and non-goals.
+- `docs/MCP_CLIENT_USAGE.md` documents read-only MCP stdio startup, client config, available tools, graph path options, safety boundary, and troubleshooting.
+- `docs/RELEASE_NOTES_v0.1.1.md` is published as the v0.1.1 release notes.
 - `docs/LEGACY_REPO_ONBOARDING_PACK.md` documents the first paid service wedge.
 
 ## Known gaps
 
 - Runtime is Node.js `v22.22.3`; project blueprint mentions Node.js `v24.16.0` LTS.
-- CLI supports `index`, `find`, `trace`, `explain`, `map`, and `mcp start`.
+- CLI supports `index`, `find`, `trace`, `explain`, `map`, `health`, `doctor`, and `mcp start`.
 - Phase 001 minimum graph, freshness, trace, explain, map, read-only MCP flow, and richer TypeScript fixture coverage are implemented.
 - SQLite storage is not implemented yet; the current index target is JSON under `.codemind/graph.json`.
 - Full TypeScript call graph resolution is not implemented yet; Slice K/M only covers conservative static function, method, namespace, constructor, and simple chained class call edges.
 - MCP currently reads only `.codemind/graph.json`; live indexing from MCP is intentionally out of scope.
-- CI badge is not added yet; add it after the first GitHub Actions run is visible on `main`.
 - Custom domain setup is not implemented yet.
 - The Vincent Liu digital business card uses a normalized portrait asset generated from `C:\Users\vince\Downloads\20260528_161756790.JPG`.
 - Codex in-app Browser currently has no registered `iab` backend in this app runtime.
@@ -110,8 +115,10 @@ Slice N call-aware `CODEMIND.md` repo map output is implemented and verified wit
 
 Slice O Graph Index Metadata Versioning is implemented and verified with focused CLI, direct MCP, MCP protocol, adapter tests, and full `pnpm check`.
 
-README v0.1.1 Demo Refresh and `docs/RELEASE_NOTES_v0.1.1.md` are prepared as a release-readiness documentation checkpoint.
+README v0.1.1 Demo Refresh and `docs/RELEASE_NOTES_v0.1.1.md` are complete, and GitHub Release `v0.1.1` is published.
 
-Immediate target: push the release-readiness docs, confirm GitHub Actions CI passes on `main`, then decide whether to create the `v0.1.1` tag.
+Slice P0 Public MVP Hardening Pack is implemented with `codemind health`, `codemind doctor`, README install polish, CI badge, richer public demo fixture, sanitized committed public `CODEMIND.md`, and MCP client usage docs.
+
+Immediate target: commit Slice P0, push to `origin/main`, and let GitHub Actions verify the checkpoint.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

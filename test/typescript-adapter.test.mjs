@@ -324,6 +324,33 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
   }
 });
 
+test("extractTypeScriptGraph indexes the public agent workspace example", async () => {
+  const rootDir = path.join(process.cwd(), "examples", "ts-agent-workspace");
+  const result = await extractTypeScriptGraph({ rootDir });
+  const graph = result.graph;
+  const callEdges = graph.edges.filter((edge) => edge.kind === "CALLS");
+
+  assert.deepEqual(result.sourceFiles, [
+    "src/context-pack.ts",
+    "src/graph-store.ts",
+    "src/index.ts",
+    "src/string-utils.ts",
+  ]);
+  assert.equal(result.diagnostics.length, 0);
+  assertSymbol(graph, "class", "GraphStore", { exported: true, filePath: "src/graph-store.ts" });
+  assertSymbol(graph, "class", "ContextPackBuilder", { exported: true, filePath: "src/context-pack.ts" });
+  assertSymbol(graph, "function", "buildDemoContext", { exported: true, filePath: "src/index.ts" });
+  assert.ok(callEdges.length >= 8);
+  assertCallEdge(graph, "method", "ContextPackBuilder.buildSummary", "function", "normalizeLabel", {
+    callee: "text.normalizeLabel",
+    resolution: "namespace-function",
+  });
+  assertCallEdge(graph, "function", "buildDemoContext", "method", "GraphStore.fromSeed", {
+    callee: "GraphStore.fromSeed",
+    resolution: "imported-method",
+  });
+});
+
 async function writeTsConfig(rootDir) {
   await writeFile(
     path.join(rootDir, "tsconfig.json"),
