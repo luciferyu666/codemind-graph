@@ -179,13 +179,16 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
         'import "./setup.js";',
         'import calculate, { Calculator, sum as add } from "./math.js";',
         'import type { NumericValue } from "./math.js";',
+        'import * as math from "./math.js";',
         'import * as models from "./models.js";',
         'import { externalValue } from "external-lib";',
         "",
         "export class ReportService {",
         "  build(value: NumericValue): models.Report {",
         "    const calculated = calculate(add(value.value, externalValue));",
-        "    return { title: this.normalize(String(calculated)) };",
+        "    const namespaced = math.sum(value.value, externalValue);",
+        "    const multiplied = Calculator.create().multiply(2);",
+        "    return { title: this.normalize(String(calculated + namespaced + multiplied)) };",
         "  }",
         "",
         "  private normalize(title: string): string {",
@@ -199,6 +202,7 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
         "",
         "export const reportStatus = models.ReportStatus.Draft;",
         "export const calculator = Calculator.create();",
+        "export const service = ReportService.create();",
         "",
       ].join("\n"),
     );
@@ -243,6 +247,11 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
       targetName: "src/math.ts",
       targetSource: "project",
     });
+    assertImportEdge(graph, "src/consumer.ts", "./math.js", {
+      importKind: "namespace",
+      targetName: "src/math.ts",
+      targetSource: "project",
+    });
     assertImportEdge(graph, "src/consumer.ts", "./models.js", {
       importKind: "namespace",
       targetName: "src/models.ts",
@@ -282,13 +291,33 @@ test("extractTypeScriptGraph covers rich import, re-export, class, and method fi
       callee: "add",
       resolution: "imported-function",
     });
+    assertCallEdge(graph, "method", "ReportService.build", "function", "sum", {
+      callee: "math.sum",
+      resolution: "namespace-function",
+    });
+    assertCallEdge(graph, "method", "ReportService.build", "method", "Calculator.multiply", {
+      callee: "Calculator.create().multiply",
+      resolution: "imported-chained-method",
+    });
     assertCallEdge(graph, "method", "ReportService.build", "method", "ReportService.normalize", {
       callee: "this.normalize",
       resolution: "same-class-method",
     });
+    assertCallEdge(graph, "method", "Calculator.create", "class", "Calculator", {
+      callee: "new Calculator",
+      resolution: "same-file-constructor",
+    });
+    assertCallEdge(graph, "method", "ReportService.create", "class", "ReportService", {
+      callee: "new ReportService",
+      resolution: "same-file-constructor",
+    });
     assertCallEdge(graph, "variable", "calculator", "method", "Calculator.create", {
       callee: "Calculator.create",
       resolution: "imported-method",
+    });
+    assertCallEdge(graph, "variable", "service", "method", "ReportService.create", {
+      callee: "ReportService.create",
+      resolution: "same-file-method",
     });
   } finally {
     await rm(rootDir, { recursive: true, force: true });

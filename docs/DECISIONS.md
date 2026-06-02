@@ -136,8 +136,8 @@ Guardrail: Keep the project runtime under test as Node.js `24.x` and pnpm `10.10
 
 Date: 2026-06-02
 
-Decision: Implement the first TypeScript `CALLS` edge extraction as a deterministic AST-based MVP. The adapter records same-file function calls, simple imported function calls, same-class `this.method()` calls, and simple imported class method calls without claiming full runtime dispatch resolution.
+Decision: Implement TypeScript `CALLS` edge extraction as a deterministic AST-based feature. The adapter records same-file function calls, simple imported function calls, namespace calls, constructor calls, same-class `this.method()` calls, same-file/imported class method calls, and simple chained class method calls without claiming full runtime dispatch resolution.
 
 Reasoning: CodeMind Graph needs call-edge data to make future `trace` and MCP context more useful, but v0.1 should avoid unstable or over-broad call graph claims. A conservative extractor is easier to test, keeps output deterministic, and preserves the local-first no-side-effect adapter boundary.
 
-Guardrail: Do not treat this as a complete TypeScript call graph. Dynamic dispatch, interface dispatch, higher-order calls, namespace calls, chained calls, and TypeChecker-backed cross-project call resolution remain future work.
+Guardrail: Do not treat this as a complete TypeScript call graph. Dynamic dispatch, interface dispatch, higher-order calls, arbitrary chained calls, and TypeChecker-backed cross-project call resolution remain future work.

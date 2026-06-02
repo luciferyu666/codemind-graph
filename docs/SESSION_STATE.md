@@ -28,7 +28,7 @@ Implemented in this session:
 
 - `packages/core` graph schema with node kinds, edge kinds, source locations, metadata, deterministic IDs, and `GraphBuilder`.
 - `packages/adapter-typescript` TypeScript Compiler API extraction for source files, imports, exports, functions, classes, interfaces, type aliases, enums, variables, and methods.
-- `packages/adapter-typescript` TypeScript `CALLS` edge MVP for same-file function calls, imported function calls, same-class methods, and simple imported class methods.
+- `packages/adapter-typescript` TypeScript `CALLS` extraction for same-file function calls, imported function calls, namespace calls, constructors, same-class methods, same-file/imported class methods, and simple chained class methods.
 - `packages/cli` `codemind index <path>` command that writes `<path>/.codemind/graph.json`.
 - `packages/cli` `codemind find <symbol>` command that reads `.codemind/graph.json` and returns deterministic symbol matches.
 - `packages/cli` `codemind trace <symbol>` command that reads `.codemind/graph.json` and reports symbol file imports, exports, calls out, called-by context, and related modules.
@@ -100,12 +100,12 @@ Current design baseline:
 - Public-facing docs must distinguish pushed public repo state from local uncommitted workspace state.
 - Public-facing strategy docs should describe MCP as an important open integration protocol rather than the only universal channel.
 - Public-facing security narratives must not collapse the GitHub VS Code extension incident and Mini Shai-Hulud / Shai-Hulud package campaigns into a single uncited event.
-- Engineering standard docs must mark SQLite, Tree-sitter, Python support, full call graph extraction, MCP audit logs, and DevSec integration as planned until implemented; Slice K implements only a conservative static `CALLS` edge MVP.
+- Engineering standard docs must mark SQLite, Tree-sitter, Python support, full call graph extraction, MCP audit logs, and DevSec integration as planned until implemented; Slice K/M implements only conservative static `CALLS` edge extraction.
 - Slice-level implementation should use the Human SOP -> Skill -> Task Contract -> Agentic Workflow model from `docs/TASK_DECOMPOSITION_GUIDE.md`.
 
 ## Next steps
 
-1. Run full `pnpm check` after MCP `explain_file`, then decide whether the next slice should add richer call resolution.
+1. Run full `pnpm check` after Slice M richer `CALLS` resolution, then decide whether the next slice should add call-aware `CODEMIND.md` repo map output.
 2. Improve example project coverage beyond a single exported function if public docs need a better trace demo.
 3. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
@@ -153,11 +153,12 @@ Latest MCP protocol update:
 Latest TypeScript adapter update:
 
 - Slice K TypeScript `CALLS` edge MVP is implemented.
-- The adapter now emits deterministic `CALLS` edges for same-file function calls, simple imported function calls, same-class `this.method()` calls, and simple imported class method calls.
+- Slice M richer TypeScript `CALLS` resolution is implemented and verified with focused adapter tests and full `pnpm check`.
+- The adapter now emits deterministic `CALLS` edges for same-file function calls, simple imported function calls, namespace calls, constructor calls, same-class `this.method()` calls, same-file/imported class method calls, and simple chained class method calls.
 - Local variable initializer calls inside functions/methods remain attributed to the enclosing function/method; top-level variable initializers may be represented as variable callers.
-- Dynamic dispatch, namespace calls, chained calls, higher-order calls, interface dispatch, and TypeChecker-backed full call graph resolution remain out of scope.
+- Dynamic dispatch, arbitrary chained calls, higher-order calls, interface dispatch, and TypeChecker-backed full call graph resolution remain out of scope.
 - Focused adapter verification passed with `pnpm build:packages; node --test test/typescript-adapter.test.mjs`.
-- Full verification passed with `pnpm check` and 25 focused `node:test` tests.
+- Full verification passed with `pnpm check` and 26 focused `node:test` tests.
 
 Latest call-context trace update:
 

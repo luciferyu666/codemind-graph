@@ -13,7 +13,7 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `packages/core` contains graph node and edge types.
 - [x] `packages/adapter-typescript` extracts TypeScript source files, functions, classes, interfaces, imports, and exports with the TypeScript Compiler API.
 - [x] TypeScript adapter fixtures cover import kinds, local/external module resolution, re-exports, classes, and class methods.
-- [x] TypeScript adapter extracts basic deterministic `CALLS` edges for same-file function calls, imported function calls, same-class methods, and simple imported class methods.
+- [x] TypeScript adapter extracts basic deterministic `CALLS` edges for same-file function calls, imported function calls, namespace calls, constructors, same-class methods, same-file/imported class methods, and simple chained class methods.
 - [x] `codemind index examples/ts-basic` writes graph data under `.codemind/`.
 - [x] `codemind find <symbol>` returns a deterministic result.
 - [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, call, and related module context.
@@ -50,4 +50,4 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - Do not describe SQLite FTS as semantic search; it is full-text symbol lookup.
 - Do not expose `docs/SESSION_STATE.md`, `docs/CURRENT_STATE.md`, or other engineering notes through MCP tools by default.
 - Do not add web dashboard, natural-language QA, Python deep support, DevSec scanning, or write-capable MCP tools in v0.1.
-- Do not describe the Slice K `CALLS` edge MVP as a complete runtime or dynamic-dispatch call graph.
+- Do not describe the Slice K/M `CALLS` edge work as a complete runtime, dynamic-dispatch, or TypeChecker-backed call graph.

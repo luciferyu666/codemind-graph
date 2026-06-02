@@ -32,7 +32,7 @@ Last updated: 2026-06-02
 - v0.1 quality gate is now defined in `docs/RUBRIC.md`.
 - `packages/core` graph schema is implemented.
 - `packages/adapter-typescript` TypeScript Compiler API extraction is implemented.
-- `packages/adapter-typescript` now extracts basic static `CALLS` edges for same-file function calls, imported function calls, same-class methods, and simple imported class methods.
+- `packages/adapter-typescript` now extracts basic static `CALLS` edges for same-file function calls, imported function calls, namespace calls, constructors, same-class methods, same-file/imported class methods, and simple chained class methods.
 - `packages/cli` supports `index` and writes `.codemind/graph.json`.
 - `packages/cli` supports `find` and reads `.codemind/graph.json` for symbol lookup.
 - `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency and call context.
@@ -61,7 +61,7 @@ Last updated: 2026-06-02
 - GitHub repository is connected to the Vercel project under `vincent-lius-projects-de5eeb92`.
 - Vercel project Root Directory is configured as `apps/web`.
 - Focused tests cover graph builder determinism and TypeScript extraction.
-- TypeScript adapter fixtures now cover richer imports, re-exports, classes, methods, and basic `CALLS` edge extraction for future trace work.
+- TypeScript adapter fixtures now cover richer imports, re-exports, classes, methods, namespace calls, constructors, same-file static methods, simple chained class methods, and basic `CALLS` edge extraction for future trace work.
 - Focused CLI tests cover symbol trace success, no-match behavior, and rendered `CALLS` edge context.
 - Focused CLI tests cover file explain success, no-match behavior, and rendered file-level `CALLS` context.
 - Focused CLI tests cover stale source fingerprints and legacy graph files without freshness metadata.
@@ -79,7 +79,7 @@ Last updated: 2026-06-02
 - CLI supports `index`, `find`, `trace`, `explain`, `map`, and `mcp start`.
 - Phase 001 minimum graph, freshness, trace, explain, map, read-only MCP flow, and richer TypeScript fixture coverage are implemented.
 - SQLite storage is not implemented yet; the current index target is JSON under `.codemind/graph.json`.
-- Full TypeScript call graph resolution is not implemented yet; Slice K only covers conservative static function and method call edges.
+- Full TypeScript call graph resolution is not implemented yet; Slice K/M only covers conservative static function, method, namespace, constructor, and simple chained class call edges.
 - MCP currently reads only `.codemind/graph.json`; live indexing from MCP is intentionally out of scope.
 - CI badge is not added yet; add it after the first GitHub Actions run is visible on `main`.
 - Custom domain setup is not implemented yet.
@@ -95,12 +95,14 @@ Slice J MCP negative/error protocol coverage is implemented and verified with `p
 
 Slice K TypeScript `CALLS` edge MVP is implemented and verified with focused adapter tests and full `pnpm check`.
 
+Slice M richer TypeScript `CALLS` resolution is implemented and verified with focused adapter tests and full `pnpm check`.
+
 `CALLS` edges are now exposed through `codemind trace` and MCP `trace_symbol` as `Calls Out` and `Called By`.
 
 Slice L call-aware `codemind explain <path>` is implemented and verified with focused tests and full `pnpm check`.
 
 MCP `explain_file` is implemented and verified with focused tests and full `pnpm check`.
 
-Immediate target: decide whether the next slice should add richer call resolution.
+Immediate target: decide whether the next slice should add call-aware `CODEMIND.md` repo map output.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

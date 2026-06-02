@@ -63,7 +63,7 @@ Last updated: 2026-06-02
 - Typecheck: passed with `pnpm typecheck`, including `@codemind/web`.
 - Tests: passed with `pnpm test` using 25 focused `node:test` tests.
 - Build: passed with `pnpm build`, including `@codemind/web`.
-- Consolidated check: passed with `pnpm check` on 2026-06-02 after MCP `explain_file` integration.
+- Consolidated check: passed with `pnpm check` on 2026-06-02 after Slice M richer TypeScript `CALLS` resolution.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -172,7 +172,7 @@ Result:
 - Adapter fixture coverage verifies side-effect, default-and-named, type-only, namespace, and external imports.
 - Re-export fixture coverage verifies named re-exports, type re-exports, export-all re-exports, and deterministic `exportNames` metadata.
 - Class and method fixture coverage verifies exported classes and non-exported method symbols with `ClassName.methodName` names.
-- Slice K `CALLS` edge fixture coverage verifies same-file function calls, imported function calls, same-class `this.method()` calls, simple imported class method calls, and top-level variable initializer callers.
+- Slice K/M `CALLS` edge fixture coverage verifies same-file function calls, imported function calls, namespace calls, constructor calls, same-class `this.method()` calls, same-file/imported class method calls, simple chained class method calls, and top-level variable initializer callers.
 
 ## Documentation imports
 
@@ -340,9 +340,10 @@ node --test test/mcp-protocol.test.mjs
 Result:
 
 - Implemented conservative TypeScript `CALLS` edge extraction in `packages/adapter-typescript`.
-- Covered same-file function calls, imported function calls, same-class `this.method()` calls, and simple imported class method calls.
+- Slice M expands coverage to namespace calls, constructor calls, same-file static methods, and simple chained class methods.
+- Covered same-file function calls, imported function calls, namespace calls, constructor calls, same-class `this.method()` calls, same-file/imported class method calls, and simple chained class method calls.
 - Kept local variable initializer calls inside methods/functions attributed to the enclosing method/function.
-- Kept dynamic dispatch, namespace calls, chained calls, higher-order calls, interface dispatch, and full TypeChecker-backed call resolution out of scope.
+- Kept dynamic dispatch, arbitrary chained calls, higher-order calls, interface dispatch, and full TypeChecker-backed call resolution out of scope.
 - Focused adapter verification passed:
 
 ```powershell

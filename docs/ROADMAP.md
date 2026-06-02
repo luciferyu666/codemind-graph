@@ -14,6 +14,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [x] Implement TypeScript Compiler API import and symbol extraction in `packages/adapter-typescript`.
 - [x] Add TypeScript adapter fixture coverage for imports, re-exports, classes, and methods.
 - [x] Add TypeScript `CALLS` edge MVP for same-file function calls, imported function calls, same-class method calls, and simple imported class method calls.
+- [x] Expand TypeScript `CALLS` edge resolution for namespace calls, constructors, same-file static methods, and simple chained class methods.
 - [x] Expose `CALLS` edges in `codemind trace` and MCP `trace_symbol` output.
 - [x] Expose file-level `CALLS` context in `codemind explain`.
 - [x] Implement CLI commands:
@@ -105,6 +106,7 @@ Day 61-90:
 - Maintain the pushed `v0.1.0` release checkpoint and use follow-up slices for CI/runtime maintenance, example coverage, and MCP negative-path tests.
 - Slice I `codemind explain <path>` is implemented.
 - Slice K TypeScript `CALLS` edge MVP is implemented.
+- Slice M richer TypeScript `CALLS` resolution is implemented.
 - `codemind trace` and MCP `trace_symbol` now render `Calls Out` and `Called By` sections from indexed `CALLS` edges.
 - `codemind explain` now renders file-level `Calls Out` and `Called By` sections from indexed `CALLS` edges.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.

@@ -27,7 +27,7 @@ Included in v0.1:
 
 - TypeScript-first repository scanner.
 - TypeScript Compiler API extraction for files, imports, exports, functions, classes, interfaces, type aliases, enums, variables, and methods.
-- Basic static `CALLS` edge extraction for same-file function calls, imported function calls, same-class `this.method()` calls, and simple imported class method calls.
+- Basic static `CALLS` edge extraction for same-file function calls, imported function calls, namespace calls, constructors, same-class `this.method()` calls, same-file/imported class methods, and simple chained class methods.
 - `trace` / `trace_symbol` output includes `Calls Out` and `Called By` sections when `CALLS` edges are indexed.
 - Deterministic graph schema with stable node and edge IDs.
 - Local `.codemind/graph.json` graph index.
@@ -45,7 +45,7 @@ Non-goals for v0.1:
 - No web dashboard product.
 - No deep Python support.
 - No security scanner.
-- No complete dynamic dispatch or runtime call graph.
+- No complete dynamic dispatch, higher-order call graph, or runtime call graph.
 
 ## Workspace
 
