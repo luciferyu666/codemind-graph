@@ -24,6 +24,7 @@ Build only:
   - `codemind find <symbol>`
   - `codemind trace <symbol>`
   - `codemind explain <path>`
+  - `codemind context <symbol-or-path>`
   - `codemind map --format markdown`
   - `codemind health`
   - `codemind doctor`

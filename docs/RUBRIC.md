@@ -18,6 +18,7 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 - [x] `codemind find <symbol>` returns a deterministic result.
 - [x] `codemind trace <symbol>` returns deterministic symbol file, import, export, call, and related module context.
 - [x] `codemind explain <path>` returns deterministic file overview, symbols, imports, exports, calls out, called-by context, related modules, diagnostics, and freshness status.
+- [x] `codemind context <symbol-or-path>` returns a deterministic, bounded Markdown context packet with overview, freshness, target context, selected symbol traces, selected file explanations, row-limited tables, and repo map excerpt.
 - [x] `codemind map --format markdown` generates call-aware `CODEMIND.md` output with calls summary, top callers, top callees, and call edge tables.
 - [x] `codemind health` reports graph freshness, index metadata, source counts, node counts, edge counts, and capabilities.
 - [x] `codemind doctor` reports local runtime, repository root, TypeScript config, graph index, graph freshness, capabilities, and read-only MCP readiness.
@@ -46,7 +47,7 @@ CodeMind Graph v0.1 is complete only when all of the following are true:
 | Dimension | Weight | Standard |
 | --- | ---: | --- |
 | Scope control | 30% | Work stays inside TypeScript, CLI, local graph, and read-only MCP v0.1 scope. |
-| Model quality | 40% | Symbol graph, dependency edges, and basic static call edges are deterministic and covered by focused tests. |
+| Model quality | 40% | Symbol graph, dependency edges, basic static call edges, and context packets are deterministic and covered by focused tests. |
 | Code integrity | 30% | `pnpm check` passes, public APIs use explicit types, and production TypeScript avoids `any`. |
 
 ## Anti-patterns

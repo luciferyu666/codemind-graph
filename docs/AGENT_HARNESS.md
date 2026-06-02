@@ -41,6 +41,7 @@ The v0.1 product surface is:
 - `codemind find`
 - `codemind trace`
 - `codemind explain`
+- `codemind context`
 - `codemind map`
 - `codemind health`
 - `codemind doctor`
@@ -65,6 +66,7 @@ Day 1-30:
 - Finish CodeMind Graph v0.1 CLI and deterministic graph query flow.
 - Complete `codemind index`, `codemind find`, and `codemind map`.
 - Add public readiness checks with `codemind health` and `codemind doctor`.
+- Add bounded agent-ready context packets with `codemind context`.
 - Generate `CODEMIND.md`.
 
 Day 31-60:

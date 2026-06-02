@@ -19,6 +19,7 @@ CodeMind Graph focuses on a smaller deterministic loop:
 - Build a local graph from repository source files.
 - Query symbols and dependency context from the graph.
 - Capture conservative `CALLS` edges for static function and method calls.
+- Build deterministic context packets for AI agents.
 - Generate `CODEMIND.md` as a call-aware repo map.
 - Expose the same graph through read-only MCP tools.
 - Warn when `.codemind/graph.json` is stale or missing freshness metadata.
@@ -36,7 +37,7 @@ Included in v0.1:
 - Local `.codemind/graph.json` graph index.
 - Graph index metadata with indexer, adapter, adapter version, language, and capabilities.
 - Graph freshness metadata with `indexedAt`, `rootDir`, `sourceFileCount`, and `sourceFingerprint`.
-- CLI commands: `index`, `find`, `trace`, `explain`, `map`, `health`, `doctor`, and `mcp start`.
+- CLI commands: `index`, `find`, `trace`, `explain`, `context`, `map`, `health`, `doctor`, and `mcp start`.
 - Read-only MCP tools: `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - Deterministic `CODEMIND.md` repo map output with call edge summary, top callers, top callees, and call edge tables.
 
@@ -57,6 +58,7 @@ Release notes: [`docs/RELEASE_NOTES_v0.1.1.md`](docs/RELEASE_NOTES_v0.1.1.md)
 Current `main` also includes the post-v0.1.1 Public MVP Hardening Pack:
 
 - `codemind health` and `codemind doctor` readiness checks.
+- `codemind context <symbol-or-path>` for deterministic agent-ready Markdown context packets.
 - CI badge and install-from-source quickstart polish.
 - richer public demo fixture in `examples/ts-agent-workspace`.
 - sanitized committed demo map at `examples/ts-agent-workspace/CODEMIND.md`.
@@ -161,6 +163,14 @@ node packages/cli/dist/index.js explain src/context-pack.ts --root examples/ts-a
 
 Explain output includes file symbols, imports, exports, outgoing calls, external callers, related modules, diagnostics, and freshness status.
 
+Build an agent-ready context packet:
+
+```powershell
+node packages/cli/dist/index.js context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 80
+```
+
+Context output includes graph overview, freshness, target context, selected symbol traces, selected file explanations, row-limited tables, and a bounded repo map excerpt.
+
 Generate the repo map:
 
 ```powershell
@@ -180,6 +190,18 @@ Expected map sections:
 ## Exports
 ## Calls
 ## Diagnostics
+```
+
+Expected context packet sections:
+
+```text
+# Context Pack
+## Overview
+## Freshness
+## Target Context
+## Symbol Trace
+## File Explain
+## Repo Map Excerpt
 ```
 
 The generated files are:

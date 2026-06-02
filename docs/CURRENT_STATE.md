@@ -37,12 +37,14 @@ Last updated: 2026-06-02
 - `packages/cli` supports `find` and reads `.codemind/graph.json` for symbol lookup.
 - `packages/cli` supports `trace` and reads `.codemind/graph.json` for symbol-level dependency and call context.
 - `packages/cli` supports `explain` and reads `.codemind/graph.json` for deterministic file-level context, including outgoing calls and external callers.
+- `packages/cli` supports `context` and reads `.codemind/graph.json` for deterministic agent-ready context packets.
 - `packages/cli` supports `map` and writes call-aware `CODEMIND.md` output.
 - `packages/cli` supports `health` and `doctor` for public-MVP graph readiness checks.
 - `packages/cli` writes graph index metadata during `index`, including indexer, adapter, adapter version, language, and capabilities.
 - `packages/cli` writes graph freshness metadata during `index` and reports stale or unknown freshness during `find`, `trace`, and `map`.
 - `packages/cli` supports `mcp start --root <path>` and delegates to the read-only MCP server.
 - `packages/core` exposes reusable graph query helpers used by CLI commands, including `CALLS` edge trace, file explain context, and repo map call overview.
+- `packages/core` exposes reusable context pack helpers that compose selected trace, explain, and repo map context.
 - `packages/mcp-server` exposes read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - `packages/mcp-server` reports graph freshness status in `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file` responses.
 - GitHub Actions CI is configured in `.github/workflows/ci.yml` for push and pull request.
@@ -69,6 +71,7 @@ Last updated: 2026-06-02
 - `examples/ts-agent-workspace/CODEMIND.md` provides the first committed sanitized public demo repo map.
 - Focused CLI tests cover symbol trace success, no-match behavior, and rendered `CALLS` edge context.
 - Focused CLI tests cover file explain success, no-match behavior, and rendered file-level `CALLS` context.
+- Focused CLI tests cover context pack success for symbol targets, file targets, and no-match behavior.
 - Focused CLI tests cover stale source fingerprints and legacy graph files without freshness metadata.
 - Focused CLI tests cover graph index metadata and legacy graph files without index metadata.
 - Focused CLI tests cover `codemind health` fresh/stale behavior and `codemind doctor` readiness output.
@@ -85,7 +88,7 @@ Last updated: 2026-06-02
 ## Known gaps
 
 - Runtime is Node.js `v22.22.3`; project blueprint mentions Node.js `v24.16.0` LTS.
-- CLI supports `index`, `find`, `trace`, `explain`, `map`, `health`, `doctor`, and `mcp start`.
+- CLI supports `index`, `find`, `trace`, `explain`, `context`, `map`, `health`, `doctor`, and `mcp start`.
 - Phase 001 minimum graph, freshness, trace, explain, map, read-only MCP flow, and richer TypeScript fixture coverage are implemented.
 - SQLite storage is not implemented yet; the current index target is JSON under `.codemind/graph.json`.
 - Full TypeScript call graph resolution is not implemented yet; Slice K/M only covers conservative static function, method, namespace, constructor, and simple chained class call edges.
@@ -119,6 +122,8 @@ README v0.1.1 Demo Refresh and `docs/RELEASE_NOTES_v0.1.1.md` are complete, and 
 
 Slice P0 Public MVP Hardening Pack is implemented with `codemind health`, `codemind doctor`, README install polish, CI badge, richer public demo fixture, sanitized committed public `CODEMIND.md`, and MCP client usage docs.
 
-Immediate target: commit Slice P0, push to `origin/main`, and let GitHub Actions verify the checkpoint.
+Slice Q0 Context Pack MVP is implemented with `codemind context <symbol-or-path>` and focused tests.
+
+Immediate target: commit Slice Q0, push to `origin/main`, and let GitHub Actions verify the checkpoint.
 
 Business strategy baseline now exists in `docs/BUSINESS_MONETIZATION_BLUEPRINT.md`, and the first service wedge is documented in `docs/LEGACY_REPO_ONBOARDING_PACK.md`.

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   GraphBuilder,
+  createContextPack,
   createEdgeId,
   createNodeId,
   findSymbols,
@@ -13,6 +14,7 @@ import {
   listCalls,
   listSymbols,
   normalizeGraphPath,
+  renderMarkdownContextPack,
   renderMarkdownSymbolTrace,
   traceSymbols,
 } from "../packages/core/dist/index.js";
@@ -193,4 +195,149 @@ test("traceSymbols returns symbol file imports exports and related modules", () 
   assert.match(markdown, /\| function:run \| function:formatName \| formatName \| imported-function \|/);
   assert.match(markdown, /^### Called By/m);
   assert.match(markdown, /No incoming calls found\./);
+});
+
+test("renderMarkdownContextPack composes trace explain and repo map context", () => {
+  const builder = new GraphBuilder();
+  const repositoryId = createNodeId("repository", ["F:/repo"]);
+  const fileId = createNodeId("file", ["src/index.ts"]);
+  const helperFileId = createNodeId("file", ["src/helper.ts"]);
+  const moduleId = createNodeId("module", ["project", "src/helper.ts"]);
+  const symbolId = createNodeId("function", ["src/index.ts", "run", "3:1"]);
+  const helperSymbolId = createNodeId("function", ["src/helper.ts", "formatName", "1:1"]);
+
+  builder.addNode({
+    id: repositoryId,
+    kind: "repository",
+    name: "repo",
+    source: "project",
+    filePath: ".",
+  });
+  builder.addNode({
+    id: fileId,
+    kind: "file",
+    name: "index.ts",
+    source: "project",
+    filePath: "src/index.ts",
+  });
+  builder.addNode({
+    id: helperFileId,
+    kind: "file",
+    name: "helper.ts",
+    source: "project",
+    filePath: "src/helper.ts",
+  });
+  builder.addNode({
+    id: moduleId,
+    kind: "module",
+    name: "src/helper.ts",
+    source: "project",
+    filePath: "src/helper.ts",
+    metadata: {
+      specifier: "./helper.js",
+    },
+  });
+  builder.addNode({
+    id: symbolId,
+    kind: "function",
+    name: "run",
+    source: "project",
+    filePath: "src/index.ts",
+    metadata: {
+      exported: true,
+    },
+  });
+  builder.addNode({
+    id: helperSymbolId,
+    kind: "function",
+    name: "formatName",
+    source: "project",
+    filePath: "src/helper.ts",
+    metadata: {
+      exported: true,
+    },
+  });
+  builder.addEdge({
+    id: createEdgeId("CONTAINS", repositoryId, fileId),
+    kind: "CONTAINS",
+    fromId: repositoryId,
+    toId: fileId,
+  });
+  builder.addEdge({
+    id: createEdgeId("CONTAINS", repositoryId, helperFileId),
+    kind: "CONTAINS",
+    fromId: repositoryId,
+    toId: helperFileId,
+  });
+  builder.addEdge({
+    id: createEdgeId("DEFINES", fileId, symbolId),
+    kind: "DEFINES",
+    fromId: fileId,
+    toId: symbolId,
+  });
+  builder.addEdge({
+    id: createEdgeId("IMPORTS", fileId, moduleId),
+    kind: "IMPORTS",
+    fromId: fileId,
+    toId: moduleId,
+    metadata: {
+      specifier: "./helper.js",
+      importKind: "named",
+    },
+  });
+  builder.addEdge({
+    id: createEdgeId("EXPORTS", fileId, symbolId),
+    kind: "EXPORTS",
+    fromId: fileId,
+    toId: symbolId,
+    metadata: {
+      exportKind: "named",
+    },
+  });
+  builder.addEdge({
+    id: createEdgeId("CALLS", symbolId, helperSymbolId, "formatName"),
+    kind: "CALLS",
+    fromId: symbolId,
+    toId: helperSymbolId,
+    metadata: {
+      callee: "formatName",
+      resolution: "imported-function",
+    },
+  });
+
+  const indexFile = {
+    schemaVersion: "0.1.0",
+    rootDir: "F:/repo",
+    sourceFiles: ["src/helper.ts", "src/index.ts"],
+    diagnostics: [],
+    metadata: {
+      indexer: "codemind-cli",
+      indexerVersion: "0.1.0",
+      adapter: "@codemind/adapter-typescript",
+      adapterVersion: "0.1.0",
+      language: "typescript",
+      capabilities: ["symbols", "imports", "exports", "calls"],
+    },
+    graph: builder.toGraph("F:/repo"),
+  };
+  const contextPack = createContextPack(indexFile, "run", {
+    limit: 1,
+    repoMapLineLimit: 12,
+  });
+  const markdown = renderMarkdownContextPack(indexFile, contextPack);
+
+  assert.equal(contextPack.targetKind, "symbol");
+  assert.equal(contextPack.symbolTraces.length, 1);
+  assert.equal(contextPack.fileExplanations.length, 1);
+  assert.match(markdown, /^# Context Pack/m);
+  assert.match(markdown, /- Target: `run`/);
+  assert.match(markdown, /- Target kind: `symbol`/);
+  assert.match(markdown, /^## Symbol Trace/m);
+  assert.match(markdown, /### Trace 1: `function run`/);
+  assert.match(markdown, /\| function:run \| function:formatName \| formatName \| imported-function \|/);
+  assert.match(markdown, /^## File Explain/m);
+  assert.match(markdown, /### File 1: `src\/index\.ts`/);
+  assert.match(markdown, /^## Repo Map Excerpt/m);
+  assert.match(markdown, /^# CODEMIND/m);
+  assert.match(markdown, /Repo map excerpt truncated at 12/);
 });

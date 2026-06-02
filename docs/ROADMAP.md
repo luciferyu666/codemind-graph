@@ -23,6 +23,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
   - [x] `find`
   - [x] `trace`
   - [x] `explain`
+  - [x] `context`
   - [x] `map`
   - [x] `health`
   - [x] `doctor`
@@ -37,6 +38,7 @@ Phase 001 is not complete until the Definition of Done in `docs/RUBRIC.md` passe
 - [x] Add MCP stdio protocol negative/error coverage for missing graph, invalid input, path escape, legacy freshness, and stale freshness.
 - [x] Generate `CODEMIND.md` repository map.
 - [x] Add Public MVP Hardening Pack with `codemind health`, `codemind doctor`, README install polish, CI badge, richer public fixture, sanitized public demo `CODEMIND.md`, and MCP client usage docs.
+- [x] Add Context Pack MVP with `codemind context <symbol-or-path>` for bounded agent-ready Markdown packets.
 - [x] Add graph index metadata versioning with indexer, adapter, language, and capabilities.
 - [x] Add GitHub Actions CI for `pnpm check`.
 
@@ -119,6 +121,7 @@ Day 61-90:
 - `codemind map` and MCP `get_repo_map` now render a call-aware `CODEMIND.md` overview with call counts, top callers, top callees, and call edge tables.
 - `.codemind/graph.json` now records indexer, adapter, adapter version, language, and graph capabilities.
 - `codemind health` and `codemind doctor` now provide public-MVP readiness checks.
+- `codemind context` now composes selected trace, explain, and repo map context into a bounded Markdown packet.
 - `examples/ts-agent-workspace/CODEMIND.md` provides the first committed sanitized public demo map.
 - `docs/MCP_CLIENT_USAGE.md` documents read-only MCP client setup and tool usage.
 - Keep governance, DevSec integration points, permission profiles, and audit logs as later expansion topics.

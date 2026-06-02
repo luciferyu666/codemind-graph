@@ -20,6 +20,7 @@ Implemented:
   - `codemind find <symbol>`
   - `codemind trace <symbol>`
   - `codemind explain <path>`
+  - `codemind context <symbol-or-path>`
   - `codemind map --format markdown`
   - `codemind health`
   - `codemind doctor`
@@ -35,6 +36,7 @@ Implemented:
 - richer public demo fixture in `examples/ts-agent-workspace`.
 - sanitized public demo map at `examples/ts-agent-workspace/CODEMIND.md`.
 - MCP client usage docs at `docs/MCP_CLIENT_USAGE.md`.
+- Context Pack MVP with bounded Markdown output for agent-ready symbol or file context.
 
 Not yet implemented:
 
@@ -644,22 +646,23 @@ pnpm test:e2e
 
 ## Recommended Next Task
 
-After Slice P0, the next task should be:
+After Slice Q0, the next task should be:
 
 ```text
-Slice Q0: Context Pack MVP
+Slice Q0b: MCP get_context_pack read-only tool
 ```
 
 Reason:
 
-The deterministic public-MVP loop now includes index, find, trace, explain, map, health, doctor, and read-only MCP. The next highest-leverage feature is an agent-ready context packet that composes existing graph outputs into a bounded Markdown artifact without adding natural-language QA or write capabilities.
+The deterministic CLI loop now includes `codemind context`. The next highest-leverage step is exposing the same bounded packet through MCP so AI clients can request focused context without manually combining `find_symbol`, `trace_symbol`, `explain_file`, and `get_repo_map`.
 
 Recommended scope:
 
-- `codemind context <symbol|path>` using existing `traceSymbols`, `explainFile`, and repo map helpers.
-- deterministic Markdown output only.
-- token-budget-like limits through static row limits, not LLM calls.
-- read-only MCP follow-up only after CLI output stabilizes.
+- MCP tool name: `get_context_pack`.
+- Inputs: `target`, optional `root`, optional `graph`, optional `limit`, optional `repoMapLines`.
+- Output: same Markdown as `codemind context`.
+- Keep read-only annotations and path containment.
+- Add direct MCP and MCP protocol smoke coverage.
 
 Alternative near-term task:
 

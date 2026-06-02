@@ -70,6 +70,8 @@ Last updated: 2026-06-02
 - Slice P0 focused CLI verification: passed with `pnpm build:packages` and `node --test test/cli-index.test.mjs`.
 - Slice P0 focused TypeScript adapter fixture verification: passed with `pnpm build:packages` and `node --test test/typescript-adapter.test.mjs`.
 - Slice P0 consolidated check: passed with `pnpm check`, 30 focused `node:test` tests, and the Next.js production build.
+- Slice Q0 focused context verification: passed with `pnpm build:packages` and `node --test test/core.test.mjs test/cli-index.test.mjs`.
+- Slice Q0 consolidated check: passed with `pnpm check`, 34 focused `node:test` tests, and the Next.js production build.
 - Browser QA: passed with `pnpm test:e2e` using Chromium desktop and mobile projects after Slice W6 digital business card integration.
 - GitHub Actions CI workflow: `.github/workflows/ci.yml` runs on push and pull request with `windows-2025-vs2026`, Node.js `24.x`, pnpm `10.10.0`, frozen install, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, Node.js 24 action majors, and `pnpm check`.
 - Browser QA workflow: `.github/workflows/browser-qa.yml` runs Playwright Chromium checks for website-related pull requests with `windows-2025-vs2026`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`, and Node.js 24 action majors.
@@ -119,6 +121,7 @@ node packages/cli/dist/index.js index examples/ts-basic
 node packages/cli/dist/index.js find greet --root examples/ts-basic
 node packages/cli/dist/index.js trace greet --root examples/ts-basic
 node packages/cli/dist/index.js explain src/index.ts --root examples/ts-basic
+node packages/cli/dist/index.js context greet --root examples/ts-basic
 node packages/cli/dist/index.js map --root examples/ts-basic --format markdown
 node packages/cli/dist/index.js index examples/ts-agent-workspace
 node packages/cli/dist/index.js health --root examples/ts-agent-workspace
@@ -134,6 +137,7 @@ Result:
 - Found `function greet` in `src/index.ts`.
 - Traced `function greet` to its file-level imports, exports, and related modules.
 - Explained `src/index.ts` with file overview, symbols, imports, exports, related modules, diagnostics, and freshness status.
+- Built a context packet for `greet` with overview, freshness, target context, symbol trace, file explain, and repo map excerpt.
 - `find` returned no freshness warning for a fresh index.
 - `trace`, `explain`, and `map` include a `Freshness` section when run against a graph index.
 - Wrote call-aware `examples/ts-basic/CODEMIND.md` during map verification with graph index metadata rendered in the Overview section.
@@ -159,6 +163,19 @@ Result:
 - `codemind explain <path>` reads `.codemind/graph.json` and emits deterministic Markdown.
 - Explain output includes file overview, symbols, imports, exports, `Calls Out`, `Called By`, related modules, diagnostics, and graph freshness status.
 - No-match explain returns exit code `2` with deterministic Markdown output.
+
+## Context pack verification
+
+Result:
+
+- `packages/core` exposes `createContextPack` and `renderMarkdownContextPack`.
+- `codemind context <symbol-or-path>` reads `.codemind/graph.json` and emits deterministic Markdown.
+- Context output includes overview, freshness, target context, selected symbol traces, selected file explanations, and a bounded repo map excerpt.
+- `--limit <n>` controls selected trace/file context count.
+- `--repo-map-lines <n>` controls the repo map excerpt line count.
+- Symbol targets return exit code `0` when matched.
+- File targets return exit code `0` when matched.
+- Unknown targets return exit code `2` with deterministic Markdown output.
 
 ## MCP verification
 
@@ -508,3 +525,27 @@ node --test test/typescript-adapter.test.mjs
 ```
 
 - Full `pnpm check` passed for this checkpoint with 30 `node:test` tests and the Next.js production build.
+
+## Latest Slice Q0 Context Pack update
+
+Result:
+
+- Added `createContextPack` and `renderMarkdownContextPack` in `packages/core`.
+- Added CLI `codemind context <symbol-or-path>`.
+- Context packets compose existing symbol trace, file explain, and repo map information without LLM calls or file writes.
+- Added bounded output controls: `--limit <n>` and `--repo-map-lines <n>`.
+- Added focused core and CLI tests.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/core.test.mjs test/cli-index.test.mjs
+```
+
+- Full `pnpm check` passed for this checkpoint with 34 `node:test` tests and the Next.js production build.
+- Manual public demo smoke passed for symbol and file context targets:
+
+```powershell
+node packages/cli/dist/index.js context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 40
+node packages/cli/dist/index.js context src/context-pack.ts --root examples/ts-agent-workspace --limit 2 --repo-map-lines 40
+```

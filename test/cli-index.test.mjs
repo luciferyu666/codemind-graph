@@ -813,6 +813,224 @@ test("codemind explain reads .codemind/graph.json and reports file context", asy
   }
 });
 
+test("codemind context builds a deterministic symbol context packet", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-context-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "helper.ts"),
+      ["export function formatName(name: string): string {", "  return name.trim();", "}", ""].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      [
+        'import { formatName } from "./helper.js";',
+        "",
+        "export function greet(name: string): string {",
+        "  return `Hello, ${formatName(name)}`;",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "caller.ts"),
+      [
+        'import { greet } from "./index.js";',
+        "",
+        "export function run(): string {",
+        '  return greet("Ada");',
+        "}",
+        "",
+      ].join("\n"),
+    );
+
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(
+      ["context", "greet", "--root", "sample", "--limit", "1", "--repo-map-lines", "20"],
+      {
+        cwd: rootDir,
+        stdout: {
+          write(chunk) {
+            stdout += String(chunk);
+          },
+        },
+        stderr: {
+          write(chunk) {
+            stderr += String(chunk);
+          },
+        },
+      },
+    );
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# Context Pack/m);
+    assert.match(stdout, /- Target: `greet`/);
+    assert.match(stdout, /- Target kind: `symbol`/);
+    assert.match(stdout, /- Match limit: 1/);
+    assert.match(stdout, /^## Freshness/m);
+    assert.match(stdout, /^## Symbol Trace/m);
+    assert.match(stdout, /### Trace 1: `function greet`/);
+    assert.match(stdout, /\| function:greet \| function:formatName \| formatName \| imported-function \|/);
+    assert.match(stdout, /\| function:run \| function:greet \| greet \| imported-function \|/);
+    assert.match(stdout, /^## File Explain/m);
+    assert.match(stdout, /### File 1: `src\/index\.ts`/);
+    assert.match(stdout, /^## Repo Map Excerpt/m);
+    assert.match(stdout, /^# CODEMIND/m);
+    assert.match(stdout, /Repo map excerpt truncated at 20/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind context builds a deterministic file context packet", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-context-file-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(
+      path.join(rootDir, "sample", "src", "index.ts"),
+      [
+        "export function greet(name: string): string {",
+        "  return `Hello, ${name}`;",
+        "}",
+        "",
+      ].join("\n"),
+    );
+
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(
+      ["context", "src/index.ts", "--root", "sample", "--limit", "1", "--repo-map-lines", "20"],
+      {
+        cwd: rootDir,
+        stdout: {
+          write(chunk) {
+            stdout += String(chunk);
+          },
+        },
+        stderr: {
+          write(chunk) {
+            stderr += String(chunk);
+          },
+        },
+      },
+    );
+
+    assert.equal(exitCode, 0);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# Context Pack/m);
+    assert.match(stdout, /- Target: `src\/index\.ts`/);
+    assert.match(stdout, /- Target kind: `file`/);
+    assert.match(stdout, /^## Symbol Trace/m);
+    assert.match(stdout, /### Trace 1: `function greet`/);
+    assert.match(stdout, /^## File Explain/m);
+    assert.match(stdout, /### File 1: `src\/index\.ts`/);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
+test("codemind context returns 2 when no file or symbol matches", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-context-empty-"));
+
+  try {
+    await mkdir(path.join(rootDir, "sample", "src"), { recursive: true });
+    await writeFile(
+      path.join(rootDir, "sample", "tsconfig.json"),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            moduleResolution: "NodeNext",
+            strict: true,
+          },
+          include: ["src/**/*.ts"],
+        },
+        null,
+        2,
+      ),
+    );
+    await writeFile(path.join(rootDir, "sample", "src", "index.ts"), "export const answer = 42;\n");
+    await runCli(["index", "sample"], {
+      cwd: rootDir,
+      stdout: { write() {} },
+      stderr: { write() {} },
+    });
+
+    let stdout = "";
+    let stderr = "";
+    const exitCode = await runCli(["context", "missing", "--root", "sample"], {
+      cwd: rootDir,
+      stdout: {
+        write(chunk) {
+          stdout += String(chunk);
+        },
+      },
+      stderr: {
+        write(chunk) {
+          stderr += String(chunk);
+        },
+      },
+    });
+
+    assert.equal(exitCode, 2);
+    assert.equal(stderr, "");
+    assert.match(stdout, /^# Context Pack/m);
+    assert.match(stdout, /- Target kind: `unknown`/);
+    assert.match(stdout, /No file or symbol context found for this target\./);
+  } finally {
+    await rm(rootDir, { recursive: true, force: true });
+  }
+});
+
 test("codemind explain returns 2 when the file is not indexed", async () => {
   const rootDir = await mkdtemp(path.join(os.tmpdir(), "codemind-explain-empty-"));
 

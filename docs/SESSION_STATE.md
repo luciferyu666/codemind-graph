@@ -33,11 +33,13 @@ Implemented in this session:
 - `packages/cli` `codemind find <symbol>` command that reads `.codemind/graph.json` and returns deterministic symbol matches.
 - `packages/cli` `codemind trace <symbol>` command that reads `.codemind/graph.json` and reports symbol file imports, exports, calls out, called-by context, and related modules.
 - `packages/cli` `codemind explain <path>` command that reads `.codemind/graph.json` and reports file overview, symbols, imports, exports, calls out, external callers, related modules, diagnostics, and freshness status.
+- `packages/cli` `codemind context <symbol-or-path>` command that reads `.codemind/graph.json` and reports deterministic agent-ready context packets.
 - `packages/cli` `codemind map --format markdown` command that reads `.codemind/graph.json` and writes call-aware `CODEMIND.md`.
 - `packages/cli` `codemind health` and `codemind doctor` commands for public-MVP graph readiness checks.
 - `packages/cli` `codemind mcp start --root <path>` command that starts the read-only MCP stdio server.
 - `packages/cli` graph index metadata output with indexer, indexer version, adapter, adapter version, language, and capabilities.
 - `packages/core` reusable graph query helpers for files, symbols, imports, exports, `CALLS` edges, graph edges, symbol trace rendering, file explain rendering, and repo map call overview rendering.
+- `packages/core` reusable context pack helpers that compose selected trace, explain, and repo map context into bounded Markdown.
 - `packages/mcp-server` read-only MCP tools with `find_symbol`, `get_repo_map`, `trace_symbol`, and `explain_file`.
 - `docs/MCP_CLIENT_USAGE.md` with read-only MCP stdio client setup, tool usage, graph path options, safety boundary, and troubleshooting.
 - `examples/ts-agent-workspace` richer public demo fixture plus sanitized committed `CODEMIND.md`.
@@ -111,8 +113,8 @@ Current design baseline:
 
 ## Next steps
 
-1. Run full `pnpm check` for Slice P0 Public MVP Hardening Pack.
-2. Commit and push the Slice P0 checkpoint to `origin/main`.
+1. Run full `pnpm check` for Slice Q0 Context Pack MVP.
+2. Commit and push the Slice Q0 checkpoint to `origin/main`.
 3. Confirm GitHub Actions CI passes on `main`.
 4. Re-check Codex in-app Browser if a future Codex App update exposes the `iab` backend on Windows.
 
@@ -236,6 +238,28 @@ node --test test/typescript-adapter.test.mjs
 ```
 
 - Full `pnpm check` passed for the Slice P0 checkpoint with 30 `node:test` tests and the Next.js production build.
+
+Latest Slice Q0 Context Pack update:
+
+- Implemented `packages/core` `createContextPack` and `renderMarkdownContextPack`.
+- Implemented CLI `codemind context <symbol-or-path>`.
+- Context packets include overview, freshness, target context, selected symbol traces, selected file explanations, row-limited tables, and bounded repo map excerpt.
+- Added `--limit <n>` and `--repo-map-lines <n>` for deterministic static output bounds.
+- Added focused core and CLI tests for symbol targets, file targets, and no-match behavior.
+- Focused verification passed:
+
+```powershell
+pnpm build:packages
+node --test test/core.test.mjs test/cli-index.test.mjs
+```
+
+- Full `pnpm check` passed for the Slice Q0 checkpoint with 34 `node:test` tests and the Next.js production build.
+- Manual public demo smoke passed for:
+
+```powershell
+node packages/cli/dist/index.js context buildDemoContext --root examples/ts-agent-workspace --limit 2 --repo-map-lines 40
+node packages/cli/dist/index.js context src/context-pack.ts --root examples/ts-agent-workspace --limit 2 --repo-map-lines 40
+```
 
 ## Resume workflow
 

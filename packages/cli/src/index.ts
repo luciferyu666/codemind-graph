@@ -12,6 +12,7 @@ import {
   type TypeScriptExtractionResult,
 } from "@codemind/adapter-typescript";
 import {
+  createContextPack,
   createGraphFreshnessMetadata,
   evaluateGraphFreshness,
   explainFile,
@@ -20,6 +21,7 @@ import {
   GRAPH_INDEX_SCHEMA_VERSION,
   isGraphIndexFile,
   renderMarkdownFreshnessSection,
+  renderMarkdownContextPack,
   renderFreshnessWarning,
   renderMarkdownFileExplain,
   renderMarkdownRepoMap,
@@ -76,6 +78,14 @@ interface ExplainArgs {
   readonly graphPath?: string;
 }
 
+interface ContextArgs {
+  readonly target: string;
+  readonly rootPath?: string;
+  readonly graphPath?: string;
+  readonly limit?: number;
+  readonly repoMapLineLimit?: number;
+}
+
 interface MapArgs {
   readonly rootPath?: string;
   readonly graphPath?: string;
@@ -99,6 +109,7 @@ Usage:
   codemind find <symbol> [--root <path>] [--graph <file>]
   codemind trace <symbol> [--root <path>] [--graph <file>]
   codemind explain <path> [--root <path>] [--graph <file>]
+  codemind context <symbol-or-path> [--root <path>] [--graph <file>] [--limit <n>] [--repo-map-lines <n>]
   codemind map [--root <path>] [--graph <file>] [--format markdown] [--out <file>]
   codemind health [--root <path>] [--graph <file>]
   codemind doctor [--root <path>] [--graph <file>]
@@ -109,6 +120,7 @@ Commands:
   find    Find symbols in .codemind/graph.json
   trace   Trace a symbol to its file imports, exports, and related modules
   explain Explain an indexed file from .codemind/graph.json
+  context Build a deterministic agent-ready Markdown context packet
   map     Generate CODEMIND.md from .codemind/graph.json
   health  Report graph index freshness and capabilities
   doctor  Check local runtime, TypeScript config, graph, freshness, and MCP readiness
@@ -155,6 +167,12 @@ export async function runCli(argv = process.argv.slice(2), options: CliOptions =
     if (command === "explain") {
       const explainArgs = parseExplainArgs(args);
       const found = await runExplainCommand(explainArgs, resolvedOptions);
+      return found ? 0 : 2;
+    }
+
+    if (command === "context") {
+      const contextArgs = parseContextArgs(args);
+      const found = await runContextCommand(contextArgs, resolvedOptions);
       return found ? 0 : 2;
     }
 
@@ -378,6 +396,82 @@ function parseExplainArgs(args: readonly string[]): ExplainArgs {
   };
 }
 
+function parseContextArgs(args: readonly string[]): ContextArgs {
+  let target: string | undefined;
+  let rootPath: string | undefined;
+  let graphPath: string | undefined;
+  let limit: number | undefined;
+  let repoMapLineLimit: number | undefined;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--root") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --root");
+      }
+      rootPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--graph") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --graph");
+      }
+      graphPath = nextArg;
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--limit") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --limit");
+      }
+      limit = parsePositiveIntegerOption(nextArg, "--limit");
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--repo-map-lines") {
+      const nextArg = args[index + 1];
+      if (nextArg === undefined || nextArg.startsWith("-")) {
+        throw new Error("Missing value for --repo-map-lines");
+      }
+      repoMapLineLimit = parsePositiveIntegerOption(nextArg, "--repo-map-lines");
+      index += 1;
+      continue;
+    }
+
+    if (arg?.startsWith("-")) {
+      throw new Error(`Unknown option for context: ${arg}`);
+    }
+
+    if (target !== undefined) {
+      throw new Error(`Unexpected extra argument for context: ${arg}`);
+    }
+
+    target = arg;
+  }
+
+  if (target === undefined) {
+    throw new Error(
+      "Usage: codemind context <symbol-or-path> [--root <path>] [--graph <file>] [--limit <n>] [--repo-map-lines <n>]",
+    );
+  }
+
+  return {
+    target,
+    ...(rootPath === undefined ? {} : { rootPath }),
+    ...(graphPath === undefined ? {} : { graphPath }),
+    ...(limit === undefined ? {} : { limit }),
+    ...(repoMapLineLimit === undefined ? {} : { repoMapLineLimit }),
+  };
+}
+
 function parseMapArgs(args: readonly string[]): MapArgs {
   let rootPath: string | undefined;
   let graphPath: string | undefined;
@@ -598,6 +692,20 @@ async function runExplainCommand(args: ExplainArgs, options: ResolvedCliOptions)
 
   options.stdout.write(markdown);
   return explanation !== undefined;
+}
+
+async function runContextCommand(args: ContextArgs, options: ResolvedCliOptions): Promise<boolean> {
+  const graphPath = resolveGraphPath(args, options.cwd);
+  const indexFile = await readGraphIndexFile(graphPath);
+  const freshness = await evaluateGraphFreshness(indexFile);
+  const contextPack = createContextPack(indexFile, args.target, {
+    ...(args.limit === undefined ? {} : { limit: args.limit }),
+    ...(args.repoMapLineLimit === undefined ? {} : { repoMapLineLimit: args.repoMapLineLimit }),
+  });
+  const markdown = renderMarkdownContextPack(indexFile, contextPack, freshness);
+
+  options.stdout.write(markdown);
+  return contextPack.targetKind !== "unknown";
 }
 
 async function runMapCommand(args: MapArgs, options: ResolvedCliOptions): Promise<void> {
@@ -836,6 +944,16 @@ function formatCapabilities(indexFile: GraphIndexFile): string {
 function nodeRuntimeStatus(version: string): DoctorCheck["status"] {
   const major = Number(version.replace(/^v/, "").split(".")[0]);
   return Number.isFinite(major) && major >= 22 ? "pass" : "warn";
+}
+
+function parsePositiveIntegerOption(value: string, optionName: string): number {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`Invalid value for ${optionName}: ${value}`);
+  }
+
+  return parsed;
 }
 
 function writeFreshnessWarning(
